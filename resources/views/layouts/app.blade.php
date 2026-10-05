@@ -1150,6 +1150,232 @@
                 font-size: 12px;
             }
         }
+
+
+        /* =====================================================
+   RIWAYATKU
+===================================================== */
+
+.riwayat-card {
+    padding: 12px;
+}
+
+.riwayat-mode {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.riwayat-mode-button {
+    min-height: 52px;
+    padding: 7px 8px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--muted);
+    text-align: left;
+    transition: 0.15s ease;
+}
+
+.riwayat-mode-button:hover {
+    border-color: var(--accent-soft-border);
+    background: var(--accent-soft);
+}
+
+.riwayat-mode-button.is-active {
+    border: 2px solid var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.riwayat-mode-icon {
+    width: 29px;
+    height: 29px;
+    flex: 0 0 29px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--accent);
+    font-size: 11px;
+}
+
+.riwayat-mode-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.riwayat-mode-content strong {
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.riwayat-mode-content small {
+    color: var(--muted-light);
+    font-size: 7px;
+    line-height: 1.3;
+}
+
+/* FILTER */
+.riwayat-filter {
+    margin-top: 9px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto 32px;
+    align-items: center;
+    gap: 5px;
+}
+
+.riwayat-filter .lb-input {
+    width: 100%;
+    height: 34px;
+    padding: 7px 8px;
+    font-size: 9px;
+}
+
+.riwayat-sampai {
+    color: var(--muted-light);
+    font-size: 8px;
+}
+
+.riwayat-view-button {
+    height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.riwayat-view-button:hover {
+    background: #1d4ed8;
+}
+
+.riwayat-reset-button {
+    width: 32px;
+    height: 34px;
+    border: 1px solid var(--border-input);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.riwayat-reset-button:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+/* HASIL */
+.riwayat-result {
+    min-height: 135px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.riwayat-empty {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--muted-light);
+    text-align: center;
+}
+
+.riwayat-empty-icon {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 18px;
+}
+
+.riwayat-empty p {
+    max-width: 360px;
+    font-size: 8px;
+    line-height: 1.5;
+}
+
+/* HASIL LOGBOOK */
+.riwayat-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.riwayat-item {
+    padding: 9px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+}
+
+.riwayat-item-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.riwayat-item-date {
+    color: var(--text);
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.riwayat-item-type {
+    padding: 3px 6px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 7px;
+    font-weight: 700;
+}
+
+.riwayat-item-detail {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 8px;
+    line-height: 1.45;
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+    .riwayat-mode {
+        grid-template-columns: 1fr;
+    }
+
+    .riwayat-filter {
+        grid-template-columns: 1fr auto 1fr;
+    }
+
+    .riwayat-view-button {
+        grid-column: 1 / 3;
+    }
+
+    .riwayat-reset-button {
+        grid-column: 3;
+        grid-row: 2;
+    }
+}
+
     </style>
 
     @stack('styles')

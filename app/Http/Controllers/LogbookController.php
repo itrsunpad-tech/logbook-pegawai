@@ -108,4 +108,4 @@ class LogbookController extends Controller
             ->route('logbook.index')
             ->with('success', 'Logbook berhasil disimpan.');
     }
-}
+} 

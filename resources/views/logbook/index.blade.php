@@ -281,23 +281,151 @@
     </section>
 
 
-    {{-- ===================== TAB RIWAYAT ===================== --}}
-    <section data-tab-panel="riwayat" class="is-hidden">
-        <div class="lb-card">
-            <h2 class="lb-card-title">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                Riwayatku
-            </h2>
+   {{-- ===================== TAB RIWAYAT ===================== --}}
+<section
+    data-tab-panel="riwayat"
+    class="is-hidden"
+>
 
-            <p class="lb-empty">
-                Riwayat logbook akan dibuat di langkah berikutnya.
-            </p>
+    <div class="lb-card riwayat-card">
+
+        <h2 class="lb-card-title">
+            <i class="fa-solid fa-chart-column"></i>
+            Riwayat Logbook
+        </h2>
+
+
+        {{-- MODE RIWAYAT --}}
+        <div class="riwayat-mode">
+
+            <button
+                type="button"
+                id="mode-lihat"
+                class="riwayat-mode-button is-active"
+            >
+
+                <span class="riwayat-mode-icon">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </span>
+
+                <span class="riwayat-mode-content">
+
+                    <strong>
+                        Lihat Langsung
+                    </strong>
+
+                    <small>
+                        Pilih rentang tanggal.
+                        Lalu lihat di sini.
+                    </small>
+
+                </span>
+
+            </button>
+
+
+            <button
+                type="button"
+                id="mode-sheet"
+                class="riwayat-mode-button"
+            >
+
+                <span class="riwayat-mode-icon">
+                    <i class="fa-solid fa-table"></i>
+                </span>
+
+                <span class="riwayat-mode-content">
+
+                    <strong>
+                        Rekap Sheet
+                    </strong>
+
+                    <small>
+                        Buka Google Sheets yang
+                        digunakan untuk rekap per pegawai.
+                    </small>
+
+                </span>
+
+            </button>
+
         </div>
-    </section>
 
+
+        {{-- FILTER TANGGAL --}}
+        <div class="riwayat-filter">
+
+            <input
+                type="date"
+                id="riwayat-dari"
+                class="lb-input"
+            >
+
+
+            <span class="riwayat-sampai">
+                s/d
+            </span>
+
+
+            <input
+                type="date"
+                id="riwayat-sampai"
+                class="lb-input"
+            >
+
+
+            <button
+                type="button"
+                id="btn-lihat-riwayat"
+                class="riwayat-view-button"
+            >
+                <i class="fa-solid fa-eye"></i>
+                Lihat
+            </button>
+
+
+            <button
+                type="button"
+                id="btn-reset-riwayat"
+                class="riwayat-reset-button"
+                title="Reset"
+            >
+                <i class="fa-solid fa-rotate-left"></i>
+            </button>
+
+        </div>
+
+
+        {{-- HASIL --}}
+        <div
+            id="riwayat-result"
+            class="riwayat-result"
+        >
+
+            <div class="riwayat-empty">
+
+                <div class="riwayat-empty-icon">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </div>
+
+                <p>
+                    Pilih rentang tanggal
+                    (dari–sampai) lalu klik
+                    "Lihat". Data akan dimuat
+                    sekali untuk seluruh rentang.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
 
     {{-- ===================== KALENDER ===================== --}}
-    <div class="lb-card">
+    <div id="kalender-utama">
+        <div class="lb-card">
         <h2 class="lb-card-title">
             <i class="fa-solid fa-calendar-days"></i>
             Kalender Pengisian
@@ -338,6 +466,7 @@
         <p class="lb-hint">
             Hanya menampilkan 2 bulan terakhir. Ketuk tanggal buat lihat detail.
         </p>
+        </div>
     </div>
 
 </div>
@@ -423,12 +552,128 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabs = qsa('.lb-tab');
     const tabPanels = qsa('[data-tab-panel]');
 
+    const kalenderUtama = qs('#kalender-utama');
+
     function showTab(name) {
-        tabs.forEach((tab) => tab.classList.toggle('is-active', tab.dataset.tab === name));
-        tabPanels.forEach((panel) => panel.classList.toggle('is-hidden', panel.dataset.tabPanel !== name));
+        tabs.forEach((tab) => {
+            tab.classList.toggle('is-active', tab.dataset.tab === name);
+        });
+
+        tabPanels.forEach((panel) => {
+            panel.classList.toggle('is-hidden', panel.dataset.tabPanel !== name);
+        });
+
+        // Kalender utama tetap tampil di Input Baru, tetapi disembunyikan
+        // ketika Riwayatku baru dibuka dan belum ada hasil pencarian.
+        kalenderUtama?.classList.toggle('is-hidden', name === 'riwayat');
     }
 
-    tabs.forEach((tab) => tab.addEventListener('click', () => showTab(tab.dataset.tab)));
+    tabs.forEach((tab) => {
+        tab.addEventListener('click', () => showTab(tab.dataset.tab));
+    });
+
+
+    /* =====================================================
+       RIWAYATKU
+    ====================================================== */
+    const riwayatDari = qs('#riwayat-dari');
+    const riwayatSampai = qs('#riwayat-sampai');
+    const btnLihatRiwayat = qs('#btn-lihat-riwayat');
+    const btnResetRiwayat = qs('#btn-reset-riwayat');
+    const riwayatResult = qs('#riwayat-result');
+
+    const renderRiwayatEmpty = (message) => {
+        riwayatResult.innerHTML = '';
+
+        const empty = el('div', 'riwayat-empty');
+        const icon = el('div', 'riwayat-empty-icon');
+        const iconElement = document.createElement('i');
+        iconElement.className = 'fa-solid fa-calendar-days';
+        icon.append(iconElement);
+
+        const text = el('p', '', message);
+        empty.append(icon, text);
+        riwayatResult.append(empty);
+    };
+
+    function renderRiwayat(tanggalDari, tanggalSampai) {
+        const hasil = [];
+
+        Object.entries(DATA).forEach(([tanggal, items]) => {
+            if (tanggal < tanggalDari || tanggal > tanggalSampai) return;
+
+            (items || []).forEach((item) => {
+                hasil.push({ tanggal, item });
+            });
+        });
+
+        hasil.sort((a, b) => a.tanggal.localeCompare(b.tanggal));
+
+        if (!hasil.length) {
+            renderRiwayatEmpty(
+                'Tidak ada logbook pada rentang tanggal yang dipilih.'
+            );
+            return;
+        }
+
+        const list = el('div', 'riwayat-list');
+
+        hasil.forEach(({ tanggal, item }) => {
+            const card = el('div', 'riwayat-item');
+            const head = el('div', 'riwayat-item-head');
+            const date = el('span', 'riwayat-item-date', formatDate(tanggal));
+            const type = el(
+                'span',
+                'riwayat-item-type',
+                JENIS_LABEL[item.jenis] || item.jenis || 'Logbook'
+            );
+
+            head.append(date, type);
+            card.append(head);
+
+            if (item.detail) {
+                card.append(el('div', 'riwayat-item-detail', item.detail));
+            }
+
+            list.append(card);
+        });
+
+        riwayatResult.innerHTML = '';
+        riwayatResult.append(list);
+    }
+
+    btnLihatRiwayat?.addEventListener('click', () => {
+        const tanggalDari = riwayatDari?.value || '';
+        const tanggalSampai = riwayatSampai?.value || '';
+
+        if (!tanggalDari || !tanggalSampai) {
+            renderRiwayatEmpty(
+                'Pilih tanggal awal dan tanggal akhir terlebih dahulu.'
+            );
+            return;
+        }
+
+        if (tanggalDari > tanggalSampai) {
+            renderRiwayatEmpty(
+                'Tanggal awal tidak boleh lebih besar dari tanggal akhir.'
+            );
+            return;
+        }
+
+        renderRiwayat(tanggalDari, tanggalSampai);
+        kalenderUtama?.classList.remove('is-hidden');
+    });
+
+    btnResetRiwayat?.addEventListener('click', () => {
+        if (riwayatDari) riwayatDari.value = '';
+        if (riwayatSampai) riwayatSampai.value = '';
+
+        renderRiwayatEmpty(
+            'Pilih rentang tanggal (dari–sampai) lalu klik "Lihat". Data akan dimuat sekali untuk seluruh rentang.'
+        );
+
+        kalenderUtama?.classList.add('is-hidden');
+    });
 
 
     /* =====================================================
@@ -489,13 +734,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* =====================================================
-       KALENDER
+       LABEL JENIS LOGBOOK
     ====================================================== */
     const JENIS_LABEL = {
         harian: 'Logbook Harian',
         lembur: 'Lembur',
         oncall: 'On Call',
     };
+
+
+    /* =====================================================
+       KALENDER
+    ====================================================== */
 
     const pad = (value) => String(value).padStart(2, '0');
     const dateKeyOf = (year, month, day) => `${year}-${pad(month)}-${pad(day)}`;
