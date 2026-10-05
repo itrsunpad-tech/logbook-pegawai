@@ -846,36 +846,105 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return item;
     }
+function openDateModal(date) {
 
-    function openDateModal(date) {
-        selectedDate = date;
+    selectedDate = date;
 
-        const items = DATA[date] || [];
 
-        modalTitle.textContent = formatDate(date);
-        modalSub.textContent = items.length
-            ? `${items.length} logbook terisi`
+    const items =
+        DATA[date] || [];
+
+
+    modalTitle.textContent =
+        formatDate(date);
+
+
+    /*
+     * Kalau sudah ada logbook,
+     * tampilkan jumlah logbook yang
+     * sudah terisi.
+     */
+    modalSub.textContent =
+        items.length
+            ? `${items.length} jenis logbook terisi`
             : 'Belum ada logbook terisi';
 
-        modalList.innerHTML = '';
 
-        if (LIBUR[date]) {
-            modalList.append(modalItem('libur', `Libur: ${LIBUR[date]}`));
-        }
+    modalList.innerHTML =
+        '';
 
-        items.forEach((item) => {
-            modalList.append(modalItem(item.jenis, JENIS_LABEL[item.jenis] || item.jenis, item.detail));
-        });
 
-        if (!items.length && !LIBUR[date]) {
-            modalList.append(el('li', 'lb-modal-item lb-modal-empty', 'Belum ada aktivitas pada tanggal ini.'));
-        }
+    /*
+     * Tampilkan informasi libur.
+     */
+    if (LIBUR[date]) {
 
-        // Tombol tambah logbook hanya muncul untuk tanggal yang boleh diisi
-        modalTypes.classList.toggle('is-hidden', !(date <= HARI_INI && DIBUKA));
+        modalList.append(
+            modalItem(
+                'libur',
+                `Libur: ${LIBUR[date]}`
+            )
+        );
 
-        modal.classList.add('is-open');
     }
+
+
+    /*
+     * Tampilkan logbook yang sudah ada.
+     */
+    items.forEach(
+        item => {
+
+            modalList.append(
+                modalItem(
+                    item.jenis,
+                    JENIS_LABEL[item.jenis]
+                        || item.jenis,
+                    item.detail
+                )
+            );
+
+        }
+    );
+
+
+    /*
+     * Kalau belum ada logbook dan bukan
+     * tanggal libur, tampilkan pesan kosong.
+     */
+    if (
+        !items.length &&
+        !LIBUR[date]
+    ) {
+
+        modalList.append(
+            el(
+                'li',
+                'lb-modal-item lb-modal-empty',
+                'Belum ada aktivitas pada tanggal ini.'
+            )
+        );
+
+    }
+
+    const bolehTambah =
+        items.length === 0 &&
+        !LIBUR[date] &&
+        date <= HARI_INI &&
+        DIBUKA;
+
+
+    modalTypes.classList.toggle(
+        'is-hidden',
+        !bolehTambah
+    );
+
+
+    modal.classList.add(
+        'is-open'
+    );
+
+}
 
     const closeModal = () => modal.classList.remove('is-open');
 
