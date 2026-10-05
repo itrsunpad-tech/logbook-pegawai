@@ -1152,227 +1152,421 @@
         }
 
 
-        /* =====================================================
+/* =====================================================
    RIWAYATKU
 ===================================================== */
 
 .riwayat-card {
-    padding: 12px;
+    padding: 15px;
 }
 
+/* Mode Riwayat */
+
 .riwayat-mode {
-    margin-top: 8px;
+    margin-top: 12px;
+
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
+
+    grid-template-columns:
+        1fr
+        1fr;
+
+    gap: 8px;
 }
 
 .riwayat-mode-button {
-    min-height: 52px;
-    padding: 7px 8px;
+    min-height: 62px;
+
+    padding: 9px 11px;
+
     display: flex;
+
     align-items: center;
-    gap: 7px;
-    border: 1px solid var(--border-input);
-    border-radius: 8px;
-    background: var(--surface);
-    color: var(--muted);
+
+    gap: 10px;
+
+    border:
+        1px solid
+        var(--border-input);
+
+    border-radius: 9px;
+
+    background:
+        var(--surface);
+
+    color:
+        var(--muted);
+
     text-align: left;
-    transition: 0.15s ease;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
 }
 
 .riwayat-mode-button:hover {
-    border-color: var(--accent-soft-border);
-    background: var(--accent-soft);
+    background:
+        var(--accent-soft);
+
+    border-color:
+        var(--accent-soft-border);
 }
 
 .riwayat-mode-button.is-active {
-    border: 2px solid var(--accent);
-    background: var(--accent-soft);
-    color: var(--accent);
+    border:
+        2px solid
+        var(--accent-border);
+
+    background:
+        var(--accent-soft);
+
+    color:
+        var(--accent);
 }
 
 .riwayat-mode-icon {
-    width: 29px;
-    height: 29px;
-    flex: 0 0 29px;
+    width: 34px;
+
+    height: 34px;
+
+    flex: 0 0 34px;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
-    border-radius: 7px;
-    background: rgba(255, 255, 255, 0.7);
-    color: var(--accent);
-    font-size: 11px;
+
+    border-radius: 8px;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.75
+        );
+
+    color:
+        var(--accent);
+
+    font-size: 13px;
 }
 
 .riwayat-mode-content {
     min-width: 0;
+
     display: flex;
+
     flex-direction: column;
-    gap: 2px;
+
+    gap: 3px;
 }
 
 .riwayat-mode-content strong {
-    font-size: 9px;
+    color: inherit;
+
+    font-size: 12px;
+
     font-weight: 700;
+
+    line-height: 1.2;
 }
 
 .riwayat-mode-content small {
-    color: var(--muted-light);
-    font-size: 7px;
-    line-height: 1.3;
+    color:
+        var(--muted-light);
+
+    font-size: 9px;
+
+    line-height: 1.35;
 }
 
-/* FILTER */
+/* Filter Tanggal */
+
 .riwayat-filter {
-    margin-top: 9px;
+    margin-top: 12px;
+
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto 32px;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        auto
+        minmax(0, 1fr)
+        auto
+        38px;
+
     align-items: center;
-    gap: 5px;
+
+    gap: 7px;
 }
 
 .riwayat-filter .lb-input {
     width: 100%;
-    height: 34px;
-    padding: 7px 8px;
-    font-size: 9px;
+
+    height: 38px;
+
+    padding:
+        9px 10px;
+
+    font-size: 12px;
 }
 
 .riwayat-sampai {
-    color: var(--muted-light);
-    font-size: 8px;
+    color:
+        var(--muted);
+
+    font-size: 10px;
+
+    text-align: center;
 }
 
 .riwayat-view-button {
-    height: 34px;
-    padding: 0 10px;
+    height: 38px;
+
+    padding:
+        0 14px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 6px;
+
     border: 0;
-    border-radius: 7px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 9px;
+
+    border-radius: 9px;
+
+    background:
+        var(--accent);
+
+    color:
+        #ffffff;
+
+    font-size: 11px;
+
     font-weight: 700;
 }
 
 .riwayat-view-button:hover {
-    background: #1d4ed8;
+    background:
+        #1d4ed8;
 }
 
 .riwayat-reset-button {
-    width: 32px;
-    height: 34px;
-    border: 1px solid var(--border-input);
-    border-radius: 7px;
-    background: var(--surface);
-    color: var(--muted);
-    font-size: 9px;
+    width: 38px;
+
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border:
+        1px solid
+        var(--border-input);
+
+    border-radius: 9px;
+
+    background:
+        var(--surface);
+
+    color:
+        var(--muted);
+
+    font-size: 11px;
 }
 
 .riwayat-reset-button:hover {
-    background: var(--accent-soft);
-    color: var(--accent);
+    background:
+        var(--accent-soft);
+
+    color:
+        var(--accent);
 }
 
-/* HASIL */
+/* Hasil */
+
 .riwayat-result {
-    min-height: 135px;
-    margin-top: 10px;
+    min-height:
+        165px;
+
+    margin-top: 12px;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
 }
 
 .riwayat-empty {
     width: 100%;
+
     display: flex;
+
     flex-direction: column;
+
     align-items: center;
+
     justify-content: center;
-    gap: 8px;
-    color: var(--muted-light);
+
+    gap: 10px;
+
+    color:
+        var(--muted-light);
+
     text-align: center;
 }
 
 .riwayat-empty-icon {
-    width: 38px;
-    height: 38px;
+    width: 46px;
+
+    height: 46px;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
-    border-radius: 9px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    font-size: 18px;
+
+    border-radius: 10px;
+
+    background:
+        var(--accent-soft);
+
+    color:
+        var(--accent);
+
+    font-size: 20px;
 }
 
 .riwayat-empty p {
-    max-width: 360px;
-    font-size: 8px;
+    max-width:
+        420px;
+
+    color:
+        var(--muted-light);
+
+    font-size: 10px;
+
     line-height: 1.5;
 }
 
-/* HASIL LOGBOOK */
+/* Hasil Logbook */
+
 .riwayat-list {
     width: 100%;
+
     display: flex;
+
     flex-direction: column;
-    gap: 6px;
+
+    gap: 8px;
 }
 
 .riwayat-item {
-    padding: 9px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface);
+    padding:
+        11px 12px;
+
+    border:
+        1px solid
+        var(--border);
+
+    border-radius: 9px;
+
+    background:
+        var(--surface);
 }
 
 .riwayat-item-head {
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
-    gap: 8px;
+
+    gap: 10px;
 }
 
 .riwayat-item-date {
-    color: var(--text);
-    font-size: 9px;
+    color:
+        var(--text);
+
+    font-size: 11px;
+
     font-weight: 700;
 }
 
 .riwayat-item-type {
-    padding: 3px 6px;
-    border-radius: 999px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    font-size: 7px;
+    padding:
+        4px 7px;
+
+    border-radius:
+        999px;
+
+    background:
+        var(--accent-soft);
+
+    color:
+        var(--accent);
+
+    font-size: 9px;
+
     font-weight: 700;
 }
 
 .riwayat-item-detail {
-    margin-top: 6px;
-    color: var(--muted);
-    font-size: 8px;
-    line-height: 1.45;
+    margin-top: 7px;
+
+    color:
+        var(--muted);
+
+    font-size: 10px;
+
+    line-height: 1.5;
 }
 
-/* RESPONSIVE */
+.riwayat-item-shift {
+    margin-top: 5px;
+
+    color:
+        var(--muted-light);
+
+    font-size: 9px;
+}
+
+
+/* Responsive */
+
 @media (max-width: 600px) {
+
     .riwayat-mode {
         grid-template-columns: 1fr;
     }
 
     .riwayat-filter {
-        grid-template-columns: 1fr auto 1fr;
+        grid-template-columns:
+            1fr
+            auto
+            1fr;
     }
 
     .riwayat-view-button {
-        grid-column: 1 / 3;
+        grid-column:
+            1 / 3;
     }
 
     .riwayat-reset-button {
-        grid-column: 3;
-        grid-row: 2;
+        grid-column:
+            3;
+
+        grid-row:
+            2;
     }
 }
 
