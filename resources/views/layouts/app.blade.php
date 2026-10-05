@@ -167,8 +167,30 @@
         .brand-status-dot {
             width: 7px;
             height: 7px;
+            flex: 0 0 7px;
             border-radius: 50%;
             background: var(--green);
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .brand-status-dot.ping-good {
+            background: #22c55e;
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.12);
+        }
+
+        .brand-status-dot.ping-medium {
+            background: #f59e0b;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
+        }
+
+        .brand-status-dot.ping-bad {
+            background: #ef4444;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12);
+        }
+
+        .brand-status-dot.ping-offline {
+            background: #94a3b8;
+            box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.12);
         }
 
         /* Tanggal, jam, batas */
@@ -1607,8 +1629,14 @@
                     <span class="brand-name">Logbook System</span>
 
                     <span class="brand-status">
-                        <span class="brand-status-dot"></span>
-                        25ms
+                        <span
+                            id="network-status-dot"
+                            class="brand-status-dot ping-good"
+                        ></span>
+
+                        <span id="network-ping">
+                            --ms
+                        </span>
                     </span>
                 </span>
             </a>
@@ -1826,6 +1854,112 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateClock();
     setInterval(updateClock, 1000);
+
+
+    /* ---------------------------------
+       Ping jaringan ke server Laravel
+    ---------------------------------- */
+    const pingElement =
+        document.getElementById('network-ping');
+
+    const pingDot =
+        document.getElementById('network-status-dot');
+
+    async function updateNetworkPing() {
+
+        if (!pingElement || !pingDot) {
+            return;
+        }
+
+        const start =
+            performance.now();
+
+        try {
+
+            const response =
+                await fetch(
+                    '{{ route('ping') }}?_='
+                    + Date.now(),
+                    {
+                        method: 'GET',
+                        cache: 'no-store',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    }
+                );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Ping request failed.'
+                );
+            }
+
+            await response.json();
+
+            const ping =
+                Math.max(
+                    0,
+                    Math.round(
+                        performance.now() - start
+                    )
+                );
+
+            pingElement.textContent =
+                `${ping}ms`;
+
+            pingDot.classList.remove(
+                'ping-good',
+                'ping-medium',
+                'ping-bad',
+                'ping-offline'
+            );
+
+            if (ping <= 80) {
+
+                pingDot.classList.add(
+                    'ping-good'
+                );
+
+            } else if (ping <= 180) {
+
+                pingDot.classList.add(
+                    'ping-medium'
+                );
+
+            } else {
+
+                pingDot.classList.add(
+                    'ping-bad'
+                );
+
+            }
+
+        } catch (error) {
+
+            pingElement.textContent =
+                'Offline';
+
+            pingDot.classList.remove(
+                'ping-good',
+                'ping-medium',
+                'ping-bad'
+            );
+
+            pingDot.classList.add(
+                'ping-offline'
+            );
+        }
+    }
+
+
+    updateNetworkPing();
+
+    setInterval(
+        updateNetworkPing,
+        5000
+    );
 
 
     /* ---------------------------------

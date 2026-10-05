@@ -290,7 +290,7 @@
     <div class="lb-card riwayat-card">
 
         <h2 class="lb-card-title">
-            <i class="fa-solid fa-chart-column"></i>
+            <i class="fa-solid fa-clock-rotate-left"></i>
             Riwayat Logbook
         </h2>
 

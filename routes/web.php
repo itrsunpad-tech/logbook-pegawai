@@ -43,3 +43,11 @@ Route::middleware('auth')
         Route::post('/', [LogbookController::class, 'store'])
             ->name('store');
     });
+
+// Ping connection
+Route::get('/ping', function () {
+    return response()->json([
+        'ok' => true,
+        'time' => now()->timestamp,
+    ]);
+})->middleware('auth')->name('ping');
