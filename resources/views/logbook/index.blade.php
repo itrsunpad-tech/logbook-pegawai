@@ -281,191 +281,126 @@
     </section>
 
 
-   {{-- ===================== TAB RIWAYAT ===================== --}}
-<section
-    data-tab-panel="riwayat"
-    class="is-hidden"
->
+    {{-- ===================== TAB RIWAYAT ===================== --}}
+    <section data-tab-panel="riwayat" class="is-hidden">
 
-    <div class="lb-card riwayat-card">
+        <div class="lb-card riwayat-card">
 
-        <h2 class="lb-card-title">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-            Riwayat Logbook
-        </h2>
+            <h2 class="lb-card-title">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                Riwayat Logbook
+            </h2>
 
+            {{-- MODE RIWAYAT --}}
+            <div class="riwayat-mode">
 
-        {{-- MODE RIWAYAT --}}
-        <div class="riwayat-mode">
+                <button type="button" id="mode-lihat" class="riwayat-mode-button is-active">
+                    <span class="riwayat-mode-icon">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </span>
 
-            <button
-                type="button"
-                id="mode-lihat"
-                class="riwayat-mode-button is-active"
-            >
+                    <span class="riwayat-mode-content">
+                        <strong>Lihat Langsung</strong>
+                        <small>Pilih rentang tanggal. Lalu lihat di sini.</small>
+                    </span>
+                </button>
 
-                <span class="riwayat-mode-icon">
-                    <i class="fa-solid fa-calendar-days"></i>
-                </span>
+                <button type="button" id="mode-sheet" class="riwayat-mode-button">
+                    <span class="riwayat-mode-icon">
+                        <i class="fa-solid fa-table"></i>
+                    </span>
 
-                <span class="riwayat-mode-content">
+                    <span class="riwayat-mode-content">
+                        <strong>Rekap Sheet</strong>
+                        <small>Buka Google Sheets yang digunakan untuk rekap per pegawai.</small>
+                    </span>
+                </button>
 
-                    <strong>
-                        Lihat Langsung
-                    </strong>
+            </div>
 
-                    <small>
-                        Pilih rentang tanggal.
-                        Lalu lihat di sini.
-                    </small>
+            {{-- FILTER TANGGAL --}}
+            <div class="riwayat-filter">
 
-                </span>
+                <input type="date" id="riwayat-dari" class="lb-input">
 
-            </button>
+                <span class="riwayat-sampai">s/d</span>
 
+                <input type="date" id="riwayat-sampai" class="lb-input">
 
-            <button
-                type="button"
-                id="mode-sheet"
-                class="riwayat-mode-button"
-            >
+                <button type="button" id="btn-lihat-riwayat" class="riwayat-view-button">
+                    <i class="fa-solid fa-eye"></i>
+                    Lihat
+                </button>
 
-                <span class="riwayat-mode-icon">
-                    <i class="fa-solid fa-table"></i>
-                </span>
+                <button type="button" id="btn-reset-riwayat" class="riwayat-reset-button" title="Reset">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
 
-                <span class="riwayat-mode-content">
+            </div>
 
-                    <strong>
-                        Rekap Sheet
-                    </strong>
+            {{-- HASIL --}}
+            <div id="riwayat-result" class="riwayat-result">
+                <div class="riwayat-empty">
+                    <div class="riwayat-empty-icon">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </div>
 
-                    <small>
-                        Buka Google Sheets yang
-                        digunakan untuk rekap per pegawai.
-                    </small>
-
-                </span>
-
-            </button>
-
-        </div>
-
-
-        {{-- FILTER TANGGAL --}}
-        <div class="riwayat-filter">
-
-            <input
-                type="date"
-                id="riwayat-dari"
-                class="lb-input"
-            >
-
-
-            <span class="riwayat-sampai">
-                s/d
-            </span>
-
-
-            <input
-                type="date"
-                id="riwayat-sampai"
-                class="lb-input"
-            >
-
-
-            <button
-                type="button"
-                id="btn-lihat-riwayat"
-                class="riwayat-view-button"
-            >
-                <i class="fa-solid fa-eye"></i>
-                Lihat
-            </button>
-
-
-            <button
-                type="button"
-                id="btn-reset-riwayat"
-                class="riwayat-reset-button"
-                title="Reset"
-            >
-                <i class="fa-solid fa-rotate-left"></i>
-            </button>
-
-        </div>
-
-
-        {{-- HASIL --}}
-        <div
-            id="riwayat-result"
-            class="riwayat-result"
-        >
-
-            <div class="riwayat-empty">
-
-                <div class="riwayat-empty-icon">
-                    <i class="fa-solid fa-calendar-days"></i>
+                    <p>
+                        Pilih rentang tanggal (dari–sampai) lalu klik "Lihat".
+                        Data akan dimuat sekali untuk seluruh rentang.
+                    </p>
                 </div>
-
-                <p>
-                    Pilih rentang tanggal
-                    (dari–sampai) lalu klik
-                    "Lihat". Data akan dimuat
-                    sekali untuk seluruh rentang.
-                </p>
-
             </div>
 
         </div>
 
-    </div>
+    </section>
 
-</section>
 
     {{-- ===================== KALENDER ===================== --}}
     <div id="kalender-utama">
         <div class="lb-card">
-        <h2 class="lb-card-title">
-            <i class="fa-solid fa-calendar-days"></i>
-            Kalender Pengisian
-        </h2>
+            <h2 class="lb-card-title">
+                <i class="fa-solid fa-calendar-days"></i>
+                Kalender Pengisian
+            </h2>
 
-        <div class="lb-cal-nav">
-            <button id="kal-prev" type="button" class="lb-cal-btn" aria-label="Bulan sebelumnya">
-                <i class="fa-solid fa-chevron-left"></i>
-            </button>
+            <div class="lb-cal-nav">
+                <button id="kal-prev" type="button" class="lb-cal-btn" aria-label="Bulan sebelumnya">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
 
-            <span id="kal-judul" class="lb-cal-title"></span>
+                <span id="kal-judul" class="lb-cal-title"></span>
 
-            <button id="kal-next" type="button" class="lb-cal-btn" aria-label="Bulan berikutnya">
-                <i class="fa-solid fa-chevron-right"></i>
-            </button>
-        </div>
+                <button id="kal-next" type="button" class="lb-cal-btn" aria-label="Bulan berikutnya">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
 
-        <div class="lb-cal-head">
-            <span>Min</span>
-            <span>Sen</span>
-            <span>Sel</span>
-            <span>Rab</span>
-            <span>Kam</span>
-            <span>Jum</span>
-            <span>Sab</span>
-        </div>
+            <div class="lb-cal-head">
+                <span>Min</span>
+                <span>Sen</span>
+                <span>Sel</span>
+                <span>Rab</span>
+                <span>Kam</span>
+                <span>Jum</span>
+                <span>Sab</span>
+            </div>
 
-        <div id="kal-grid" class="lb-cal-grid"></div>
+            <div id="kal-grid" class="lb-cal-grid"></div>
 
-        <div class="lb-legend">
-            <span><i class="lb-dot lb-dot--harian"></i> Harian</span>
-            <span><i class="lb-dot lb-dot--lembur"></i> Lembur</span>
-            <span><i class="lb-dot lb-dot--oncall"></i> On Call</span>
-            <span><i class="lb-dot lb-dot--libur"></i> Libur Nasional</span>
-            <span><i class="lb-dot lb-dot--dll"></i> DLL</span>
-        </div>
+            <div class="lb-legend">
+                <span><i class="lb-dot lb-dot--harian"></i> Harian</span>
+                <span><i class="lb-dot lb-dot--lembur"></i> Lembur</span>
+                <span><i class="lb-dot lb-dot--oncall"></i> On Call</span>
+                <span><i class="lb-dot lb-dot--libur"></i> Libur Nasional</span>
+                <span><i class="lb-dot lb-dot--kosong"></i> Belum diisi</span>
+                <span><i class="lb-dot lb-dot--dll"></i> DLL</span>
+            </div>
 
-        <p class="lb-hint">
-            Hanya menampilkan 2 bulan terakhir. Ketuk tanggal buat lihat detail.
-        </p>
+            <p class="lb-hint">
+                Hanya menampilkan 2 bulan terakhir. Ketuk tanggal buat lihat detail.
+            </p>
         </div>
     </div>
 
@@ -545,6 +480,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const DIBUKA = readData('dibuka');
     const JENIS_LAMA = readData('jenisLama');
 
+    // Label & jenis yang dikenal (dipakai juga untuk kelas warna)
+    const JENIS_LABEL = {
+        harian: 'Logbook Harian',
+        lembur: 'Lembur',
+        oncall: 'On Call',
+    };
+
+    const safeJenis = (jenis) => (JENIS_LABEL[jenis] ? jenis : 'harian');
+
 
     /* =====================================================
        TAB
@@ -599,32 +543,32 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderRiwayat(tanggalDari, tanggalSampai) {
         const hasil = [];
 
-        Object.entries(DATA).forEach(([tanggal, items]) => {
-            if (tanggal < tanggalDari || tanggal > tanggalSampai) return;
+        Object.entries(DATA).forEach(([tgl, items]) => {
+            if (tgl < tanggalDari || tgl > tanggalSampai) return;
 
             (items || []).forEach((item) => {
-                hasil.push({ tanggal, item });
+                hasil.push({ tanggal: tgl, item });
             });
         });
 
         hasil.sort((a, b) => a.tanggal.localeCompare(b.tanggal));
 
         if (!hasil.length) {
-            renderRiwayatEmpty(
-                'Tidak ada logbook pada rentang tanggal yang dipilih.'
-            );
+            renderRiwayatEmpty('Tidak ada logbook pada rentang tanggal yang dipilih.');
             return;
         }
 
         const list = el('div', 'riwayat-list');
 
-        hasil.forEach(({ tanggal, item }) => {
-            const card = el('div', 'riwayat-item');
+        hasil.forEach(({ tanggal: tgl, item }) => {
+            const jenis = safeJenis(item.jenis);
+
+            const card = el('div', `riwayat-item riwayat-item--${jenis}`);
             const head = el('div', 'riwayat-item-head');
-            const date = el('span', 'riwayat-item-date', formatDate(tanggal));
+            const date = el('span', 'riwayat-item-date', formatDate(tgl));
             const type = el(
                 'span',
-                'riwayat-item-type',
+                `riwayat-item-type riwayat-item-type--${jenis}`,
                 JENIS_LABEL[item.jenis] || item.jenis || 'Logbook'
             );
 
@@ -647,16 +591,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const tanggalSampai = riwayatSampai?.value || '';
 
         if (!tanggalDari || !tanggalSampai) {
-            renderRiwayatEmpty(
-                'Pilih tanggal awal dan tanggal akhir terlebih dahulu.'
-            );
+            renderRiwayatEmpty('Pilih tanggal awal dan tanggal akhir terlebih dahulu.');
             return;
         }
 
         if (tanggalDari > tanggalSampai) {
-            renderRiwayatEmpty(
-                'Tanggal awal tidak boleh lebih besar dari tanggal akhir.'
-            );
+            renderRiwayatEmpty('Tanggal awal tidak boleh lebih besar dari tanggal akhir.');
             return;
         }
 
@@ -734,16 +674,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* =====================================================
-       LABEL JENIS LOGBOOK
-    ====================================================== */
-    const JENIS_LABEL = {
-        harian: 'Logbook Harian',
-        lembur: 'Lembur',
-        oncall: 'On Call',
-    };
-
-
-    /* =====================================================
        KALENDER
     ====================================================== */
 
@@ -790,14 +720,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let day = 1; day <= totalDays; day++) {
             const dateKey = dateKeyOf(y, m, day);
+            const items = DATA[dateKey] || [];
 
-            const button = el('button', 'lb-cal-day' + (dateKey === HARI_INI ? ' is-today' : ''));
+            // Hari kerja (Sen-Jum) yang sudah lewat, bukan libur nasional, dan belum ada logbook
+            const weekday = new Date(y, m - 1, day).getDay();
+            const isWeekday = weekday !== 0 && weekday !== 6;
+            const isMissing = isWeekday
+                && dateKey < HARI_INI
+                && !LIBUR[dateKey]
+                && items.length === 0;
+
+            const button = el(
+                'button',
+                'lb-cal-day'
+                    + (dateKey === HARI_INI ? ' is-today' : '')
+                    + (isMissing ? ' is-missing' : '')
+            );
             button.type = 'button';
             button.disabled = dateKey > HARI_INI;
+            if (isMissing) button.title = 'Belum diisi';
             button.append(el('span', '', day));
 
-            const types = new Set((DATA[dateKey] || []).map((item) => item.jenis));
+            const types = new Set(items.map((item) => item.jenis));
             if (LIBUR[dateKey]) types.add('libur');
+            if (isMissing) types.add('kosong');
 
             const dots = el('span', 'lb-dots');
             types.forEach((type) => dots.append(el('i', `lb-dot lb-dot--${type}`)));
@@ -846,105 +792,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return item;
     }
-function openDateModal(date) {
 
-    selectedDate = date;
+    function openDateModal(date) {
+        selectedDate = date;
 
+        const items = DATA[date] || [];
 
-    const items =
-        DATA[date] || [];
+        modalTitle.textContent = formatDate(date);
 
-
-    modalTitle.textContent =
-        formatDate(date);
-
-
-    /*
-     * Kalau sudah ada logbook,
-     * tampilkan jumlah logbook yang
-     * sudah terisi.
-     */
-    modalSub.textContent =
-        items.length
+        // Jumlah logbook yang sudah terisi pada tanggal ini
+        modalSub.textContent = items.length
             ? `${items.length} jenis logbook terisi`
             : 'Belum ada logbook terisi';
 
+        modalList.innerHTML = '';
 
-    modalList.innerHTML =
-        '';
+        // Informasi libur
+        if (LIBUR[date]) {
+            modalList.append(modalItem('libur', `Libur: ${LIBUR[date]}`));
+        }
 
-
-    /*
-     * Tampilkan informasi libur.
-     */
-    if (LIBUR[date]) {
-
-        modalList.append(
-            modalItem(
-                'libur',
-                `Libur: ${LIBUR[date]}`
-            )
-        );
-
-    }
-
-
-    /*
-     * Tampilkan logbook yang sudah ada.
-     */
-    items.forEach(
-        item => {
-
+        // Logbook yang sudah ada
+        items.forEach((item) => {
             modalList.append(
                 modalItem(
                     item.jenis,
-                    JENIS_LABEL[item.jenis]
-                        || item.jenis,
+                    JENIS_LABEL[item.jenis] || item.jenis,
                     item.detail
                 )
             );
+        });
 
+        // Belum ada logbook dan bukan tanggal libur
+        if (!items.length && !LIBUR[date]) {
+            modalList.append(
+                el('li', 'lb-modal-item lb-modal-empty', 'Belum ada aktivitas pada tanggal ini.')
+            );
         }
-    );
 
+        const bolehTambah =
+            items.length === 0 &&
+            !LIBUR[date] &&
+            date <= HARI_INI &&
+            DIBUKA;
 
-    /*
-     * Kalau belum ada logbook dan bukan
-     * tanggal libur, tampilkan pesan kosong.
-     */
-    if (
-        !items.length &&
-        !LIBUR[date]
-    ) {
+        modalTypes.classList.toggle('is-hidden', !bolehTambah);
 
-        modalList.append(
-            el(
-                'li',
-                'lb-modal-item lb-modal-empty',
-                'Belum ada aktivitas pada tanggal ini.'
-            )
-        );
-
+        modal.classList.add('is-open');
     }
-
-    const bolehTambah =
-        items.length === 0 &&
-        !LIBUR[date] &&
-        date <= HARI_INI &&
-        DIBUKA;
-
-
-    modalTypes.classList.toggle(
-        'is-hidden',
-        !bolehTambah
-    );
-
-
-    modal.classList.add(
-        'is-open'
-    );
-
-}
 
     const closeModal = () => modal.classList.remove('is-open');
 
