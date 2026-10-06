@@ -46,11 +46,6 @@
             --red: #dc2626;
         }
 
-        html,
-        body {
-            min-height: 100%;
-        }
-
         body {
             min-height: 100vh;
             background:
@@ -175,12 +170,12 @@
         }
 
         .brand-status-dot.ping-good {
-            background: #22c55e;
+            background: var(--green);
             box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.12);
         }
 
         .brand-status-dot.ping-medium {
-            background: #f59e0b;
+            background: var(--orange);
             box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
         }
 
@@ -368,7 +363,8 @@
 
 
         /* =====================================================
-           BATAS PENGISIAN (pill melayang, selalu merah)
+           BATAS PENGISIAN (pill melayang)
+           Netral -> kuning (3 jam terakhir) -> merah (terlewat)
         ====================================================== */
         .deadline-float {
             position: fixed;
@@ -381,19 +377,47 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            border: 1px solid #fecaca;
+            border: 1px solid var(--border);
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.96);
-            color: var(--red);
+            color: var(--text-dark);
             font-size: 11px;
             font-weight: 700;
             white-space: nowrap;
             box-shadow: 0 8px 22px rgba(15, 23, 42, 0.14);
             backdrop-filter: blur(8px);
+            transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
 
         .deadline-float i {
+            color: var(--muted-light);
             font-size: 11px;
+        }
+
+        .deadline-sisa {
+            padding-left: 8px;
+            border-left: 1px solid rgba(15, 23, 42, 0.15);
+        }
+
+        .deadline-float.is-warning {
+            border-color: #fde68a;
+            background: #fffbeb;
+            color: #b45309;
+        }
+
+        .deadline-float.is-warning i {
+            color: #d97706;
+        }
+
+        .deadline-float.is-closed {
+            border-color: #fecaca;
+            background: #fef2f2;
+            color: var(--red);
+            cursor: pointer;
+        }
+
+        .deadline-float.is-closed i {
+            color: var(--red);
         }
 
 
@@ -474,7 +498,6 @@
             color: var(--accent);
         }
 
-        /* Teks catatan kecil (pengganti inline style di index.blade.php) */
         .lb-note {
             margin-top: 6px;
             color: var(--muted-light);
@@ -502,13 +525,6 @@
             background: #fef2f2;
             border: 1px solid #fecaca;
             color: #991b1b;
-        }
-
-        .lb-empty {
-            margin-top: 12px;
-            color: var(--muted-light);
-            font-size: 11px;
-            text-align: center;
         }
 
 
@@ -752,10 +768,21 @@
         }
 
         .lb-cal-day.is-today {
-            border: 2px solid #3b82f6;
+            border: 2px solid var(--blue);
             background: #f5f9ff;
             color: var(--text);
             font-weight: 700;
+        }
+
+        /* Hari kerja yang belum diisi */
+        .lb-cal-day.is-missing {
+            border: 1px dashed #fca5a5;
+            background: #fff7f7;
+        }
+
+        .lb-cal-day.is-missing:hover:not(:disabled) {
+            border-color: #f87171;
+            background: #fee2e2;
         }
 
         .lb-dots {
@@ -779,6 +806,7 @@
         .lb-dot--lembur { background: var(--orange); }
         .lb-dot--oncall { background: var(--purple); }
         .lb-dot--libur  { background: var(--green); }
+        .lb-dot--kosong { background: #f87171; }
         .lb-dot--dll    { background: var(--gray); }
 
         .lb-legend {
@@ -808,7 +836,7 @@
 
 
         /* =====================================================
-           LOGBOOK: MODAL
+           LOGBOOK: MODAL TANGGAL
         ====================================================== */
         .lb-modal {
             position: fixed;
@@ -906,6 +934,176 @@
             background: var(--accent-soft);
             border-color: var(--accent-soft-border);
             color: var(--accent);
+        }
+
+
+        /* =====================================================
+           WARNA PER JENIS LOGBOOK (selaras dengan titik kalender)
+        ====================================================== */
+        .lb-type-button[data-jenis="harian"] i,
+        .lb-modal-type-button[data-open-jenis="harian"] i { color: var(--blue); }
+
+        .lb-type-button[data-jenis="lembur"] i,
+        .lb-modal-type-button[data-open-jenis="lembur"] i { color: var(--orange); }
+
+        .lb-type-button[data-jenis="oncall"] i,
+        .lb-modal-type-button[data-open-jenis="oncall"] i { color: var(--purple); }
+
+        .lb-type-button[data-jenis="lembur"]:hover,
+        .lb-type-button[data-jenis="lembur"].is-active {
+            background: #fffbeb;
+            border-color: #fcd34d;
+        }
+
+        .lb-type-button[data-jenis="lembur"].is-active { color: #b45309; }
+
+        .lb-type-button[data-jenis="oncall"]:hover,
+        .lb-type-button[data-jenis="oncall"].is-active {
+            background: #f5f3ff;
+            border-color: #c4b5fd;
+        }
+
+        .lb-type-button[data-jenis="oncall"].is-active { color: #6d28d9; }
+
+        .lb-form[data-jenis-panel="harian"] { border-top: 3px solid var(--blue); }
+        .lb-form[data-jenis-panel="lembur"] { border-top: 3px solid var(--orange); }
+        .lb-form[data-jenis-panel="oncall"] { border-top: 3px solid var(--purple); }
+
+        .lb-form[data-jenis-panel="lembur"] .lb-card-title i { color: var(--orange); }
+        .lb-form[data-jenis-panel="oncall"] .lb-card-title i { color: var(--purple); }
+
+        .lb-form[data-jenis-panel="lembur"] .lb-submit-button { background: #b45309; }
+        .lb-form[data-jenis-panel="oncall"] .lb-submit-button { background: #7c3aed; }
+
+
+        /* =====================================================
+           RIWAYATKU: TOMBOL FILTER & HASIL
+           (tata letak filter dan modal detail ada di logbook/index)
+        ====================================================== */
+        .riwayat-view-button {
+            height: 32px;
+            padding: 0 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            border: 0;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .riwayat-view-button:hover {
+            background: #1d4ed8;
+        }
+
+        .riwayat-reset-button {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-input);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        .riwayat-reset-button:hover {
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .riwayat-result {
+            min-height: 165px;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .riwayat-empty {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--muted-light);
+            text-align: center;
+        }
+
+        .riwayat-empty-icon {
+            width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 20px;
+        }
+
+        .riwayat-empty p {
+            max-width: 420px;
+            color: var(--muted-light);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .riwayat-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .riwayat-item {
+            padding: 11px 12px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: var(--surface);
+        }
+
+        .riwayat-item--harian { border-left: 3px solid var(--blue); }
+        .riwayat-item--lembur { border-left: 3px solid var(--orange); }
+        .riwayat-item--oncall { border-left: 3px solid var(--purple); }
+
+        .riwayat-item-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .riwayat-item-date {
+            color: var(--text);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .riwayat-item-type {
+            padding: 4px 7px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .riwayat-item-type--harian { background: #dbeafe; color: #1d4ed8; }
+        .riwayat-item-type--lembur { background: #fef3c7; color: #b45309; }
+        .riwayat-item-type--oncall { background: #ede9fe; color: #6d28d9; }
+
+        .riwayat-item-detail {
+            margin-top: 7px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
         }
 
 
@@ -1118,23 +1316,18 @@
                 height: 64px;
             }
 
-            .toast-container {
-                top: 72px;
-                right: 10px;
-            }
-
             .header-inner {
                 padding: 0 10px;
+            }
+
+            .brand {
+                gap: 10px;
             }
 
             .brand-logo {
                 width: 38px;
                 height: 38px;
                 flex-basis: 38px;
-            }
-
-            .brand {
-                gap: 10px;
             }
 
             .brand-name {
@@ -1167,13 +1360,23 @@
                 flex-basis: 32px;
             }
 
+            .toast-container {
+                top: 72px;
+                right: 10px;
+            }
+
             .app-content {
                 padding: 12px 8px 84px;
             }
 
             .deadline-float {
+                max-width: calc(100% - 16px);
                 padding: 8px 14px;
+                justify-content: center;
+                border-radius: 16px;
                 font-size: 10px;
+                text-align: center;
+                white-space: normal;
             }
 
             .lb-page {
@@ -1193,321 +1396,11 @@
                 min-height: 52px;
                 font-size: 12px;
             }
-        }
 
-
-        /* =====================================================
-           RIWAYATKU
-        ====================================================== */
-        .riwayat-card {
-            padding: 15px;
-        }
-
-        /* Mode Riwayat */
-        .riwayat-mode {
-            margin-top: 12px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .riwayat-mode-button {
-            min-height: 62px;
-            padding: 9px 11px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border: 1px solid var(--border-input);
-            border-radius: 9px;
-            background: var(--surface);
-            color: var(--muted);
-            text-align: left;
-            transition: background 0.15s ease, border-color 0.15s ease;
-        }
-
-        .riwayat-mode-button:hover {
-            background: var(--accent-soft);
-            border-color: var(--accent-soft-border);
-        }
-
-        .riwayat-mode-button.is-active {
-            border: 2px solid var(--accent-border);
-            background: var(--accent-soft);
-            color: var(--accent);
-        }
-
-        .riwayat-mode-icon {
-            width: 34px;
-            height: 34px;
-            flex: 0 0 34px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.75);
-            color: var(--accent);
-            font-size: 13px;
-        }
-
-        .riwayat-mode-content {
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .riwayat-mode-content strong {
-            color: inherit;
-            font-size: 12px;
-            font-weight: 700;
-            line-height: 1.2;
-        }
-
-        .riwayat-mode-content small {
-            color: var(--muted-light);
-            font-size: 11px;
-            line-height: 1.35;
-        }
-
-        /* Filter Tanggal */
-        .riwayat-filter {
-            margin-top: 12px;
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto 38px;
-            align-items: center;
-            gap: 7px;
-        }
-
-        .riwayat-filter .lb-input {
-            width: 100%;
-            height: 38px;
-            padding: 9px 10px;
-            font-size: 12px;
-        }
-
-        .riwayat-sampai {
-            color: var(--muted);
-            font-size: 11px;
-            text-align: center;
-        }
-
-        .riwayat-view-button {
-            height: 38px;
-            padding: 0 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            border: 0;
-            border-radius: 9px;
-            background: var(--accent);
-            color: #ffffff;
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        .riwayat-view-button:hover {
-            background: #1d4ed8;
-        }
-
-        .riwayat-reset-button {
-            width: 38px;
-            height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--border-input);
-            border-radius: 9px;
-            background: var(--surface);
-            color: var(--muted);
-            font-size: 11px;
-        }
-
-        .riwayat-reset-button:hover {
-            background: var(--accent-soft);
-            color: var(--accent);
-        }
-
-        /* Hasil */
-        .riwayat-result {
-            min-height: 165px;
-            margin-top: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .riwayat-empty {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            color: var(--muted-light);
-            text-align: center;
-        }
-
-        .riwayat-empty-icon {
-            width: 46px;
-            height: 46px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            background: var(--accent-soft);
-            color: var(--accent);
-            font-size: 20px;
-        }
-
-        .riwayat-empty p {
-            max-width: 420px;
-            color: var(--muted-light);
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        /* Hasil Logbook */
-        .riwayat-list {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .riwayat-item {
-            padding: 11px 12px;
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            background: var(--surface);
-        }
-
-        .riwayat-item-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .riwayat-item-date {
-            color: var(--text);
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        .riwayat-item-type {
-            padding: 4px 7px;
-            border-radius: 999px;
-            background: var(--accent-soft);
-            color: var(--accent);
-            font-size: 10px;
-            font-weight: 700;
-        }
-
-        .riwayat-item-detail {
-            margin-top: 7px;
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .riwayat-item-shift {
-            margin-top: 5px;
-            color: var(--muted-light);
-            font-size: 11px;
-        }
-
-        /* Responsive */
-        @media (max-width: 600px) {
-            .riwayat-mode {
-                grid-template-columns: 1fr;
-            }
-
-            .riwayat-filter {
-                grid-template-columns: 1fr auto 1fr;
-            }
-
-            .riwayat-view-button {
-                grid-column: 1 / 3;
-            }
-
-            .riwayat-reset-button {
-                grid-column: 3;
-                grid-row: 2;
-            }
-        }
-
-        /* =====================================================
-           WARNA PER JENIS LOGBOOK (selaras dengan titik kalender)
-        ====================================================== */
-        .lb-type-button[data-jenis="harian"] i,
-        .lb-modal-type-button[data-open-jenis="harian"] i { color: var(--blue); }
-
-        .lb-type-button[data-jenis="lembur"] i,
-        .lb-modal-type-button[data-open-jenis="lembur"] i { color: var(--orange); }
-
-        .lb-type-button[data-jenis="oncall"] i,
-        .lb-modal-type-button[data-open-jenis="oncall"] i { color: var(--purple); }
-
-        .lb-type-button[data-jenis="lembur"]:hover,
-        .lb-type-button[data-jenis="lembur"].is-active {
-            background: #fffbeb;
-            border-color: #fcd34d;
-        }
-
-        .lb-type-button[data-jenis="lembur"].is-active { color: #b45309; }
-
-        .lb-type-button[data-jenis="oncall"]:hover,
-        .lb-type-button[data-jenis="oncall"].is-active {
-            background: #f5f3ff;
-            border-color: #c4b5fd;
-        }
-
-        .lb-type-button[data-jenis="oncall"].is-active { color: #6d28d9; }
-
-        .lb-form[data-jenis-panel="harian"] { border-top: 3px solid var(--blue); }
-        .lb-form[data-jenis-panel="lembur"] { border-top: 3px solid var(--orange); }
-        .lb-form[data-jenis-panel="oncall"] { border-top: 3px solid var(--purple); }
-
-        .lb-form[data-jenis-panel="lembur"] .lb-card-title i { color: var(--orange); }
-        .lb-form[data-jenis-panel="oncall"] .lb-card-title i { color: var(--purple); }
-
-        .lb-form[data-jenis-panel="lembur"] .lb-submit-button { background: #b45309; }
-        .lb-form[data-jenis-panel="oncall"] .lb-submit-button { background: #7c3aed; }
-
-        .riwayat-item--harian { border-left: 3px solid var(--blue); }
-        .riwayat-item--lembur { border-left: 3px solid var(--orange); }
-        .riwayat-item--oncall { border-left: 3px solid var(--purple); }
-
-        .riwayat-item-type--harian { background: #dbeafe; color: #1d4ed8; }
-        .riwayat-item-type--lembur { background: #fef3c7; color: #b45309; }
-        .riwayat-item-type--oncall { background: #ede9fe; color: #6d28d9; }
-
-
-        /* =====================================================
-           KALENDER: HARI KERJA YANG BELUM DIISI
-        ====================================================== */
-        .lb-cal-day.is-missing {
-            border: 1px dashed #fca5a5;
-            background: #fff7f7;
-        }
-
-        .lb-cal-day.is-missing:hover:not(:disabled) {
-            border-color: #f87171;
-            background: #fee2e2;
-        }
-
-        .lb-dot--kosong { background: #f87171; }
-
-
-        /* =====================================================
-           MOBILE: input 16px supaya iPhone tidak zoom otomatis
-        ====================================================== */
-        @media (max-width: 700px) {
+            /* input 16px supaya iPhone tidak zoom otomatis */
             .lb-input,
             .lb-select,
-            .lb-textarea,
-            .riwayat-filter .lb-input {
+            .lb-textarea {
                 font-size: 16px;
             }
         }
@@ -1548,14 +1441,8 @@
                     <span class="brand-name">Logbook System</span>
 
                     <span class="brand-status">
-                        <span
-                            id="network-status-dot"
-                            class="brand-status-dot ping-good"
-                        ></span>
-
-                        <span id="network-ping">
-                            --ms
-                        </span>
+                        <span id="network-status-dot" class="brand-status-dot ping-good"></span>
+                        <span id="network-ping">--ms</span>
                     </span>
                 </span>
             </a>
@@ -1669,9 +1556,15 @@
 
 
     {{-- ===================== BATAS PENGISIAN (MELAYANG) ===================== --}}
-    <div class="deadline-float" role="status">
+    <div
+        id="deadline-float"
+        class="deadline-float"
+        role="status"
+        data-batas="{{ $batas->toIso8601String() }}"
+    >
         <i class="fa-solid fa-lock"></i>
         <span>Batas: {{ $batas->format('d/m/Y \p\u\k\u\l H:i') }} WIB</span>
+        <span id="deadline-sisa" class="deadline-sisa is-hidden"></span>
     </div>
 
 </div>
@@ -1681,7 +1574,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     /* ---------------------------------
-       Dropdown profil
+       Dropdown profil & konfirmasi logout
     ---------------------------------- */
     const profileButton = document.getElementById('profile-button');
     const profileMenu = document.getElementById('profile-menu');
@@ -1699,13 +1592,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         profileMenu.addEventListener('click', (event) => event.stopPropagation());
-
         document.addEventListener('click', () => setMenu(false));
 
-
-        /* ---------------------------------
-           Konfirmasi logout (modal sendiri)
-        ---------------------------------- */
         const logoutForm = document.getElementById('logout-form');
         const logoutButton = document.getElementById('logout-button');
         const confirmModal = document.getElementById('confirm-modal');
@@ -1760,6 +1648,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const now = new Date();
 
         if (dateElement) dateElement.textContent = dateFormat.format(now);
+
         if (timeElement) {
             const parts = timeFormat.formatToParts(now);
             const get = (type) => parts.find((part) => part.type === type)?.value ?? '';
@@ -1782,70 +1671,85 @@ document.addEventListener('DOMContentLoaded', () => {
     ---------------------------------- */
     const pingElement = document.getElementById('network-ping');
     const pingDot = document.getElementById('network-status-dot');
+    const PING_STATES = ['ping-good', 'ping-medium', 'ping-bad', 'ping-offline'];
+
+    function setPing(label, state) {
+        pingElement.textContent = label;
+        pingDot.classList.remove(...PING_STATES);
+        pingDot.classList.add(state);
+    }
 
     async function updateNetworkPing() {
-
-        if (!pingElement || !pingDot) {
-            return;
-        }
+        if (!pingElement || !pingDot) return;
 
         const start = performance.now();
 
         try {
+            const response = await fetch('{{ route('ping') }}?_=' + Date.now(), {
+                method: 'GET',
+                cache: 'no-store',
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' },
+            });
 
-            const response = await fetch(
-                '{{ route('ping') }}?_=' + Date.now(),
-                {
-                    method: 'GET',
-                    cache: 'no-store',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error('Ping request failed.');
-            }
+            if (!response.ok) throw new Error('Ping request failed.');
 
             await response.json();
 
             const ping = Math.max(0, Math.round(performance.now() - start));
+            const state = ping <= 80 ? 'ping-good' : (ping <= 180 ? 'ping-medium' : 'ping-bad');
 
-            pingElement.textContent = `${ping}ms`;
-
-            pingDot.classList.remove(
-                'ping-good',
-                'ping-medium',
-                'ping-bad',
-                'ping-offline'
-            );
-
-            if (ping <= 80) {
-                pingDot.classList.add('ping-good');
-            } else if (ping <= 180) {
-                pingDot.classList.add('ping-medium');
-            } else {
-                pingDot.classList.add('ping-bad');
-            }
-
+            setPing(`${ping}ms`, state);
         } catch (error) {
-
-            pingElement.textContent = 'Offline';
-
-            pingDot.classList.remove(
-                'ping-good',
-                'ping-medium',
-                'ping-bad'
-            );
-
-            pingDot.classList.add('ping-offline');
+            setPing('Offline', 'ping-offline');
         }
     }
 
     updateNetworkPing();
     setInterval(updateNetworkPing, 5000);
+
+
+    /* ---------------------------------
+       Warna batas pengisian sesuai sisa waktu
+       (netral -> kuning 3 jam terakhir -> merah terlewat)
+    ---------------------------------- */
+    const deadline = document.getElementById('deadline-float');
+    const deadlineSisa = document.getElementById('deadline-sisa');
+
+    if (deadline && deadlineSisa) {
+        const batas = new Date(deadline.dataset.batas).getTime();
+        const AMBANG_MS = 3 * 60 * 60 * 1000; // 3 jam
+
+        const updateDeadline = () => {
+            const sisa = batas - Date.now();
+            const hampir = sisa > 0 && sisa <= AMBANG_MS;
+            const lewat = sisa <= 0;
+
+            deadline.classList.toggle('is-warning', hampir);
+            deadline.classList.toggle('is-closed', lewat);
+            deadlineSisa.classList.toggle('is-hidden', !hampir && !lewat);
+
+            if (lewat) {
+                deadlineSisa.textContent = 'Batas terlewat · ketuk untuk muat ulang';
+            } else if (hampir) {
+                const menitTotal = Math.floor(sisa / 60000);
+                const jam = Math.floor(menitTotal / 60);
+                const menit = menitTotal % 60;
+
+                deadlineSisa.textContent = jam > 0
+                    ? `Sisa ${jam} j ${menit} m`
+                    : `Sisa ${menit} menit`;
+            }
+        };
+
+        // Setelah ganti hari, ketuk pill untuk memuat batas hari baru
+        deadline.addEventListener('click', () => {
+            if (deadline.classList.contains('is-closed')) window.location.reload();
+        });
+
+        updateDeadline();
+        setInterval(updateDeadline, 30000);
+    }
 
 
     /* ---------------------------------

@@ -50,22 +50,36 @@ class LogbookController extends Controller
             ->orderBy('tanggal')
             ->get();
 
-        // Format: ['2026-10-02' => [['jenis' => 'harian', 'detail' => 'Shift: Pagi'], ...]]
+        // Format: ['2026-10-02' => [['jenis' => 'harian', 'detail' => 'Shift: Pagi', ...], ...]]
         $kalender = $logbookKalender
             ->groupBy(fn ($item) => $item->tanggal->format('Y-m-d'))
             ->map(fn ($items) => $items->map(function ($item) {
                 $shift = $item->shift ? 'Shift: ' . $item->shift->nama : null;
 
-                $jam = ($item->jam_mulai && $item->jam_selesai)
-                    ? substr($item->jam_mulai, 0, 5) . ' - ' . substr($item->jam_selesai, 0, 5)
-                    : null;
+                 $jam = ($item->jam_mulai && $item->jam_selesai)
+                ? substr($item->jam_mulai, 0, 5) . ' - ' . substr($item->jam_selesai, 0, 5)
+                : null;
 
-                return [
-                    'jenis' => $item->jenis,
-                    'detail' => collect([$shift, $jam])->filter()->implode(' | ') ?: null,
-                ];
-            })->values()->all())
-            ->all();
+            $data = [
+                'jenis'     => $item->jenis,
+                'detail'    => collect([$shift, $jam])->filter()->implode(' | ') ?: null,
+                'jam_kerja' => $item->shift?->nama ?? $jam,   // harian: nama shift, lembur/on call: rentang jam
+                'kegiatan'  => $item->ringkasan,
+                'is_wfh'    => (bool) $item->is_wfh,
+            ];
+
+            // Opsional: hanya dikirim kalau kolomnya memang ada di tabel logbooks
+            $atribut = $item->getAttributes();
+
+            foreach (['status', 'keterangan_hc'] as $kolom) {
+                if (array_key_exists($kolom, $atribut)) {
+                    $data[$kolom] = $atribut[$kolom];
+                }
+            }
+
+            return $data;
+        })->values()->all())
+        ->all();
 
         // Libur nasional: ['2026-08-17' => 'Hari Kemerdekaan RI']
         $libur = Holiday::query()

@@ -4,6 +4,310 @@
 
 @section('content')
 
+@push('styles')
+<style>
+    /* =====================================================
+       RIWAYATKU: FILTER TANGGAL (tanpa Rekap Sheet)
+    ====================================================== */
+    /* Desktop: Dari | Sampai | [Lihat] [Reset] dalam satu baris */
+    .rw-filter {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+        align-items: end;
+        gap: 12px;
+    }
+
+    .rw-filter .lb-input {
+        height: 38px;
+    }
+
+    .rw-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .rw-actions .riwayat-view-button {
+        flex: 0 0 auto;
+    }
+
+    /* Layar sempit: dua tanggal berdampingan, tombol di baris bawah */
+    @media (max-width: 560px) {
+        .rw-filter {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .rw-actions {
+            grid-column: 1 / -1;
+        }
+
+        .rw-actions .riwayat-view-button {
+            flex: 1;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .rw-filter {
+            grid-template-columns: 1fr;
+        }
+    }
+
+
+    /* =====================================================
+       RIWAYATKU: BARIS DETAIL + TOMBOL DETAIL
+    ====================================================== */
+    .rw-item-row {
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .rw-item-row .riwayat-item-detail {
+        margin-top: 0;
+        min-width: 0;
+    }
+
+    .rw-detail-btn {
+        height: 30px;
+        padding: 0 11px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--accent-soft-border);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 700;
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .rw-detail-btn:hover {
+        background: var(--accent-soft);
+        border-color: var(--accent-border);
+    }
+
+
+    /* =====================================================
+       MODAL DETAIL LOGBOOK
+    ====================================================== */
+    .rw-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 250; /* di atas modal kalender (200), di bawah toast (300) */
+        padding: 16px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(2px);
+    }
+
+    .rw-modal.is-open {
+        display: flex;
+    }
+
+    .rw-box {
+        width: 100%;
+        max-width: 540px;
+        max-height: calc(100vh - 32px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+        animation: rw-in 0.18s ease;
+    }
+
+    @keyframes rw-in {
+        from { opacity: 0; transform: scale(0.97) translateY(6px); }
+        to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .rw-head {
+        padding: 16px 18px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .rw-title {
+        color: var(--text-dark);
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .rw-sub {
+        margin-top: 3px;
+        color: var(--muted-light);
+        font-size: 12px;
+    }
+
+    .rw-close {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    .rw-close:hover {
+        background: #f1f5f9;
+    }
+
+    .rw-body {
+        padding: 16px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow-y: auto;
+    }
+
+    /* Ringkasan: jenis, jam kerja, status */
+    .rw-meta {
+        padding: 12px 14px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface);
+    }
+
+    .rw-meta-item {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .rw-meta-label,
+    .rw-section-title {
+        color: var(--muted-light);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.45px;
+        text-transform: uppercase;
+    }
+
+    .rw-meta-value {
+        color: var(--text-dark);
+        font-size: 12.5px;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .rw-status {
+        padding: 4px 9px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .rw-status--ok   { background: #dcfce7; color: #15803d; }
+    .rw-status--no   { background: #fee2e2; color: #b91c1c; }
+    .rw-status--wait { background: #fef3c7; color: #b45309; }
+
+    /* Bagian isi */
+    .rw-section {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .rw-section-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .rw-section-title i {
+        color: var(--accent);
+    }
+
+    .rw-text {
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--text);
+        font-size: 13px;
+        line-height: 1.65;
+        overflow-wrap: anywhere;
+    }
+
+    .rw-text p + p,
+    .rw-text ul + p,
+    .rw-text p + ul {
+        margin-top: 8px;
+    }
+
+    .rw-text ul {
+        padding-left: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .rw-text ul li::marker {
+        color: var(--accent);
+    }
+
+    .rw-text--muted {
+        background: var(--surface);
+        color: var(--muted-light);
+    }
+
+    .rw-foot {
+        padding: 12px 18px;
+        display: flex;
+        justify-content: flex-end;
+        border-top: 1px solid var(--border);
+    }
+
+    .rw-foot-btn {
+        height: 36px;
+        padding: 0 18px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        background: #fff;
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .rw-foot-btn:hover {
+        background: var(--surface);
+    }
+
+    @media (max-width: 700px) {
+        .rw-modal {
+            padding: 10px;
+            align-items: flex-end;
+        }
+
+        .rw-box {
+            max-height: calc(100vh - 20px);
+            border-radius: 16px 16px 12px 12px;
+        }
+    }
+</style>
+@endpush
+
 @php
     // Jenis form yang terakhir dikirim (dipakai untuk membuka kembali form saat validasi gagal)
     $jenisLama = old('jenis');
@@ -291,50 +595,29 @@
                 Riwayat Logbook
             </h2>
 
-            {{-- MODE RIWAYAT --}}
-            <div class="riwayat-mode">
-
-                <button type="button" id="mode-lihat" class="riwayat-mode-button is-active">
-                    <span class="riwayat-mode-icon">
-                        <i class="fa-solid fa-calendar-days"></i>
-                    </span>
-
-                    <span class="riwayat-mode-content">
-                        <strong>Lihat Langsung</strong>
-                        <small>Pilih rentang tanggal. Lalu lihat di sini.</small>
-                    </span>
-                </button>
-
-                <button type="button" id="mode-sheet" class="riwayat-mode-button">
-                    <span class="riwayat-mode-icon">
-                        <i class="fa-solid fa-table"></i>
-                    </span>
-
-                    <span class="riwayat-mode-content">
-                        <strong>Rekap Sheet</strong>
-                        <small>Buka Google Sheets yang digunakan untuk rekap per pegawai.</small>
-                    </span>
-                </button>
-
-            </div>
-
             {{-- FILTER TANGGAL --}}
-            <div class="riwayat-filter">
+            <div class="rw-filter">
 
-                <input type="date" id="riwayat-dari" class="lb-input">
+                <div class="rw-field">
+                    <label for="riwayat-dari" class="lb-label">Dari Tanggal</label>
+                    <input type="date" id="riwayat-dari" class="lb-input">
+                </div>
 
-                <span class="riwayat-sampai">s/d</span>
+                <div class="rw-field">
+                    <label for="riwayat-sampai" class="lb-label">Sampai Tanggal</label>
+                    <input type="date" id="riwayat-sampai" class="lb-input">
+                </div>
 
-                <input type="date" id="riwayat-sampai" class="lb-input">
+                <div class="rw-actions">
+                    <button type="button" id="btn-lihat-riwayat" class="riwayat-view-button">
+                        <i class="fa-solid fa-eye"></i>
+                        Lihat
+                    </button>
 
-                <button type="button" id="btn-lihat-riwayat" class="riwayat-view-button">
-                    <i class="fa-solid fa-eye"></i>
-                    Lihat
-                </button>
-
-                <button type="button" id="btn-reset-riwayat" class="riwayat-reset-button" title="Reset">
-                    <i class="fa-solid fa-rotate-left"></i>
-                </button>
+                    <button type="button" id="btn-reset-riwayat" class="riwayat-reset-button" title="Reset">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
 
             </div>
 
@@ -407,7 +690,7 @@
 </div>
 
 
-{{-- ===================== MODAL DETAIL TANGGAL ===================== --}}
+{{-- ===================== MODAL DETAIL TANGGAL (KALENDER) ===================== --}}
 <div id="kal-modal" class="lb-modal" role="dialog" aria-modal="true">
     <div class="lb-modal-box">
 
@@ -437,6 +720,70 @@
                 <i class="fa-solid fa-phone"></i>
                 On Call
             </button>
+        </div>
+
+    </div>
+</div>
+
+
+{{-- ===================== MODAL DETAIL LOGBOOK (RIWAYATKU) ===================== --}}
+<div
+    id="rw-modal"
+    class="rw-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="rw-modal-judul"
+>
+    <div class="rw-box">
+
+        <div class="rw-head">
+            <div>
+                <h3 id="rw-modal-judul" class="rw-title">Detail Logbook</h3>
+                <p id="rw-modal-sub" class="rw-sub"></p>
+            </div>
+
+            <button type="button" id="rw-modal-tutup" class="rw-close" aria-label="Tutup">&times;</button>
+        </div>
+
+        <div class="rw-body">
+
+            <div class="rw-meta">
+                <div class="rw-meta-item">
+                    <span class="rw-meta-label">Jenis</span>
+                    <span id="rw-meta-jenis"></span>
+                </div>
+
+                <div class="rw-meta-item">
+                    <span class="rw-meta-label">Jam Kerja</span>
+                    <span id="rw-meta-jam" class="rw-meta-value"></span>
+                </div>
+
+                <div id="rw-meta-status-wrap" class="rw-meta-item">
+                    <span class="rw-meta-label">Status</span>
+                    <span id="rw-meta-status"></span>
+                </div>
+            </div>
+
+            <div class="rw-section">
+                <h4 class="rw-section-title">
+                    <i class="fa-solid fa-list-check"></i>
+                    Kegiatan
+                </h4>
+                <div id="rw-kegiatan" class="rw-text"></div>
+            </div>
+
+            <div id="rw-keterangan-wrap" class="rw-section">
+                <h4 class="rw-section-title">
+                    <i class="fa-solid fa-comment-dots"></i>
+                    Keterangan HC
+                </h4>
+                <div id="rw-keterangan" class="rw-text"></div>
+            </div>
+
+        </div>
+
+        <div class="rw-foot">
+            <button type="button" id="rw-modal-selesai" class="rw-foot-btn">Tutup</button>
         </div>
 
     </div>
@@ -575,9 +922,21 @@ document.addEventListener('DOMContentLoaded', () => {
             head.append(date, type);
             card.append(head);
 
-            if (item.detail) {
-                card.append(el('div', 'riwayat-item-detail', item.detail));
-            }
+            // Baris bawah: ringkasan singkat + tombol Detail
+            const row = el('div', 'rw-item-row');
+            row.append(el('div', 'riwayat-item-detail', item.detail || ''));
+
+            const detailButton = el('button', 'rw-detail-btn');
+            detailButton.type = 'button';
+
+            const detailIcon = document.createElement('i');
+            detailIcon.className = 'fa-solid fa-file-lines';
+            detailButton.append(detailIcon, document.createTextNode(' Detail'));
+
+            detailButton.addEventListener('click', () => openRiwayatModal(tgl, item));
+
+            row.append(detailButton);
+            card.append(row);
 
             list.append(card);
         });
@@ -613,6 +972,147 @@ document.addEventListener('DOMContentLoaded', () => {
         );
 
         kalenderUtama?.classList.add('is-hidden');
+    });
+
+
+    /* =====================================================
+       MODAL DETAIL LOGBOOK (tombol "Detail" di Riwayatku)
+       Field yang dibaca dari tiap item:
+       jenis, detail, jam_kerja, kegiatan, status, keterangan_hc
+    ====================================================== */
+    const rwModal = qs('#rw-modal');
+    const rwSub = qs('#rw-modal-sub');
+    const rwJenis = qs('#rw-meta-jenis');
+    const rwJam = qs('#rw-meta-jam');
+    const rwStatus = qs('#rw-meta-status');
+    const rwKegiatan = qs('#rw-kegiatan');
+    const rwKeterangan = qs('#rw-keterangan');
+
+    // Badge status berwarna (Diterima / Ditolak / Menunggu)
+    function renderStatus(status) {
+        rwStatus.innerHTML = '';
+
+        const text = String(status || '').trim();
+
+        if (!text) {
+            rwStatus.append(el('span', 'rw-meta-value', '-'));
+            return;
+        }
+
+        const lower = text.toLowerCase();
+        let variant = '';
+        let icon = '';
+
+        if (/terima|setuju|approve|acc/.test(lower)) {
+            variant = 'rw-status--ok';
+            icon = 'fa-circle-check';
+        } else if (/tolak|reject|revisi/.test(lower)) {
+            variant = 'rw-status--no';
+            icon = 'fa-circle-xmark';
+        } else if (/tunggu|pending|proses|review/.test(lower)) {
+            variant = 'rw-status--wait';
+            icon = 'fa-clock';
+        }
+
+        if (!variant) {
+            rwStatus.append(el('span', 'rw-meta-value', text));
+            return;
+        }
+
+        const badge = el('span', `rw-status ${variant}`);
+        const iconElement = document.createElement('i');
+        iconElement.className = `fa-solid ${icon}`;
+        badge.append(iconElement, document.createTextNode(' ' + text));
+        rwStatus.append(badge);
+    }
+
+    // Uraian kegiatan: baris berawalan "-" menjadi poin, baris lain menjadi paragraf
+    function renderKegiatan(container, text, emptyMessage) {
+        container.innerHTML = '';
+        container.classList.remove('rw-text--muted');
+
+        const lines = String(text || '')
+            .split(/\r?\n/)
+            .map((line) => line.trim())
+            .filter(Boolean);
+
+        if (!lines.length) {
+            container.classList.add('rw-text--muted');
+            container.textContent = emptyMessage;
+            return;
+        }
+
+        let bullets = null;
+
+        lines.forEach((line) => {
+            const match = line.match(/^[-•*]\s+(.*)$/);
+
+            if (match) {
+                if (!bullets) {
+                    bullets = el('ul');
+                    container.append(bullets);
+                }
+
+                bullets.append(el('li', '', match[1]));
+            } else {
+                bullets = null;
+                container.append(el('p', '', line));
+            }
+        });
+    }
+
+    function openRiwayatModal(tgl, item) {
+        const jenis = safeJenis(item.jenis);
+
+        rwSub.textContent = formatDate(tgl);
+
+        rwJenis.innerHTML = '';
+        rwJenis.append(
+            el(
+                'span',
+                `riwayat-item-type riwayat-item-type--${jenis}`,
+                JENIS_LABEL[item.jenis] || item.jenis || 'Logbook'
+            )
+        );
+
+        const jamKerja = item.jam_kerja
+            || (item.jam_mulai && item.jam_selesai ? `${item.jam_mulai} – ${item.jam_selesai}` : '')
+            || item.shift
+            || '-';
+
+        rwJam.textContent = jamKerja + (item.is_wfh ? ' · WFH' : '');
+
+        // Status & Keterangan HC selalu tampil. Selama dashboard admin belum
+        // mengisi, status dianggap "Menunggu" dan keterangan memakai teks kosong.
+        renderStatus(item.status || 'Menunggu');
+
+        renderKegiatan(
+            rwKegiatan,
+            item.kegiatan || item.ringkasan || '',
+            'Tidak ada uraian kegiatan.'
+        );
+
+        renderKegiatan(
+            rwKeterangan,
+            item.keterangan_hc || '',
+            'Belum ada keterangan dari HC.'
+        );
+
+        rwModal.classList.add('is-open');
+        rwModal.querySelector('.rw-body').scrollTop = 0;
+    }
+
+    const closeRiwayatModal = () => rwModal.classList.remove('is-open');
+
+    qs('#rw-modal-tutup').addEventListener('click', closeRiwayatModal);
+    qs('#rw-modal-selesai').addEventListener('click', closeRiwayatModal);
+
+    rwModal.addEventListener('click', (event) => {
+        if (event.target === rwModal) closeRiwayatModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeRiwayatModal();
     });
 
 
