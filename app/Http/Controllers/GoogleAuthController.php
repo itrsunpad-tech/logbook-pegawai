@@ -44,6 +44,8 @@ class GoogleAuthController extends Controller
 
         request()->session()->regenerate();
 
-        return redirect()->route('logbook.index');
+        return redirect()->route(
+            $user->isAdmin() ? 'admin.dashboard' : 'logbook.index'
+        );
     }
 }

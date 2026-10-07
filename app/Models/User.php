@@ -10,6 +10,10 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    public const ROLE_PEGAWAI = 'pegawai';
+
+    public const ROLE_ADMIN = 'admin';
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
@@ -47,5 +51,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Apakah user ini admin (HC)?
+     * 'role' sengaja TIDAK masuk $fillable supaya tidak bisa
+     * diubah lewat mass assignment.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\LogbookController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -51,3 +52,12 @@ Route::get('/ping', function () {
         'time' => now()->timestamp,
     ]);
 })->middleware('auth')->name('ping');
+
+// Admin / HC
+Route::middleware(['auth', 'admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/', [AdminDashboardController::class, 'index'])
+            ->name('dashboard');
+    });
