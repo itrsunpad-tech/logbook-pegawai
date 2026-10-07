@@ -222,6 +222,21 @@
     .rw-status--no   { background: #fee2e2; color: #b91c1c; }
     .rw-status--wait { background: #fef3c7; color: #b45309; }
 
+    /* Wadah badge di kartu riwayat: status + jenis, sejajar di kanan */
+    .riwayat-item-badges {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    /* Badge status di kartu dibuat sedikit lebih kecil dari yang di modal Detail */
+    .riwayat-item-badges .rw-status {
+        padding: 3px 9px;
+        font-size: 10.5px;
+    }
+
     /* Bagian isi */
     .rw-section {
         display: flex;
@@ -887,6 +902,30 @@ document.addEventListener('DOMContentLoaded', () => {
         riwayatResult.append(empty);
     };
 
+    // Badge status berwarna untuk kartu daftar (Menunggu / Disetujui / Ditolak)
+    function buildStatusBadge(status) {
+        const text = String(status || 'Menunggu').trim();
+        const lower = text.toLowerCase();
+
+        let variant = 'rw-status--wait';
+        let icon = 'fa-clock';
+
+        if (/terima|setuju|approve|acc/.test(lower)) {
+            variant = 'rw-status--ok';
+            icon = 'fa-circle-check';
+        } else if (/tolak|reject|revisi/.test(lower)) {
+            variant = 'rw-status--no';
+            icon = 'fa-circle-xmark';
+        }
+
+        const badge = el('span', `rw-status ${variant}`);
+        const iconElement = document.createElement('i');
+        iconElement.className = `fa-solid ${icon}`;
+        badge.append(iconElement, document.createTextNode(' ' + text));
+
+        return badge;
+    }
+
     function renderRiwayat(tanggalDari, tanggalSampai) {
         const hasil = [];
 
@@ -919,7 +958,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 JENIS_LABEL[item.jenis] || item.jenis || 'Logbook'
             );
 
-            head.append(date, type);
+            // Status HC ditampilkan di sebelah label jenis
+            const badges = el('div', 'riwayat-item-badges');
+            badges.append(buildStatusBadge(item.status), type);
+
+            head.append(date, badges);
             card.append(head);
 
             // Baris bawah: ringkasan singkat + tombol Detail
@@ -960,7 +1003,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         renderRiwayat(tanggalDari, tanggalSampai);
-        kalenderUtama?.classList.remove('is-hidden');
+        // kalenderUtama?.classList.remove('is-hidden');
     });
 
     btnResetRiwayat?.addEventListener('click', () => {
@@ -971,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'Pilih rentang tanggal (dari–sampai) lalu klik "Lihat". Data akan dimuat sekali untuk seluruh rentang.'
         );
 
-        kalenderUtama?.classList.add('is-hidden');
+        // kalenderUtama?.classList.add('is-hidden');
     });
 
 

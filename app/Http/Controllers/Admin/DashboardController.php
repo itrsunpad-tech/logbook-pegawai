@@ -13,6 +13,7 @@ class DashboardController extends Controller
     {
         $ringkasan = [
             'pegawai' => User::where('role', User::ROLE_PEGAWAI)->count(),
+            'menunggu' => Logbook::where('status', Logbook::STATUS_MENUNGGU)->count(),
             'logbook_hari_ini' => Logbook::whereDate('tanggal', today())->count(),
             'logbook_bulan_ini' => Logbook::whereYear('tanggal', now()->year)
                 ->whereMonth('tanggal', now()->month)

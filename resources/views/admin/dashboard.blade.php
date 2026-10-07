@@ -127,12 +127,14 @@
 
         {{-- Menu --}}
         <div class="adm-menu">
-            <div class="adm-menu-item is-disabled">
+            <a href="{{ route('admin.logbook.index') }}" class="adm-menu-item">
                 <i class="fa-solid fa-circle-check"></i>
                 <span class="adm-menu-name">ACC Logbook Pegawai</span>
                 <span class="adm-menu-desc">Setujui atau tolak logbook yang dikirim pegawai.</span>
-                <span class="adm-badge">Segera hadir</span>
-            </div>
+                @if ($ringkasan['menunggu'] > 0)
+                    <span class="adm-badge">{{ $ringkasan['menunggu'] }} menunggu</span>
+                @endif
+            </a>
 
             <div class="adm-menu-item is-disabled">
                 <i class="fa-solid fa-table-list"></i>

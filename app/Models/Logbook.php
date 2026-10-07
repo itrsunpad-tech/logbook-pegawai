@@ -20,6 +20,18 @@ class Logbook extends Model
         self::ONCALL,
     ];
 
+    public const STATUS_MENUNGGU = 'Menunggu';
+
+    public const STATUS_DISETUJUI = 'Disetujui';
+
+    public const STATUS_DITOLAK = 'Ditolak';
+
+    public const STATUS = [
+        self::STATUS_MENUNGGU,
+        self::STATUS_DISETUJUI,
+        self::STATUS_DITOLAK,
+    ];
+
     protected $fillable = [
         'user_id',
         'jenis',

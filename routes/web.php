@@ -3,6 +3,7 @@
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\LogbookController as AdminLogbookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -60,4 +61,14 @@ Route::middleware(['auth', 'admin'])
     ->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])
             ->name('dashboard');
+
+        // ACC logbook
+        Route::get('/logbook', [AdminLogbookController::class, 'index'])
+            ->name('logbook.index');
+
+        Route::patch('/logbook/{logbook}/setujui', [AdminLogbookController::class, 'setujui'])
+            ->name('logbook.setujui');
+
+        Route::patch('/logbook/{logbook}/tolak', [AdminLogbookController::class, 'tolak'])
+            ->name('logbook.tolak');
     });
