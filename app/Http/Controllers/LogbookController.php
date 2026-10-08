@@ -7,6 +7,7 @@ use App\Models\Holiday;
 use App\Models\Logbook;
 use App\Models\Shift;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -39,55 +40,11 @@ class LogbookController extends Controller
             ->orderBy('nama')
             ->get();
 
-        // Kalender: bulan lalu + bulan berjalan
-        $mulaiKalender = now()->startOfMonth()->subMonth()->startOfMonth();
-        $akhirKalender = now()->endOfMonth();
+        // Kalender & Riwayatku: bulan lalu + bulan berjalan
+        [$mulaiKalender, $akhirKalender] = $this->rentangKalender();
 
-        $logbookKalender = Logbook::query()
-            ->with('shift')
-            ->where('user_id', Auth::id())
-            ->whereBetween('tanggal', [$mulaiKalender, $akhirKalender])
-            ->orderBy('tanggal')
-            ->get();
-
-        // Format: ['2026-10-02' => [['jenis' => 'harian', 'detail' => 'Shift: Pagi', ...], ...]]
-        $kalender = $logbookKalender
-            ->groupBy(fn ($item) => $item->tanggal->format('Y-m-d'))
-            ->map(fn ($items) => $items->map(function ($item) {
-                $shift = $item->shift ? 'Shift: ' . $item->shift->nama : null;
-
-                 $jam = ($item->jam_mulai && $item->jam_selesai)
-                ? substr($item->jam_mulai, 0, 5) . ' - ' . substr($item->jam_selesai, 0, 5)
-                : null;
-
-            $data = [
-                'jenis'     => $item->jenis,
-                'detail'    => collect([$shift, $jam])->filter()->implode(' | ') ?: null,
-                'jam_kerja' => $item->shift?->nama ?? $jam,   // harian: nama shift, lembur/on call: rentang jam
-                'kegiatan'  => $item->ringkasan,
-                'is_wfh'    => (bool) $item->is_wfh,
-            ];
-
-            // Opsional: hanya dikirim kalau kolomnya memang ada di tabel logbooks
-            $atribut = $item->getAttributes();
-
-            foreach (['status', 'keterangan_hc'] as $kolom) {
-                if (array_key_exists($kolom, $atribut)) {
-                    $data[$kolom] = $atribut[$kolom];
-                }
-            }
-
-            return $data;
-        })->values()->all())
-        ->all();
-
-        // Libur nasional: ['2026-08-17' => 'Hari Kemerdekaan RI']
-        $libur = Holiday::query()
-            ->whereBetween('tanggal', [$mulaiKalender, $akhirKalender])
-            ->orderBy('tanggal')
-            ->pluck('nama', 'tanggal')
-            ->mapWithKeys(fn ($nama, $tanggal) => [Carbon::parse($tanggal)->format('Y-m-d') => $nama])
-            ->all();
+        $kalender = $this->dataKalender($mulaiKalender, $akhirKalender);
+        $libur = $this->dataLibur($mulaiKalender, $akhirKalender);
 
         return view('logbook.index', compact(
             'logbooks',
@@ -100,6 +57,20 @@ class LogbookController extends Controller
             'kalender',
             'libur'
         ));
+    }
+
+    /**
+     * Tombol Refresh untuk memuat ulang data (JSON).
+     */
+
+    public function riwayat(): JsonResponse
+    {
+        [$mulai, $akhir] = $this->rentangKalender();
+
+        return response()->json([
+            'kalender' => $this->dataKalender($mulai, $akhir),
+            'libur'    => $this->dataLibur($mulai, $akhir),
+        ]);
     }
 
     public function store(StoreLogbookRequest $request): RedirectResponse
@@ -122,4 +93,71 @@ class LogbookController extends Controller
             ->route('logbook.index')
             ->with('success', 'Logbook berhasil disimpan.');
     }
-} 
+
+
+    /** Rentang data: awal bulan lalu sampai akhir bulan berjalan. */
+    private function rentangKalender(): array
+    {
+        return [
+            now()->startOfMonth()->subMonth()->startOfMonth(),
+            now()->endOfMonth(),
+        ];
+    }
+
+    /**
+     * Logbook milik user yang sedang login, dikelompokkan per tanggal.
+     */
+    
+    private function dataKalender(Carbon $mulai, Carbon $akhir): array
+    {
+        return Logbook::query()
+            ->with('shift')
+            ->where('user_id', Auth::id())
+            ->whereBetween('tanggal', [$mulai, $akhir])
+            ->orderBy('tanggal')
+            ->get()
+            ->groupBy(fn ($item) => $item->tanggal->format('Y-m-d'))
+            ->map(fn ($items) => $items->map(fn ($item) => $this->formatItem($item))->values()->all())
+            ->all();
+    }
+
+    /** Satu logbook dalam bentuk array untuk kalender, kartu riwayat, dan popup detail. */
+    private function formatItem(Logbook $item): array
+    {
+        $shift = $item->shift ? 'Shift: ' . $item->shift->nama : null;
+
+        $jam = ($item->jam_mulai && $item->jam_selesai)
+            ? substr($item->jam_mulai, 0, 5) . ' - ' . substr($item->jam_selesai, 0, 5)
+            : null;
+
+        $data = [
+            'jenis'     => $item->jenis,
+            'detail'    => collect([$shift, $jam])->filter()->implode(' | ') ?: null,
+            'jam_kerja' => $item->shift?->nama ?? $jam, // harian: nama shift, lembur/on call: rentang jam
+            'kegiatan'  => $item->ringkasan,
+            'is_wfh'    => (bool) $item->is_wfh,
+        ];
+
+        // Opsional: hanya dikirim kalau kolomnya memang ada di tabel logbooks
+        $atribut = $item->getAttributes();
+
+        foreach (['status', 'keterangan_hc'] as $kolom) {
+            if (array_key_exists($kolom, $atribut)) {
+                $data[$kolom] = $atribut[$kolom];
+            }
+        }
+
+        return $data;
+    }
+
+    /** Libur nasional: ['2026-08-17' => 'Hari Kemerdekaan RI'] */
+    private function dataLibur(Carbon $mulai, Carbon $akhir): array
+    {
+        return Holiday::query()
+            ->whereBetween('tanggal', [$mulai, $akhir])
+            ->orderBy('tanggal')
+            ->pluck('nama', 'tanggal')
+            ->mapWithKeys(fn ($nama, $tanggal) => [Carbon::parse($tanggal)->format('Y-m-d') => $nama])
+            ->all();
+    }
+}

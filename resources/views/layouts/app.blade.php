@@ -999,7 +999,7 @@
             background: #1d4ed8;
         }
 
-        .riwayat-reset-button {
+        .riwayat-refresh-button {
             width: 32px;
             height: 32px;
             display: flex;
@@ -1009,12 +1009,26 @@
             border-radius: 8px;
             background: var(--surface);
             color: var(--muted);
-            font-size: 10px;
+            font-size: 11px;
         }
 
-        .riwayat-reset-button:hover {
+        .riwayat-refresh-button:hover:not(:disabled) {
             background: var(--accent-soft);
             color: var(--accent);
+        }
+
+        .riwayat-refresh-button:disabled {
+            opacity: 0.7;
+        }
+
+        .riwayat-refresh-button.is-loading i {
+            animation: riwayat-spin 0.8s linear infinite;
+        }
+
+        @keyframes riwayat-spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .riwayat-result {

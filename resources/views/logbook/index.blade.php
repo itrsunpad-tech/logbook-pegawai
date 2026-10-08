@@ -31,6 +31,16 @@
         flex: 0 0 auto;
     }
 
+    .rw-notice {
+        margin-top: 10px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: #fef2f2;
+        color: #b91c1c;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
     /* Layar sempit: dua tanggal berdampingan, tombol di baris bawah */
     @media (max-width: 560px) {
         .rw-filter {
@@ -629,12 +639,21 @@
                         Lihat
                     </button>
 
-                    <button type="button" id="btn-reset-riwayat" class="riwayat-reset-button" title="Reset (tampilkan semua)">
-                        <i class="fa-solid fa-rotate-left"></i>
+                    <button
+                        type="button"
+                        id="btn-refresh-riwayat"
+                        class="riwayat-refresh-button"
+                        title="Muat ulang riwayat"
+                        aria-label="Muat ulang riwayat"
+                    >
+                        <i class="fa-solid fa-rotate"></i>
                     </button>
                 </div>
 
             </div>
+
+            {{-- Pesan jika muat ulang gagal --}}
+            <p id="riwayat-notice" class="rw-notice is-hidden" role="status"></p>
 
             {{-- HASIL --}}
             <div id="riwayat-result" class="riwayat-result">
@@ -811,6 +830,7 @@
     data-hari-ini='@json($hariIni)'
     data-dibuka='@json($dibuka)'
     data-jenis-lama='@json($jenisLama)'
+    data-riwayat-url="{{ route('logbook.riwayat') }}"
 ></div>
 
 
@@ -833,11 +853,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const serverData = qs('#logbook-data').dataset;
     const readData = (name) => JSON.parse(serverData[name]);
 
-    const DATA = readData('kalender');
-    const LIBUR = readData('libur');
+    // DATA & LIBUR bisa diperbarui lewat tombol muat ulang di Riwayatku
+    let DATA = readData('kalender');
+    let LIBUR = readData('libur');
     const HARI_INI = readData('hariIni');
     const DIBUKA = readData('dibuka');
     const JENIS_LAMA = readData('jenisLama');
+    const RIWAYAT_URL = serverData.riwayatUrl;
 
     // Label & jenis yang dikenal (dipakai juga untuk kelas warna)
     const JENIS_LABEL = {
@@ -905,7 +927,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const riwayatDari = qs('#riwayat-dari');
     const riwayatSampai = qs('#riwayat-sampai');
     const btnLihatRiwayat = qs('#btn-lihat-riwayat');
-    const btnResetRiwayat = qs('#btn-reset-riwayat');
+    const btnRefreshRiwayat = qs('#btn-refresh-riwayat');
+    const riwayatNotice = qs('#riwayat-notice');
     const riwayatResult = qs('#riwayat-result');
 
     const renderRiwayatEmpty = (message) => {
@@ -1023,7 +1046,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         renderRiwayat(tanggalDari, tanggalSampai);
-        saveState({ dari: tanggalDari, sampai: tanggalSampai, semua: false });
+        saveState({ dari: tanggalDari, sampai: tanggalSampai });
     });
 
     // Rentang bawaan: tanggal 1 bulan ini sampai hari ini
@@ -1032,24 +1055,9 @@ document.addEventListener('DOMContentLoaded', () => {
         sampai: HARI_INI,
     });
 
-    // Kosongkan filter dan tampilkan seluruh logbook yang tersedia
-    // (bulan lalu + bulan ini, sesuai data dari controller)
-    function tampilkanSemua() {
-        riwayatDari.value = '';
-        riwayatSampai.value = '';
-
-        renderRiwayat('', '9999-12-31');
-    }
-
-    // Isi filter (mode "semua", rentang tersimpan, atau bawaan) lalu tampilkan datanya.
-    // Data berasal dari server saat halaman dimuat, jadi selalu yang terbaru.
+    // Isi filter (rentang tersimpan, atau bawaan) lalu tampilkan datanya.
     function muatRiwayat() {
         const saved = loadState();
-
-        if (saved.semua) {
-            tampilkanSemua();
-            return;
-        }
 
         const rentang = saved.dari && saved.sampai && saved.dari <= saved.sampai
             ? { dari: saved.dari, sampai: saved.sampai }
@@ -1061,11 +1069,59 @@ document.addEventListener('DOMContentLoaded', () => {
         renderRiwayat(rentang.dari, rentang.sampai);
     }
 
-    // Reset: kosongkan filter dan tampilkan semua
-    btnResetRiwayat?.addEventListener('click', () => {
-        saveState({ dari: '', sampai: '', semua: true });
-        tampilkanSemua();
-    });
+    // Muat ulang data riwayat dari server tanpa me-reload halaman.
+    // Filter tanggal yang sedang dipilih tetap dipakai.
+    let sedangMuatUlang = false;
+
+    async function muatUlangRiwayat() {
+        if (sedangMuatUlang) return;
+
+        sedangMuatUlang = true;
+        btnRefreshRiwayat.disabled = true;
+        btnRefreshRiwayat.classList.add('is-loading');
+        riwayatNotice.classList.add('is-hidden');
+
+        try {
+            // Jeda minimal supaya putaran ikon terlihat walau server cepat
+            const [response] = await Promise.all([
+                fetch(RIWAYAT_URL, {
+                    method: 'GET',
+                    cache: 'no-store',
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' },
+                }),
+                new Promise((resolve) => setTimeout(resolve, 450)),
+            ]);
+
+            if (!response.ok) throw new Error('Gagal memuat riwayat.');
+
+            const baru = await response.json();
+
+            DATA = baru.kalender || {};
+            LIBUR = baru.libur || {};
+
+            const dari = riwayatDari.value;
+            const sampai = riwayatSampai.value;
+
+            if (dari && sampai && dari <= sampai) {
+                renderRiwayat(dari, sampai);
+            } else {
+                muatRiwayat();
+            }
+
+            // Kalender di tab Input Baru ikut diperbarui
+            renderCalendar();
+        } catch (error) {
+            riwayatNotice.textContent = 'Gagal memuat ulang riwayat. Periksa koneksi Anda lalu coba lagi.';
+            riwayatNotice.classList.remove('is-hidden');
+        } finally {
+            sedangMuatUlang = false;
+            btnRefreshRiwayat.disabled = false;
+            btnRefreshRiwayat.classList.remove('is-loading');
+        }
+    }
+
+    btnRefreshRiwayat?.addEventListener('click', muatUlangRiwayat);
 
 
     /* =====================================================

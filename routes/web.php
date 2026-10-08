@@ -72,3 +72,6 @@ Route::middleware(['auth', 'admin'])
         Route::patch('/logbook/{logbook}/tolak', [AdminLogbookController::class, 'tolak'])
             ->name('logbook.tolak');
     });
+
+// Riwayat logbook
+Route::get('/logbook/riwayat', [LogbookController::class, 'riwayat'])->name('logbook.riwayat');
