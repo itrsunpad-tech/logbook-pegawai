@@ -629,7 +629,7 @@
                         Lihat
                     </button>
 
-                    <button type="button" id="btn-reset-riwayat" class="riwayat-reset-button" title="Reset">
+                    <button type="button" id="btn-reset-riwayat" class="riwayat-reset-button" title="Reset (tampilkan semua)">
                         <i class="fa-solid fa-rotate-left"></i>
                     </button>
                 </div>
@@ -643,10 +643,7 @@
                         <i class="fa-solid fa-calendar-days"></i>
                     </div>
 
-                    <p>
-                        Pilih rentang tanggal (dari–sampai) lalu klik "Lihat".
-                        Data akan dimuat sekali untuk seluruh rentang.
-                    </p>
+                    <p>Memuat riwayat logbook...</p>
                 </div>
             </div>
 
@@ -851,6 +848,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const safeJenis = (jenis) => (JENIS_LABEL[jenis] ? jenis : 'harian');
 
+    // Simpan tab aktif & rentang tanggal Riwayatku supaya tidak hilang saat refresh
+    const STATE_KEY = 'logbook:riwayat-state';
+
+    const loadState = () => {
+        try {
+            return JSON.parse(sessionStorage.getItem(STATE_KEY)) || {};
+        } catch (error) {
+            return {};
+        }
+    };
+
+    const saveState = (patch) => {
+        try {
+            sessionStorage.setItem(STATE_KEY, JSON.stringify({ ...loadState(), ...patch }));
+        } catch (error) {
+            // penyimpanan tidak tersedia: abaikan
+        }
+    };
+
 
     /* =====================================================
        TAB
@@ -861,6 +877,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const kalenderUtama = qs('#kalender-utama');
 
     function showTab(name) {
+        saveState({ tab: name });
+
         tabs.forEach((tab) => {
             tab.classList.toggle('is-active', tab.dataset.tab === name);
         });
@@ -869,9 +887,11 @@ document.addEventListener('DOMContentLoaded', () => {
             panel.classList.toggle('is-hidden', panel.dataset.tabPanel !== name);
         });
 
-        // Kalender utama tetap tampil di Input Baru, tetapi disembunyikan
-        // ketika Riwayatku baru dibuka dan belum ada hasil pencarian.
+        // Kalender hanya tampil di Input Baru
         kalenderUtama?.classList.toggle('is-hidden', name === 'riwayat');
+
+        // Riwayatku langsung memuat data tanpa input tanggal manual
+        if (name === 'riwayat') muatRiwayat();
     }
 
     tabs.forEach((tab) => {
@@ -1003,18 +1023,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         renderRiwayat(tanggalDari, tanggalSampai);
-        // kalenderUtama?.classList.remove('is-hidden');
+        saveState({ dari: tanggalDari, sampai: tanggalSampai, semua: false });
     });
 
+    // Rentang bawaan: tanggal 1 bulan ini sampai hari ini
+    const rentangBawaan = () => ({
+        dari: HARI_INI.slice(0, 8) + '01',
+        sampai: HARI_INI,
+    });
+
+    // Kosongkan filter dan tampilkan seluruh logbook yang tersedia
+    // (bulan lalu + bulan ini, sesuai data dari controller)
+    function tampilkanSemua() {
+        riwayatDari.value = '';
+        riwayatSampai.value = '';
+
+        renderRiwayat('', '9999-12-31');
+    }
+
+    // Isi filter (mode "semua", rentang tersimpan, atau bawaan) lalu tampilkan datanya.
+    // Data berasal dari server saat halaman dimuat, jadi selalu yang terbaru.
+    function muatRiwayat() {
+        const saved = loadState();
+
+        if (saved.semua) {
+            tampilkanSemua();
+            return;
+        }
+
+        const rentang = saved.dari && saved.sampai && saved.dari <= saved.sampai
+            ? { dari: saved.dari, sampai: saved.sampai }
+            : rentangBawaan();
+
+        riwayatDari.value = rentang.dari;
+        riwayatSampai.value = rentang.sampai;
+
+        renderRiwayat(rentang.dari, rentang.sampai);
+    }
+
+    // Reset: kosongkan filter dan tampilkan semua
     btnResetRiwayat?.addEventListener('click', () => {
-        if (riwayatDari) riwayatDari.value = '';
-        if (riwayatSampai) riwayatSampai.value = '';
-
-        renderRiwayatEmpty(
-            'Pilih rentang tanggal (dari–sampai) lalu klik "Lihat". Data akan dimuat sekali untuk seluruh rentang.'
-        );
-
-        // kalenderUtama?.classList.add('is-hidden');
+        saveState({ dari: '', sampai: '', semua: true });
+        tampilkanSemua();
     });
 
 
@@ -1409,6 +1459,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     renderCalendar();
+
+
+    /* =====================================================
+       PULIHKAN RIWAYATKU SETELAH REFRESH
+       Data diambil ulang dari server, jadi selalu yang terbaru.
+    ====================================================== */
+    // Jika validasi form gagal, tetap tampilkan form (bukan Riwayatku)
+    if (!JENIS_LAMA && loadState().tab === 'riwayat') {
+        showTab('riwayat');
+    }
 
 });
 </script>
