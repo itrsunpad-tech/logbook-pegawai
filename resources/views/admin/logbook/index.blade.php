@@ -3,6 +3,7 @@
 @section('title', 'ACC Logbook Pegawai')
 
 @push('styles')
+<!-- hanya test -->
     <style>
         .acc-page {
             width: 100%;
