@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Logbook;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,40 +14,61 @@ use Illuminate\View\View;
 class LogbookController extends Controller
 {
     /**
-     * Daftar logbook + filter. Default: yang masih menunggu.
+     * Daftar pegawai + jumlah entri sesuai status/filter.
+     * Default: yang masih menunggu.
      */
     public function index(Request $request): View
     {
-        $filter = $request->validate([
-            'status' => ['nullable', Rule::in(array_merge(Logbook::STATUS, ['semua']))],
-            'jenis' => ['nullable', Rule::in(Logbook::JENIS)],
-            'dari' => ['nullable', 'date'],
-            'sampai' => ['nullable', 'date', 'after_or_equal:dari'],
-            'q' => ['nullable', 'string', 'max:100'],
-        ]);
-
+        $filter = $this->validasiFilter($request);
         $status = $filter['status'] ?? Logbook::STATUS_MENUNGGU;
+        $kata   = $filter['q'] ?? null;
 
-        $logbooks = Logbook::with(['user', 'shift'])
-            ->when($status !== 'semua', fn($q) => $q->where('status', $status))
-            ->when($filter['jenis'] ?? null, fn($q, $jenis) => $q->where('jenis', $jenis))
-            ->when($filter['dari'] ?? null, fn($q, $dari) => $q->whereDate('tanggal', '>=', $dari))
-            ->when($filter['sampai'] ?? null, fn($q, $sampai) => $q->whereDate('tanggal', '<=', $sampai))
-            ->when($filter['q'] ?? null, fn($q, $kata) => $q->whereHas(
-                'user',
-                fn($u) => $u->where('name', 'like', "%{$kata}%")
-            ))
-            ->orderByDesc('tanggal')
-            ->orderByDesc('id')
-            ->simplePaginate(15)
+        // Syarat logbook yang dihitung (status, jenis, tanggal)
+        $batasi = fn ($query) => $this->terapkanFilter($query, $filter, $status);
+
+        $pegawai = User::query()
+            ->whereHas('logbooks', $batasi)
+            ->withCount(['logbooks as total_entri' => $batasi])
+            ->when($kata, fn ($q) => $q->where('name', 'like', "%{$kata}%"))
+            ->orderBy('name')
+            ->simplePaginate(20)
             ->withQueryString();
+
+        // Total entri untuk teks ringkasan di atas daftar
+        $totalEntri = $this->terapkanFilter(Logbook::query(), $filter, $status)
+            ->when($kata, fn ($q) => $q->whereHas(
+                'user',
+                fn ($u) => $u->where('name', 'like', "%{$kata}%")
+            ))
+            ->count();
 
         // Jumlah per status untuk angka di tab: ['Menunggu' => 5, 'Disetujui' => 20, ...]
         $jumlah = Logbook::selectRaw('status, COUNT(*) AS total')
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        return view('admin.logbook.index', compact('logbooks', 'status', 'jumlah'));
+        return view('admin.logbook.index', compact('pegawai', 'status', 'jumlah', 'totalEntri'));
+    }
+
+    /**
+     * Detail logbook satu pegawai (halaman "Mulai Review").
+     */
+    public function show(Request $request, User $user): View
+    {
+        $filter = $this->validasiFilter($request);
+        $status = $filter['status'] ?? Logbook::STATUS_MENUNGGU;
+
+        $logbooks = $this->terapkanFilter(
+            Logbook::where('user_id', $user->id)->with('shift'),
+            $filter,
+            $status
+        )
+            ->orderBy('tanggal')   // dari yang paling lama, biar review urut
+            ->orderBy('id')
+            ->simplePaginate(30)
+            ->withQueryString();
+
+        return view('admin.logbook.show', compact('user', 'logbooks', 'status'));
     }
 
     public function setujui(Logbook $logbook): RedirectResponse
@@ -66,7 +89,7 @@ class LogbookController extends Controller
             'keterangan_hc' => ['required', 'string', 'max:500'],
         ], [
             'keterangan_hc.required' => 'Alasan penolakan wajib diisi.',
-            'keterangan_hc.max' => 'Alasan penolakan maksimal 500 karakter.',
+            'keterangan_hc.max'      => 'Alasan penolakan maksimal 500 karakter.',
         ]);
 
         $logbook->status = Logbook::STATUS_DITOLAK;
@@ -77,5 +100,31 @@ class LogbookController extends Controller
             'success',
             "Logbook {$logbook->user->name} tanggal {$logbook->tanggal->format('d/m/Y')} ditolak."
         );
+    }
+
+    /**
+     * Aturan filter yang dipakai bersama oleh daftar & detail.
+     */
+    private function validasiFilter(Request $request): array
+    {
+        return $request->validate([
+            'status' => ['nullable', Rule::in(array_merge(Logbook::STATUS, ['semua']))],
+            'jenis'  => ['nullable', Rule::in(Logbook::JENIS)],
+            'dari'   => ['nullable', 'date'],
+            'sampai' => ['nullable', 'date', 'after_or_equal:dari'],
+            'q'      => ['nullable', 'string', 'max:100'],
+        ]);
+    }
+
+    /**
+     * Tempelkan filter status/jenis/tanggal ke query logbook.
+     */
+    private function terapkanFilter(Builder $query, array $filter, string $status): Builder
+    {
+        return $query
+            ->when($status !== 'semua', fn ($q) => $q->where('status', $status))
+            ->when($filter['jenis'] ?? null, fn ($q, $jenis) => $q->where('jenis', $jenis))
+            ->when($filter['dari'] ?? null, fn ($q, $dari) => $q->whereDate('tanggal', '>=', $dari))
+            ->when($filter['sampai'] ?? null, fn ($q, $sampai) => $q->whereDate('tanggal', '<=', $sampai));
     }
 }

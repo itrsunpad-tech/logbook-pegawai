@@ -66,6 +66,9 @@ Route::middleware(['auth', 'admin'])
         Route::get('/logbook', [AdminLogbookController::class, 'index'])
             ->name('logbook.index');
 
+        Route::get('/logbook/pegawai/{user}', [AdminLogbookController::class, 'show'])
+            ->name('logbook.pegawai');
+
         Route::patch('/logbook/{logbook}/setujui', [AdminLogbookController::class, 'setujui'])
             ->name('logbook.setujui');
 
