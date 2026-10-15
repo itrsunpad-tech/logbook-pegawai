@@ -4,6 +4,7 @@ use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LogbookController as AdminLogbookController;
+use App\Http\Controllers\Admin\KepegawaianController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -61,6 +62,19 @@ Route::middleware(['auth', 'admin'])
     ->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])
             ->name('dashboard');
+
+        // Kepegawaian
+        Route::get('/kepegawaian', [KepegawaianController::class, 'index'])
+            ->name('kepegawaian.index');
+
+        Route::get('/kepegawaian/{user}', [KepegawaianController::class, 'show'])
+            ->name('kepegawaian.show');
+
+        Route::patch('/kepegawaian/{user}/overview', [KepegawaianController::class, 'updateOverview'])
+            ->name('kepegawaian.update-overview');
+
+        Route::patch('/kepegawaian/{user}/kontak', [KepegawaianController::class, 'updateKontak'])
+            ->name('kepegawaian.update-kontak');
 
         // ACC logbook
         Route::get('/logbook', [AdminLogbookController::class, 'index'])

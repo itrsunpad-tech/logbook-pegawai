@@ -149,6 +149,12 @@
                 <span class="adm-menu-desc">Data dari mesin sidik jari (eksperimental).</span>
                 <span class="adm-badge">Tahap berikutnya</span>
             </div>
+
+            <a href="{{ route('admin.kepegawaian.index') }}" class="adm-menu-item">
+                <i class="fa-solid fa-users-gear"></i>
+                <span class="adm-menu-name">Kepegawaian</span>
+                <span class="adm-menu-desc">Data pegawai, kontak, dan pendaftaran email login.</span>
+            </a>
         </div>
 
     </div>

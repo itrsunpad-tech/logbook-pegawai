@@ -8,12 +8,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
     public const ROLE_PEGAWAI = 'pegawai';
 
     public const ROLE_ADMIN = 'admin';
+
+    /** Pilihan kategori pegawai (kolom employee_category). */
+    public const KATEGORI = ['Medis', 'Non-Medis'];
 
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -70,5 +75,26 @@ class User extends Authenticatable
     public function logbooks(): HasMany
     {
         return $this->hasMany(Logbook::class);
+    }
+
+        /**
+     * Profil detail pegawai (satu-ke-satu).
+     */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(EmployeeProfile::class);
+    }
+
+    /**
+     * Inisial untuk avatar, mis. "Ilmi Ghazali" => "IG".
+     */
+    public function inisial(): string
+    {
+        return Str::of((string) $this->name)
+            ->explode(' ')
+            ->filter()
+            ->take(2)
+            ->map(fn ($kata) => mb_strtoupper(mb_substr($kata, 0, 1)))
+            ->implode('');
     }
 }
