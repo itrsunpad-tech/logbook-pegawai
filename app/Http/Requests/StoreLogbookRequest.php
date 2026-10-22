@@ -30,7 +30,6 @@ class StoreLogbookRequest extends FormRequest
 
             // Harian
             'shift_id'    => ['required_if:jenis,harian', 'nullable', 'exists:shifts,id'],
-            'is_wfh'      => ['nullable', 'boolean'],
 
             // Lembur & On Call
             'jam_mulai'   => ['required_if:jenis,lembur,oncall', 'nullable', 'date_format:H:i'],
@@ -55,6 +54,40 @@ class StoreLogbookRequest extends FormRequest
 
             $jenis = $this->input('jenis');
 
+            $tanggalTerkunci = Logbook::query()
+                ->where('user_id', $this->user()->id)
+                ->whereDate('tanggal', $this->input('tanggal'))
+                ->whereIn('status', [Logbook::STATUS_DISETUJUI, Logbook::STATUS_DITOLAK])
+                ->exists();
+
+            if ($tanggalTerkunci) {
+                $validator->errors()->add(
+                    'tanggal',
+                    'Tanggal ini tidak dapat diisi kembali karena logbook sudah disetujui atau ditolak.'
+                );
+            }
+
+            if (in_array($jenis, ['lembur', 'oncall'], true)) {
+                $mulai = $this->menitDariTengahMalam($this->input('jam_mulai'));
+                $selesai = $this->menitDariTengahMalam($this->input('jam_selesai'));
+
+                // Jam selesai yang lebih kecil berarti kegiatan melewati tengah malam.
+                if ($selesai < $mulai) {
+                    $selesai += 24 * 60;
+                }
+
+                $durasiMinimal = ($jenis === 'lembur' ? LogbookController::MIN_JAM_LEMBUR : LogbookController::MIN_JAM_ONCALL) * 60;
+
+                if (($selesai - $mulai) < $durasiMinimal) {
+                    $minimalJam = $durasiMinimal / 60;
+                    $label = $jenis === 'lembur' ? 'Lembur' : 'On call';
+                    $validator->errors()->add(
+                        'jam_selesai',
+                        "{$label} belum memenuhi durasi minimal {$minimalJam} jam. Silakan periksa kembali jam mulai dan jam selesai."
+                    );
+                }
+            }
+
             $sudahAda = Logbook::query()
                 ->where('user_id', $this->user()->id)
                 ->whereDate('tanggal', $this->input('tanggal'))
@@ -71,6 +104,13 @@ class StoreLogbookRequest extends FormRequest
                 );
             }
         });
+    }
+
+    private function menitDariTengahMalam(string $waktu): int
+    {
+        [$jam, $menit] = array_map('intval', explode(':', $waktu));
+
+        return ($jam * 60) + $menit;
     }
 
     public function attributes(): array

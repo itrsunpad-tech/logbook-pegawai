@@ -6,9 +6,10 @@ use App\Http\Requests\StoreLogbookRequest;
 use App\Models\Holiday;
 use App\Models\Logbook;
 use App\Models\Shift;
+use App\Notifications\LogbookStatusChanged;
 use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -17,8 +18,11 @@ class LogbookController extends Controller
     /** Maksimal pengisian on call per hari. */
     public const MAKS_ONCALL = 1;
 
-    /** Minimal jam lembur agar diakui HC (hanya sebagai informasi di form). */
-    public const MIN_JAM_LEMBUR = 1;
+    /** Minimal durasi lembur yang dapat diajukan. */
+    public const MIN_JAM_LEMBUR = 2;
+
+    /** Minimal durasi on call yang dapat diajukan. */
+    public const MIN_JAM_ONCALL = 4;
 
     public function index(): View
     {
@@ -28,6 +32,7 @@ class LogbookController extends Controller
 
         $maksOncall = self::MAKS_ONCALL;
         $minJam = self::MIN_JAM_LEMBUR;
+        $minJamOncall = self::MIN_JAM_ONCALL;
 
         $logbooks = Logbook::query()
             ->where('user_id', Auth::id())
@@ -40,11 +45,17 @@ class LogbookController extends Controller
             ->orderBy('nama')
             ->get();
 
-        // Kalender & Riwayatku: bulan lalu + bulan berjalan
+        // Kalender: bulan lalu + bulan berjalan
         [$mulaiKalender, $akhirKalender] = $this->rentangKalender();
 
         $kalender = $this->dataKalender($mulaiKalender, $akhirKalender);
         $libur = $this->dataLibur($mulaiKalender, $akhirKalender);
+        $notifikasiStatus = Auth::user()->unreadNotifications()
+            ->where('type', LogbookStatusChanged::class)
+            ->latest()
+            ->get();
+
+        $notifikasiStatus->each->markAsRead();
 
         return view('logbook.index', compact(
             'logbooks',
@@ -53,24 +64,12 @@ class LogbookController extends Controller
             'dibuka',
             'maksOncall',
             'minJam',
+            'minJamOncall',
             'hariIni',
             'kalender',
-            'libur'
+            'libur',
+            'notifikasiStatus'
         ));
-    }
-
-    /**
-     * Tombol Refresh untuk memuat ulang data (JSON).
-     */
-
-    public function riwayat(): JsonResponse
-    {
-        [$mulai, $akhir] = $this->rentangKalender();
-
-        return response()->json([
-            'kalender' => $this->dataKalender($mulai, $akhir),
-            'libur'    => $this->dataLibur($mulai, $akhir),
-        ]);
     }
 
     public function store(StoreLogbookRequest $request): RedirectResponse
@@ -86,12 +85,34 @@ class LogbookController extends Controller
             'jam_mulai'   => $harian ? null : $data['jam_mulai'],
             'jam_selesai' => $harian ? null : $data['jam_selesai'],
             'ringkasan'   => $data['ringkasan'],
-            'is_wfh'      => $harian && $request->boolean('is_wfh'),
+            'is_wfh'      => false,
         ]);
 
         return redirect()
             ->route('logbook.index')
             ->with('success', 'Logbook berhasil disimpan.');
+    }
+
+    public function banding(Request $request, Logbook $logbook): RedirectResponse
+    {
+        abort_unless((int) $logbook->user_id === (int) $request->user()->id, 403);
+        abort_unless($logbook->status === Logbook::STATUS_DITOLAK, 404);
+
+        $data = $request->validate([
+            'keterangan_pegawai' => ['required', 'string', 'min:10', 'max:1000'],
+        ], [
+            'keterangan_pegawai.required' => 'Keterangan banding wajib diisi.',
+            'keterangan_pegawai.min' => 'Keterangan banding minimal 10 karakter.',
+            'keterangan_pegawai.max' => 'Keterangan banding maksimal 1000 karakter.',
+        ]);
+
+        $logbook->keterangan_pegawai = $data['keterangan_pegawai'];
+        $logbook->status = Logbook::STATUS_MENUNGGU;
+        $logbook->save();
+
+        return redirect()
+            ->route('logbook.index')
+            ->with('success', 'Berhasil mengirimkan aju banding.');
     }
 
 
@@ -131,11 +152,13 @@ class LogbookController extends Controller
             : null;
 
         $data = [
+            'id'        => $item->id,
             'jenis'     => $item->jenis,
             'detail'    => collect([$shift, $jam])->filter()->implode(' | ') ?: null,
             'jam_kerja' => $item->shift?->nama ?? $jam, // harian: nama shift, lembur/on call: rentang jam
             'kegiatan'  => $item->ringkasan,
             'is_wfh'    => (bool) $item->is_wfh,
+            'keterangan_pegawai' => $item->keterangan_pegawai,
         ];
 
         // Opsional: hanya dikirim kalau kolomnya memang ada di tabel logbooks

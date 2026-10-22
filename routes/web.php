@@ -45,6 +45,9 @@ Route::middleware('auth')
 
         Route::post('/', [LogbookController::class, 'store'])
             ->name('store');
+
+        Route::patch('/{logbook}/banding', [LogbookController::class, 'banding'])
+            ->name('banding');
     });
 
 // Ping connection
@@ -90,5 +93,3 @@ Route::middleware(['auth', 'admin'])
             ->name('logbook.tolak');
     });
 
-// Riwayat logbook
-Route::get('/logbook/riwayat', [LogbookController::class, 'riwayat'])->name('logbook.riwayat');

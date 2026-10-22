@@ -6,79 +6,6 @@
 
 @push('styles')
 <style>
-    /* =====================================================
-       RIWAYATKU: FILTER TANGGAL (tanpa Rekap Sheet)
-    ====================================================== */
-    /* Desktop: Dari | Sampai | [Lihat] [Reset] dalam satu baris */
-    .rw-filter {
-        margin-top: 12px;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-        align-items: end;
-        gap: 12px;
-    }
-
-    .rw-filter .lb-input {
-        height: 38px;
-    }
-
-    .rw-actions {
-        display: flex;
-        gap: 8px;
-    }
-
-    .rw-actions .riwayat-view-button {
-        flex: 0 0 auto;
-    }
-
-    .rw-notice {
-        margin-top: 10px;
-        padding: 8px 12px;
-        border-radius: 8px;
-        background: #fef2f2;
-        color: #b91c1c;
-        font-size: 11px;
-        line-height: 1.5;
-    }
-
-    /* Layar sempit: dua tanggal berdampingan, tombol di baris bawah */
-    @media (max-width: 560px) {
-        .rw-filter {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .rw-actions {
-            grid-column: 1 / -1;
-        }
-
-        .rw-actions .riwayat-view-button {
-            flex: 1;
-        }
-    }
-
-    @media (max-width: 380px) {
-        .rw-filter {
-            grid-template-columns: 1fr;
-        }
-    }
-
-
-    /* =====================================================
-       RIWAYATKU: BARIS DETAIL + TOMBOL DETAIL
-    ====================================================== */
-    .rw-item-row {
-        margin-top: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-    }
-
-    .rw-item-row .riwayat-item-detail {
-        margin-top: 0;
-        min-width: 0;
-    }
-
     .rw-detail-btn {
         height: 30px;
         padding: 0 11px;
@@ -98,6 +25,45 @@
     .rw-detail-btn:hover {
         background: var(--accent-soft);
         border-color: var(--accent-border);
+    }
+
+    .kal-logbook-item {
+        align-items: flex-start;
+    }
+
+    .kal-logbook-item > .lb-dot {
+        margin-top: 5px;
+    }
+
+    .kal-logbook-content {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .kal-logbook-head,
+    .kal-logbook-detail {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .kal-logbook-detail {
+        margin-top: 7px;
+    }
+
+    .kal-logbook-detail .riwayat-item-detail {
+        margin: 0;
+        min-width: 0;
+    }
+
+    .kal-logbook-head .riwayat-item-badges {
+        justify-content: flex-start;
+    }
+
+    .rw-banding-error {
+        color: #b91c1c;
+        font-size: 11px;
     }
 
 
@@ -345,32 +311,22 @@
 <div class="lb-page">
 
     {{-- Error validasi (notifikasi sukses memakai toast di layout) --}}
-    @if ($errors->any())
+    @php
+        $errorsUmum = collect($errors->all())
+            ->reject(fn ($error) => str_contains($error, 'belum memenuhi durasi minimal'));
+    @endphp
+
+    @if ($errorsUmum->isNotEmpty())
         <div class="lb-alert lb-alert--error">
             <ul>
-                @foreach ($errors->all() as $error)
+                @foreach ($errorsUmum as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
         </div>
     @endif
 
-    {{-- ===================== TAB ===================== --}}
-    <div class="lb-tabs">
-        <button type="button" data-tab="input" class="lb-tab is-active">
-            <i class="fa-solid fa-pen"></i>
-            Input Baru
-        </button>
-
-        <button type="button" data-tab="riwayat" class="lb-tab">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-            Riwayatku
-        </button>
-    </div>
-
-
-    {{-- ===================== TAB INPUT ===================== --}}
-    <section data-tab-panel="input">
+    <section>
 
         {{-- Pilih jenis logbook --}}
         <div class="lb-card">
@@ -452,24 +408,6 @@
                 >{{ $o('harian', 'ringkasan') }}</textarea>
             </div>
 
-            <div class="lb-field">
-                <label class="lb-checkbox">
-                    <input
-                        type="checkbox"
-                        name="is_wfh"
-                        value="1"
-                        disabled
-                        class="js-wfh"
-                        @checked($o('harian', 'is_wfh'))
-                    >
-                    <span>Saya hari ini WFH (Work From Home)</span>
-                </label>
-
-                <p class="lb-info js-wfh-info">
-                    Pilih tanggal dulu untuk mengaktifkan opsi WFH.
-                </p>
-            </div>
-
             @include('logbook._pernyataan')
         </form>
 
@@ -525,7 +463,7 @@
             </div>
 
             <p class="lb-note">
-                Minimal {{ $minJam }} jam biar diakui/disetujui HC.
+                Durasi minimal lembur {{ $minJam }} jam.
             </p>
 
             <div class="lb-field">
@@ -593,6 +531,10 @@
                 </div>
             </div>
 
+            <p class="lb-note">
+                Durasi minimal on call {{ $minJamOncall }} jam.
+            </p>
+
             <div class="lb-field">
                 <label class="lb-label">Ringkasan Kegiatan *</label>
                 <textarea
@@ -606,67 +548,6 @@
 
             @include('logbook._pernyataan')
         </form>
-
-    </section>
-
-
-    {{-- ===================== TAB RIWAYAT ===================== --}}
-    <section data-tab-panel="riwayat" class="is-hidden">
-
-        <div class="lb-card riwayat-card">
-
-            <h2 class="lb-card-title">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                Riwayat Logbook
-            </h2>
-
-            {{-- FILTER TANGGAL --}}
-            <div class="rw-filter">
-
-                <div class="rw-field">
-                    <label for="riwayat-dari" class="lb-label">Dari Tanggal</label>
-                    <input type="date" id="riwayat-dari" class="lb-input">
-                </div>
-
-                <div class="rw-field">
-                    <label for="riwayat-sampai" class="lb-label">Sampai Tanggal</label>
-                    <input type="date" id="riwayat-sampai" class="lb-input">
-                </div>
-
-                <div class="rw-actions">
-                    <button type="button" id="btn-lihat-riwayat" class="riwayat-view-button">
-                        <i class="fa-solid fa-eye"></i>
-                        Lihat
-                    </button>
-
-                    <button
-                        type="button"
-                        id="btn-refresh-riwayat"
-                        class="riwayat-refresh-button"
-                        title="Muat ulang riwayat"
-                        aria-label="Muat ulang riwayat"
-                    >
-                        <i class="fa-solid fa-rotate"></i>
-                    </button>
-                </div>
-
-            </div>
-
-            {{-- Pesan jika muat ulang gagal --}}
-            <p id="riwayat-notice" class="rw-notice is-hidden" role="status"></p>
-
-            {{-- HASIL --}}
-            <div id="riwayat-result" class="riwayat-result">
-                <div class="riwayat-empty">
-                    <div class="riwayat-empty-icon">
-                        <i class="fa-solid fa-calendar-days"></i>
-                    </div>
-
-                    <p>Memuat riwayat logbook...</p>
-                </div>
-            </div>
-
-        </div>
 
     </section>
 
@@ -709,7 +590,9 @@
                 <span><i class="lb-dot lb-dot--oncall"></i> On Call</span>
                 <span><i class="lb-dot lb-dot--libur"></i> Libur Nasional</span>
                 <span><i class="lb-dot lb-dot--kosong"></i> Belum diisi</span>
-                <span><i class="lb-dot lb-dot--dll"></i> DLL</span>
+                <span><i class="lb-calendar-key lb-calendar-key--waiting"></i> Menunggu</span>
+                <span><i class="fa-solid fa-check lb-cal-approved-check"></i> Disetujui</span>
+                <span><i class="fa-solid fa-xmark lb-cal-rejected-x"></i> Ditolak</span>
             </div>
 
             <p class="lb-hint">
@@ -757,7 +640,7 @@
 </div>
 
 
-{{-- ===================== MODAL DETAIL LOGBOOK (RIWAYATKU) ===================== --}}
+{{-- ===================== MODAL DETAIL LOGBOOK ===================== --}}
 <div
     id="rw-modal"
     class="rw-modal"
@@ -811,6 +694,38 @@
                 <div id="rw-keterangan" class="rw-text"></div>
             </div>
 
+            <div id="rw-banding-history-wrap" class="rw-section is-hidden">
+                <h4 class="rw-section-title">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    Keterangan Banding
+                </h4>
+                <div id="rw-banding-history" class="rw-text"></div>
+            </div>
+
+            <form id="rw-banding-form" class="rw-section is-hidden" method="POST">
+                @csrf
+                @method('PATCH')
+                <label for="rw-banding-textarea" class="rw-section-title">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    Ajukan Banding
+                </label>
+                <textarea
+                    id="rw-banding-textarea"
+                    name="keterangan_pegawai"
+                    rows="4"
+                    minlength="10"
+                    maxlength="1000"
+                    required
+                    class="lb-textarea"
+                    placeholder="Jelaskan alasan banding (minimal 10 karakter)..."
+                >{{ old('keterangan_pegawai') }}</textarea>
+                @error('keterangan_pegawai')
+                    <small class="rw-banding-error">{{ $message }}</small>
+                @enderror
+                <input type="hidden" name="logbook_id" value="{{ old('logbook_id') }}">
+                <button type="submit" class="lb-submit-button">Kirim Banding</button>
+            </form>
+
         </div>
 
         <div class="rw-foot">
@@ -830,7 +745,9 @@
     data-hari-ini='@json($hariIni)'
     data-dibuka='@json($dibuka)'
     data-jenis-lama='@json($jenisLama)'
-    data-riwayat-url="{{ route('logbook.riwayat') }}"
+    data-banding-url="{{ route('logbook.banding', ['logbook' => '__ID__'], false) }}"
+    data-old-banding='@json(old("keterangan_pegawai"))'
+    data-old-banding-id='@json(old("logbook_id"))'
 ></div>
 
 
@@ -853,13 +770,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const serverData = qs('#logbook-data').dataset;
     const readData = (name) => JSON.parse(serverData[name]);
 
-    // DATA & LIBUR bisa diperbarui lewat tombol muat ulang di Riwayatku
+    // Data kalender berisi logbook dan hari libur untuk bulan lalu serta bulan ini.
     let DATA = readData('kalender');
     let LIBUR = readData('libur');
     const HARI_INI = readData('hariIni');
     const DIBUKA = readData('dibuka');
     const JENIS_LAMA = readData('jenisLama');
-    const RIWAYAT_URL = serverData.riwayatUrl;
+    const BANDING_URL = serverData.bandingUrl;
+    const OLD_BANDING = readData('oldBanding');
+    const OLD_BANDING_ID = readData('oldBandingId');
 
     // Label & jenis yang dikenal (dipakai juga untuk kelas warna)
     const JENIS_LABEL = {
@@ -869,81 +788,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const safeJenis = (jenis) => (JENIS_LABEL[jenis] ? jenis : 'harian');
-
-    // Simpan tab aktif & rentang tanggal Riwayatku supaya tidak hilang saat refresh
-    const STATE_KEY = 'logbook:riwayat-state';
-
-    const loadState = () => {
-        try {
-            return JSON.parse(sessionStorage.getItem(STATE_KEY)) || {};
-        } catch (error) {
-            return {};
-        }
-    };
-
-    const saveState = (patch) => {
-        try {
-            sessionStorage.setItem(STATE_KEY, JSON.stringify({ ...loadState(), ...patch }));
-        } catch (error) {
-            // penyimpanan tidak tersedia: abaikan
-        }
-    };
-
-
-    /* =====================================================
-       TAB
-    ====================================================== */
-    const tabs = qsa('.lb-tab');
-    const tabPanels = qsa('[data-tab-panel]');
-
-    const kalenderUtama = qs('#kalender-utama');
-
-    function showTab(name) {
-        saveState({ tab: name });
-
-        tabs.forEach((tab) => {
-            tab.classList.toggle('is-active', tab.dataset.tab === name);
-        });
-
-        tabPanels.forEach((panel) => {
-            panel.classList.toggle('is-hidden', panel.dataset.tabPanel !== name);
-        });
-
-        // Kalender hanya tampil di Input Baru
-        kalenderUtama?.classList.toggle('is-hidden', name === 'riwayat');
-
-        // Riwayatku langsung memuat data tanpa input tanggal manual
-        if (name === 'riwayat') muatRiwayat();
-    }
-
-    tabs.forEach((tab) => {
-        tab.addEventListener('click', () => showTab(tab.dataset.tab));
-    });
-
-
-    /* =====================================================
-       RIWAYATKU
-    ====================================================== */
-    const riwayatDari = qs('#riwayat-dari');
-    const riwayatSampai = qs('#riwayat-sampai');
-    const btnLihatRiwayat = qs('#btn-lihat-riwayat');
-    const btnRefreshRiwayat = qs('#btn-refresh-riwayat');
-    const riwayatNotice = qs('#riwayat-notice');
-    const riwayatResult = qs('#riwayat-result');
-
-    const renderRiwayatEmpty = (message) => {
-        riwayatResult.innerHTML = '';
-
-        const empty = el('div', 'riwayat-empty');
-        const icon = el('div', 'riwayat-empty-icon');
-        const iconElement = document.createElement('i');
-        iconElement.className = 'fa-solid fa-calendar-days';
-        icon.append(iconElement);
-
-        const text = el('p', '', message);
-        empty.append(icon, text);
-        riwayatResult.append(empty);
-    };
 
     // Badge status berwarna untuk kartu daftar (Menunggu / Disetujui / Ditolak)
     function buildStatusBadge(status) {
@@ -969,163 +813,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return badge;
     }
 
-    function renderRiwayat(tanggalDari, tanggalSampai) {
-        const hasil = [];
-
-        Object.entries(DATA).forEach(([tgl, items]) => {
-            if (tgl < tanggalDari || tgl > tanggalSampai) return;
-
-            (items || []).forEach((item) => {
-                hasil.push({ tanggal: tgl, item });
-            });
-        });
-
-        hasil.sort((a, b) => a.tanggal.localeCompare(b.tanggal));
-
-        if (!hasil.length) {
-            renderRiwayatEmpty('Tidak ada logbook pada rentang tanggal yang dipilih.');
-            return;
-        }
-
-        const list = el('div', 'riwayat-list');
-
-        hasil.forEach(({ tanggal: tgl, item }) => {
-            const jenis = safeJenis(item.jenis);
-
-            const card = el('div', `riwayat-item riwayat-item--${jenis}`);
-            const head = el('div', 'riwayat-item-head');
-            const date = el('span', 'riwayat-item-date', formatDate(tgl));
-            const type = el(
-                'span',
-                `riwayat-item-type riwayat-item-type--${jenis}`,
-                JENIS_LABEL[item.jenis] || item.jenis || 'Logbook'
-            );
-
-            // Status HC ditampilkan di sebelah label jenis
-            const badges = el('div', 'riwayat-item-badges');
-            badges.append(buildStatusBadge(item.status), type);
-
-            head.append(date, badges);
-            card.append(head);
-
-            // Baris bawah: ringkasan singkat + tombol Detail
-            const row = el('div', 'rw-item-row');
-            row.append(el('div', 'riwayat-item-detail', item.detail || ''));
-
-            const detailButton = el('button', 'rw-detail-btn');
-            detailButton.type = 'button';
-
-            const detailIcon = document.createElement('i');
-            detailIcon.className = 'fa-solid fa-file-lines';
-            detailButton.append(detailIcon, document.createTextNode(' Detail'));
-
-            detailButton.addEventListener('click', () => openRiwayatModal(tgl, item));
-
-            row.append(detailButton);
-            card.append(row);
-
-            list.append(card);
-        });
-
-        riwayatResult.innerHTML = '';
-        riwayatResult.append(list);
-    }
-
-    btnLihatRiwayat?.addEventListener('click', () => {
-        const tanggalDari = riwayatDari?.value || '';
-        const tanggalSampai = riwayatSampai?.value || '';
-
-        if (!tanggalDari || !tanggalSampai) {
-            renderRiwayatEmpty('Pilih tanggal awal dan tanggal akhir terlebih dahulu.');
-            return;
-        }
-
-        if (tanggalDari > tanggalSampai) {
-            renderRiwayatEmpty('Tanggal awal tidak boleh lebih besar dari tanggal akhir.');
-            return;
-        }
-
-        renderRiwayat(tanggalDari, tanggalSampai);
-        saveState({ dari: tanggalDari, sampai: tanggalSampai });
-    });
-
-    // Rentang bawaan: tanggal 1 bulan ini sampai hari ini
-    const rentangBawaan = () => ({
-        dari: HARI_INI.slice(0, 8) + '01',
-        sampai: HARI_INI,
-    });
-
-    // Isi filter (rentang tersimpan, atau bawaan) lalu tampilkan datanya.
-    function muatRiwayat() {
-        const saved = loadState();
-
-        const rentang = saved.dari && saved.sampai && saved.dari <= saved.sampai
-            ? { dari: saved.dari, sampai: saved.sampai }
-            : rentangBawaan();
-
-        riwayatDari.value = rentang.dari;
-        riwayatSampai.value = rentang.sampai;
-
-        renderRiwayat(rentang.dari, rentang.sampai);
-    }
-
-    // Muat ulang data riwayat dari server tanpa me-reload halaman.
-    // Filter tanggal yang sedang dipilih tetap dipakai.
-    let sedangMuatUlang = false;
-
-    async function muatUlangRiwayat() {
-        if (sedangMuatUlang) return;
-
-        sedangMuatUlang = true;
-        btnRefreshRiwayat.disabled = true;
-        btnRefreshRiwayat.classList.add('is-loading');
-        riwayatNotice.classList.add('is-hidden');
-
-        try {
-            // Jeda minimal supaya putaran ikon terlihat walau server cepat
-            const [response] = await Promise.all([
-                fetch(RIWAYAT_URL, {
-                    method: 'GET',
-                    cache: 'no-store',
-                    credentials: 'same-origin',
-                    headers: { 'Accept': 'application/json' },
-                }),
-                new Promise((resolve) => setTimeout(resolve, 450)),
-            ]);
-
-            if (!response.ok) throw new Error('Gagal memuat riwayat.');
-
-            const baru = await response.json();
-
-            DATA = baru.kalender || {};
-            LIBUR = baru.libur || {};
-
-            const dari = riwayatDari.value;
-            const sampai = riwayatSampai.value;
-
-            if (dari && sampai && dari <= sampai) {
-                renderRiwayat(dari, sampai);
-            } else {
-                muatRiwayat();
-            }
-
-            // Kalender di tab Input Baru ikut diperbarui
-            renderCalendar();
-        } catch (error) {
-            riwayatNotice.textContent = 'Gagal memuat ulang riwayat. Periksa koneksi Anda lalu coba lagi.';
-            riwayatNotice.classList.remove('is-hidden');
-        } finally {
-            sedangMuatUlang = false;
-            btnRefreshRiwayat.disabled = false;
-            btnRefreshRiwayat.classList.remove('is-loading');
-        }
-    }
-
-    btnRefreshRiwayat?.addEventListener('click', muatUlangRiwayat);
-
 
     /* =====================================================
-       MODAL DETAIL LOGBOOK (tombol "Detail" di Riwayatku)
+       MODAL DETAIL LOGBOOK (tombol "Detail" pada tanggal kalender)
        Field yang dibaca dari tiap item:
        jenis, detail, jam_kerja, kegiatan, status, keterangan_hc
     ====================================================== */
@@ -1136,6 +826,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const rwStatus = qs('#rw-meta-status');
     const rwKegiatan = qs('#rw-kegiatan');
     const rwKeterangan = qs('#rw-keterangan');
+    const rwBandingForm = qs('#rw-banding-form');
+    const rwBandingTextarea = qs('#rw-banding-textarea');
+    const rwBandingHistoryWrap = qs('#rw-banding-history-wrap');
+    const rwBandingHistory = qs('#rw-banding-history');
 
     // Badge status berwarna (Diterima / Ditolak / Menunggu)
     function renderStatus(status) {
@@ -1247,6 +941,15 @@ document.addEventListener('DOMContentLoaded', () => {
             'Belum ada keterangan dari HC.'
         );
 
+        rwBandingHistory.textContent = item.keterangan_pegawai || '';
+        rwBandingHistoryWrap.classList.toggle('is-hidden', !item.keterangan_pegawai);
+        rwBandingForm.action = BANDING_URL.replace('__ID__', String(item.id));
+        rwBandingTextarea.value = String(item.id) === String(OLD_BANDING_ID)
+            ? (OLD_BANDING || '')
+            : '';
+        qs('input[name="logbook_id"]', rwBandingForm).value = String(item.id);
+        rwBandingForm.classList.toggle('is-hidden', item.status !== 'Ditolak');
+
         rwModal.classList.add('is-open');
         rwModal.querySelector('.rw-body').scrollTop = 0;
     }
@@ -1271,7 +974,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const typeButtons = qsa('[data-jenis]');
     const forms = qsa('[data-jenis-panel]');
 
-    function showJenis(jenis) {
+    function showJenis(jenis, clearDurationErrors = true) {
+        if (clearDurationErrors) {
+            qsa('.js-duration-error').forEach((message) => message.remove());
+        }
+
         forms.forEach((form) => form.classList.toggle('is-active', form.dataset.jenisPanel === jenis));
         typeButtons.forEach((button) => button.classList.toggle('is-active', button.dataset.jenis === jenis));
 
@@ -1281,29 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
     typeButtons.forEach((button) => button.addEventListener('click', () => showJenis(button.dataset.jenis)));
 
     // Validasi gagal: buka kembali form yang tadi dikirim
-    if (JENIS_LAMA) showJenis(JENIS_LAMA);
-
-
-    /* =====================================================
-       WFH (aktif setelah tanggal diisi)
-    ====================================================== */
-    const tanggal = qs('.js-tanggal');
-    const wfh = qs('.js-wfh');
-    const wfhInfo = qs('.js-wfh-info');
-
-    function syncWfh() {
-        const hasDate = Boolean(tanggal.value);
-
-        wfh.disabled = !hasDate;
-        wfhInfo.classList.toggle('is-hidden', hasDate);
-
-        if (!hasDate) {
-            wfh.checked = false;
-        }
-    }
-
-    tanggal.addEventListener('change', syncWfh);
-    syncWfh();
+    if (JENIS_LAMA) showJenis(JENIS_LAMA, false);
 
 
     /* =====================================================
@@ -1378,24 +1063,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 && dateKey < HARI_INI
                 && !LIBUR[dateKey]
                 && items.length === 0;
+            const adaPenolakan = items.some((item) => item.status === 'Ditolak');
+            const adaMenunggu = items.some((item) => item.status === 'Menunggu');
+            const semuaDisetujui = items.length > 0
+                && items.every((item) => item.status === 'Disetujui');
 
             const button = el(
                 'button',
                 'lb-cal-day'
                     + (dateKey === HARI_INI ? ' is-today' : '')
-                    + (isMissing ? ' is-missing' : '')
+                    + (adaPenolakan ? ' has-rejected' : '')
+                    + (!adaPenolakan && adaMenunggu ? ' has-waiting' : '')
+                    + (!adaPenolakan && !adaMenunggu && semuaDisetujui ? ' has-approved' : '')
             );
             button.type = 'button';
             button.disabled = dateKey > HARI_INI;
-            if (isMissing) button.title = 'Belum diisi';
+            if (adaPenolakan) button.title = 'Ada logbook ditolak';
+            else if (adaMenunggu) button.title = 'Menunggu persetujuan';
+            else if (semuaDisetujui) button.title = 'Semua logbook disetujui';
+            else if (isMissing) button.title = 'Belum diisi';
             button.append(el('span', '', day));
 
-            const types = new Set(items.map((item) => item.jenis));
-            if (LIBUR[dateKey]) types.add('libur');
-            if (isMissing) types.add('kosong');
-
             const dots = el('span', 'lb-dots');
-            types.forEach((type) => dots.append(el('i', `lb-dot lb-dot--${type}`)));
+            if (isMissing) {
+                dots.append(el('i', 'lb-dot lb-dot--kosong'));
+            } else if (semuaDisetujui && !adaPenolakan && !adaMenunggu) {
+                dots.append(el('i', 'fa-solid fa-check lb-cal-approved-check'));
+            } else if (adaPenolakan) {
+                dots.append(el('i', 'fa-solid fa-xmark lb-cal-rejected-x'));
+            }
             button.append(dots);
 
             button.addEventListener('click', () => openDateModal(dateKey));
@@ -1463,13 +1159,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Logbook yang sudah ada
         items.forEach((item) => {
-            modalList.append(
-                modalItem(
-                    item.jenis,
-                    JENIS_LABEL[item.jenis] || item.jenis,
-                    item.detail
-                )
+            const jenis = safeJenis(item.jenis);
+            const row = el('li', `lb-modal-item kal-logbook-item kal-logbook-item--${jenis}`);
+            const content = el('div', 'kal-logbook-content');
+            const head = el('div', 'kal-logbook-head');
+            const badges = el('div', 'riwayat-item-badges');
+            const type = el(
+                'span',
+                `riwayat-item-type riwayat-item-type--${jenis}`,
+                JENIS_LABEL[item.jenis] || item.jenis || 'Logbook'
             );
+            const detailRow = el('div', 'kal-logbook-detail');
+            const detail = el('span', 'riwayat-item-detail', item.detail || '');
+            const detailButton = el('button', 'rw-detail-btn');
+
+            detailButton.type = 'button';
+            detailButton.append(
+                el('i', 'fa-solid fa-file-lines'),
+                document.createTextNode(' Detail')
+            );
+            detailButton.addEventListener('click', () => openRiwayatModal(date, item));
+
+            badges.append(buildStatusBadge(item.status), type);
+            head.append(badges);
+            detailRow.append(detail, detailButton);
+            content.append(head, detailRow);
+            row.append(el('i', `lb-dot lb-dot--${jenis}`), content);
+            modalList.append(row);
         });
 
         // Belum ada logbook dan bukan tanggal libur
@@ -1517,14 +1233,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCalendar();
 
 
-    /* =====================================================
-       PULIHKAN RIWAYATKU SETELAH REFRESH
-       Data diambil ulang dari server, jadi selalu yang terbaru.
-    ====================================================== */
-    // Jika validasi form gagal, tetap tampilkan form (bukan Riwayatku)
-    if (!JENIS_LAMA && loadState().tab === 'riwayat') {
-        showTab('riwayat');
-    }
 
 });
 </script>

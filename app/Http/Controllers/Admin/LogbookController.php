@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Notifications\LogbookStatusChanged;
 use App\Models\Logbook;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -73,9 +74,14 @@ class LogbookController extends Controller
 
     public function setujui(Logbook $logbook): RedirectResponse
     {
+        $statusSebelumnya = $logbook->status;
         $logbook->status = Logbook::STATUS_DISETUJUI;
         $logbook->keterangan_hc = null; // bersihkan alasan lama kalau sebelumnya pernah ditolak
         $logbook->save();
+
+        if ($statusSebelumnya !== Logbook::STATUS_DISETUJUI) {
+            $logbook->user->notify(new LogbookStatusChanged($logbook, Logbook::STATUS_DISETUJUI));
+        }
 
         return back()->with(
             'success',
@@ -92,9 +98,14 @@ class LogbookController extends Controller
             'keterangan_hc.max'      => 'Alasan penolakan maksimal 500 karakter.',
         ]);
 
+        $statusSebelumnya = $logbook->status;
         $logbook->status = Logbook::STATUS_DITOLAK;
         $logbook->keterangan_hc = $data['keterangan_hc'];
         $logbook->save();
+
+        if ($statusSebelumnya !== Logbook::STATUS_DITOLAK) {
+            $logbook->user->notify(new LogbookStatusChanged($logbook, Logbook::STATUS_DITOLAK));
+        }
 
         return back()->with(
             'success',

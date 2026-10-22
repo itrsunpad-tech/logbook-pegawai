@@ -71,6 +71,10 @@
                 <div class="acc-hc"><strong>Keterangan HC:</strong> {{ $lb->keterangan_hc }}</div>
             @endif
 
+            @if ($lb->keterangan_pegawai)
+                <div class="acc-hc"><strong>Keterangan Banding Pegawai:</strong> {{ $lb->keterangan_pegawai }}</div>
+            @endif
+
             <div class="acc-actions">
                 @if ($lb->status !== \App\Models\Logbook::STATUS_DISETUJUI)
                     <form method="POST" action="{{ route('admin.logbook.setujui', $lb) }}">

@@ -422,7 +422,7 @@
 
 
         /* =====================================================
-           LOGBOOK: PAGE, TAB, CARD
+           LOGBOOK: PAGE, CARD
         ====================================================== */
         .lb-page {
             width: 100%;
@@ -431,40 +431,6 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-        }
-
-        /* Jarak antar card di dalam panel tab */
-        [data-tab-panel] {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .lb-tabs {
-            width: 100%;
-            padding: 4px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.98);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
-        }
-
-        .lb-tab {
-            padding: 8px 10px;
-            border: 0;
-            border-radius: 8px;
-            background: transparent;
-            color: var(--muted);
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .lb-tab.is-active {
-            background: var(--surface);
-            color: var(--accent);
         }
 
         .lb-card {
@@ -664,6 +630,13 @@
             font-size: 12px;
         }
 
+        .lb-declaration .lb-alert {
+            margin-top: 8px;
+            padding: 6px 9px;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+
         .lb-submit-wrap {
             margin-top: 14px;
             display: flex;
@@ -774,15 +747,34 @@
             font-weight: 700;
         }
 
-        /* Hari kerja yang belum diisi */
-        .lb-cal-day.is-missing {
-            border: 1px dashed #fca5a5;
-            background: #fff7f7;
+        .lb-cal-day.has-rejected {
+            border: 1px solid #ef4444;
+            background: #fff1f2;
         }
 
-        .lb-cal-day.is-missing:hover:not(:disabled) {
-            border-color: #f87171;
-            background: #fee2e2;
+        .lb-cal-day.has-rejected:hover:not(:disabled) {
+            border-color: #ef4444;
+            background: #ffe4e6;
+        }
+
+        .lb-cal-day.has-waiting {
+            border: 1px solid #facc15;
+            background: #fefce8;
+        }
+
+        .lb-cal-day.has-waiting:hover:not(:disabled) {
+            border-color: #eab308;
+            background: #fef3c7;
+        }
+
+        .lb-cal-day.has-approved {
+            border: 1px solid #86efac;
+            background: #f0fdf4;
+        }
+
+        .lb-cal-day.has-approved:hover:not(:disabled) {
+            border-color: #86efac;
+            background: #dcfce7;
         }
 
         .lb-dots {
@@ -806,8 +798,44 @@
         .lb-dot--lembur { background: var(--orange); }
         .lb-dot--oncall { background: var(--purple); }
         .lb-dot--libur  { background: var(--green); }
-        .lb-dot--kosong { background: #f87171; }
-        .lb-dot--dll    { background: var(--gray); }
+        .lb-dot--kosong { background: #94a3b8; }
+        .lb-cal-approved-check {
+            width: 8px;
+            height: 8px;
+            flex: 0 0 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #10b981;
+            font-size: 8px;
+            line-height: 1;
+        }
+
+        .lb-cal-rejected-x {
+            width: 8px;
+            height: 8px;
+            flex: 0 0 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #ef4444;
+            font-size: 9px;
+        }
+
+        .lb-calendar-key {
+            width: 10px;
+            height: 10px;
+            flex: 0 0 10px;
+            display: inline-block;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            background: #f1f5f9;
+        }
+
+        .lb-calendar-key--waiting {
+            border-color: #facc15;
+            background: #fefce8;
+        }
 
         .lb-legend {
             margin-top: 12px;
@@ -1067,37 +1095,6 @@
             color: var(--muted-light);
             font-size: 12px;
             line-height: 1.5;
-        }
-
-        .riwayat-list {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .riwayat-item {
-            padding: 11px 12px;
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            background: var(--surface);
-        }
-
-        .riwayat-item--harian { border-left: 3px solid var(--blue); }
-        .riwayat-item--lembur { border-left: 3px solid var(--orange); }
-        .riwayat-item--oncall { border-left: 3px solid var(--purple); }
-
-        .riwayat-item-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .riwayat-item-date {
-            color: var(--text);
-            font-size: 11px;
-            font-weight: 700;
         }
 
         .riwayat-item-type {
@@ -1542,8 +1539,18 @@
 
 
     {{-- ===================== TOAST ===================== --}}
-    @if (session('success') || session('error'))
+    @php($notifikasiStatus = $notifikasiStatus ?? collect())
+    @if (session('success') || session('error') || $notifikasiStatus->isNotEmpty())
         <div class="toast-container">
+            @foreach ($notifikasiStatus as $notifikasi)
+                @php($ditolak = ($notifikasi->data['status'] ?? '') === \App\Models\Logbook::STATUS_DITOLAK)
+                <div class="toast {{ $ditolak ? 'toast--error' : 'toast--success' }}" role="{{ $ditolak ? 'alert' : 'status' }}">
+                    <i class="fa-solid {{ $ditolak ? 'fa-circle-exclamation' : 'fa-circle-check' }}"></i>
+                    <span>{{ $notifikasi->data['message'] ?? 'Status logbook diperbarui.' }}</span>
+                    <button type="button" class="toast-close" aria-label="Tutup">&times;</button>
+                </div>
+            @endforeach
+
             @if (session('success'))
                 <div class="toast toast--success" role="status">
                     <i class="fa-solid fa-circle-check"></i>
@@ -1627,14 +1634,6 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutButton.addEventListener('click', openConfirm);
         confirmCancel.addEventListener('click', closeConfirm);
         confirmOk.addEventListener('click', () => {
-            // Hapus tab & filter Riwayatku yang tersimpan, supaya login berikutnya
-            // (juga oleh akun lain di perangkat yang sama) mulai dari Input Baru
-            try {
-                sessionStorage.removeItem('logbook:riwayat-state');
-            } catch (error) {
-                // penyimpanan tidak tersedia: abaikan
-            }
-
             logoutForm.submit();
         });
 
