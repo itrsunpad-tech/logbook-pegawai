@@ -797,7 +797,7 @@
         .lb-dot--harian { background: var(--blue); }
         .lb-dot--lembur { background: var(--orange); }
         .lb-dot--oncall { background: var(--purple); }
-        .lb-dot--libur  { background: var(--green); }
+        .lb-dot--libur  { background: #0f766e; }
         .lb-dot--kosong { background: #94a3b8; }
         .lb-cal-approved-check {
             width: 8px;
@@ -837,6 +837,16 @@
             background: #fefce8;
         }
 
+        .lb-calendar-key--approved {
+            border-color: #86efac;
+            background: #f0fdf4;
+        }
+
+        .lb-calendar-key--rejected {
+            border-color: #fca5a5;
+            background: #fff1f2;
+        }
+
         .lb-legend {
             margin-top: 12px;
             padding-top: 10px;
@@ -850,9 +860,18 @@
         }
 
         .lb-legend span {
+            min-height: 12px;
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            line-height: 1.2;
+        }
+
+        .lb-legend .lb-dot,
+        .lb-legend .lb-calendar-key {
+            flex: 0 0 auto;
+            margin: 0;
+            vertical-align: middle;
         }
 
         .lb-hint {
@@ -1098,16 +1117,21 @@
         }
 
         .riwayat-item-type {
-            padding: 4px 7px;
+            min-height: 20px;
+            padding: 0 7px;
+            display: inline-flex;
+            align-items: center;
+            box-sizing: border-box;
             border-radius: 999px;
             background: var(--accent-soft);
             color: var(--accent);
             font-size: 10px;
             font-weight: 700;
+            line-height: 1;
         }
 
         .riwayat-item-type--harian { background: #dbeafe; color: #1d4ed8; }
-        .riwayat-item-type--lembur { background: #fef3c7; color: #b45309; }
+        .riwayat-item-type--lembur { background: #ffedd5; color: #c2410c; }
         .riwayat-item-type--oncall { background: #ede9fe; color: #6d28d9; }
 
         .riwayat-item-detail {

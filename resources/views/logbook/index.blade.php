@@ -185,13 +185,26 @@
     }
 
     .rw-status {
-        padding: 4px 9px;
+        min-height: 22px;
+        padding: 0 9px;
         display: inline-flex;
         align-items: center;
         gap: 5px;
+        box-sizing: border-box;
         border-radius: 999px;
         font-size: 11px;
         font-weight: 700;
+        line-height: 1;
+    }
+
+    .rw-status > i {
+        width: 11px;
+        flex: 0 0 11px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        line-height: 1;
     }
 
     .rw-status--ok   { background: #dcfce7; color: #15803d; }
@@ -209,7 +222,7 @@
 
     /* Badge status di kartu dibuat sedikit lebih kecil dari yang di modal Detail */
     .riwayat-item-badges .rw-status {
-        padding: 3px 9px;
+        min-height: 20px;
         font-size: 10.5px;
     }
 
@@ -344,6 +357,7 @@
                 <button type="button" data-jenis="lembur" class="lb-type-button">
                     <i class="fa-solid fa-business-time"></i>
                     Lembur
+                    <span class="lb-type-sub">Maks 1 kali per hari</span>
                 </button>
 
                 <button type="button" data-jenis="oncall" class="lb-type-button lb-type-button--wide">
@@ -591,8 +605,8 @@
                 <span><i class="lb-dot lb-dot--libur"></i> Libur Nasional</span>
                 <span><i class="lb-dot lb-dot--kosong"></i> Belum diisi</span>
                 <span><i class="lb-calendar-key lb-calendar-key--waiting"></i> Menunggu</span>
-                <span><i class="fa-solid fa-check lb-cal-approved-check"></i> Disetujui</span>
-                <span><i class="fa-solid fa-xmark lb-cal-rejected-x"></i> Ditolak</span>
+                <span><i class="lb-calendar-key lb-calendar-key--approved"></i> Disetujui</span>
+                <span><i class="lb-calendar-key lb-calendar-key--rejected"></i> Ditolak</span>
             </div>
 
             <p class="lb-hint">
@@ -1088,10 +1102,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const dots = el('span', 'lb-dots');
             if (isMissing) {
                 dots.append(el('i', 'lb-dot lb-dot--kosong'));
-            } else if (semuaDisetujui && !adaPenolakan && !adaMenunggu) {
-                dots.append(el('i', 'fa-solid fa-check lb-cal-approved-check'));
-            } else if (adaPenolakan) {
-                dots.append(el('i', 'fa-solid fa-xmark lb-cal-rejected-x'));
+            } else {
+                const jenisTerisi = [...new Set(items.map((item) => item.jenis))];
+                if (LIBUR[dateKey]) jenisTerisi.push('libur');
+                jenisTerisi.forEach((jenis) => {
+                    dots.append(el('i', `lb-dot lb-dot--${jenis}`));
+                });
             }
             button.append(dots);
 

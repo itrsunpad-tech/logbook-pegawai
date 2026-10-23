@@ -97,10 +97,17 @@ class StoreLogbookRequest extends FormRequest
                 $validator->errors()->add('tanggal', 'Logbook harian untuk tanggal ini sudah diisi.');
             }
 
-            if ($jenis === 'oncall' && $sudahAda->count() >= LogbookController::MAKS_ONCALL) {
+            if ($jenis === 'lembur' && $sudahAda->exists()) {
                 $validator->errors()->add(
                     'tanggal',
-                    'On call pada tanggal ini sudah mencapai batas ' . LogbookController::MAKS_ONCALL . ' kali per hari.'
+                    'Lembur pada tanggal ini sudah diisi. Maksimal satu logbook lembur per hari.'
+                );
+            }
+
+            if ($jenis === 'oncall' && $sudahAda->exists()) {
+                $validator->errors()->add(
+                    'tanggal',
+                    'On call pada tanggal ini sudah diisi. Maksimal satu logbook on call per hari.'
                 );
             }
         });
