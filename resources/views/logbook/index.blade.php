@@ -323,19 +323,11 @@
 
 <div class="lb-page">
 
-    {{-- Error validasi (notifikasi sukses memakai toast di layout) --}}
-    @php
-        $errorsUmum = collect($errors->all())
-            ->reject(fn ($error) => str_contains($error, 'belum memenuhi durasi minimal'));
-    @endphp
-
-    @if ($errorsUmum->isNotEmpty())
-        <div class="lb-alert lb-alert--error">
-            <ul>
-                @foreach ($errorsUmum as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+    {{-- Error pengajuan banding (error logbook tampil di bawah checkbox pernyataan) --}}
+    @if ($errors->has('keterangan_pegawai'))
+        <div class="lb-alert lb-alert--error" role="alert">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            {{ $errors->first('keterangan_pegawai') }}
         </div>
     @endif
 
@@ -357,13 +349,13 @@
                 <button type="button" data-jenis="lembur" class="lb-type-button">
                     <i class="fa-solid fa-business-time"></i>
                     Lembur
-                    <span class="lb-type-sub">Maks 1 kali per hari</span>
+                    <span class="lb-type-sub">Maks 1 kali per hari, tidak bisa digabung dengan On Call</span>
                 </button>
 
                 <button type="button" data-jenis="oncall" class="lb-type-button lb-type-button--wide">
                     <i class="fa-solid fa-phone"></i>
                     On Call
-                    <span class="lb-type-sub">Maks pengisian {{ $maksOncall }} kali per hari</span>
+                    <span class="lb-type-sub">Maks {{ $maksOncall }} kali per hari, tidak bisa digabung dengan Lembur</span>
                 </button>
             </div>
         </div>
@@ -422,7 +414,7 @@
                 >{{ $o('harian', 'ringkasan') }}</textarea>
             </div>
 
-            @include('logbook._pernyataan')
+            @include('logbook._pernyataan', ['jenisForm' => 'harian'])
         </form>
 
 
@@ -491,7 +483,7 @@
                 >{{ $o('lembur', 'ringkasan') }}</textarea>
             </div>
 
-            @include('logbook._pernyataan')
+            @include('logbook._pernyataan', ['jenisForm' => 'lembur'])
         </form>
 
 
@@ -560,7 +552,7 @@
                 >{{ $o('oncall', 'ringkasan') }}</textarea>
             </div>
 
-            @include('logbook._pernyataan')
+            @include('logbook._pernyataan', ['jenisForm' => 'oncall'])
         </form>
 
     </section>
@@ -994,7 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showJenis(jenis, clearDurationErrors = true) {
         if (clearDurationErrors) {
-            qsa('.js-duration-error').forEach((message) => message.remove());
+            qsa('.js-form-warning').forEach((message) => message.remove());
         }
 
         forms.forEach((form) => form.classList.toggle('is-active', form.dataset.jenisPanel === jenis));

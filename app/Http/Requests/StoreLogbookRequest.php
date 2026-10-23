@@ -63,7 +63,7 @@ class StoreLogbookRequest extends FormRequest
             if ($tanggalTerkunci) {
                 $validator->errors()->add(
                     'tanggal',
-                    'Tanggal ini tidak dapat diisi kembali karena logbook sudah disetujui atau ditolak.'
+                    'Tanggal ini sudah final dan tidak dapat diisi ulang.'
                 );
             }
 
@@ -83,32 +83,33 @@ class StoreLogbookRequest extends FormRequest
                     $label = $jenis === 'lembur' ? 'Lembur' : 'On call';
                     $validator->errors()->add(
                         'jam_selesai',
-                        "{$label} belum memenuhi durasi minimal {$minimalJam} jam. Silakan periksa kembali jam mulai dan jam selesai."
+                        "Durasi {$label} minimal {$minimalJam} jam."
                     );
                 }
             }
 
-            $sudahAda = Logbook::query()
+            $logbookTanggal = Logbook::query()
                 ->where('user_id', $this->user()->id)
-                ->whereDate('tanggal', $this->input('tanggal'))
-                ->where('jenis', $jenis);
+                ->whereDate('tanggal', $this->input('tanggal'));
 
-            if ($jenis === 'harian' && $sudahAda->exists()) {
-                $validator->errors()->add('tanggal', 'Logbook harian untuk tanggal ini sudah diisi.');
+            if ($jenis === 'harian' && (clone $logbookTanggal)->where('jenis', 'harian')->exists()) {
+                $validator->errors()->add('tanggal', 'Logbook harian tanggal ini sudah diisi.');
             }
 
-            if ($jenis === 'lembur' && $sudahAda->exists()) {
-                $validator->errors()->add(
-                    'tanggal',
-                    'Lembur pada tanggal ini sudah diisi. Maksimal satu logbook lembur per hari.'
-                );
-            }
+            if (in_array($jenis, ['lembur', 'oncall'], true)) {
+                $jenisLama = (clone $logbookTanggal)
+                    ->whereIn('jenis', ['lembur', 'oncall'])
+                    ->value('jenis');
 
-            if ($jenis === 'oncall' && $sudahAda->exists()) {
-                $validator->errors()->add(
-                    'tanggal',
-                    'On call pada tanggal ini sudah diisi. Maksimal satu logbook on call per hari.'
-                );
+                if ($jenisLama !== null) {
+                    $namaJenisLama = $jenisLama === 'lembur' ? 'Lembur' : 'On Call';
+
+                    $pesan = $jenisLama === $jenis
+                        ? "{$namaJenisLama} tanggal ini sudah diisi (maksimal 1 kali)."
+                        : "Sudah ada {$namaJenisLama}. Pilih Lembur atau On Call, tidak bisa keduanya.";
+
+                    $validator->errors()->add('tanggal', $pesan);
+                }
             }
         });
     }
