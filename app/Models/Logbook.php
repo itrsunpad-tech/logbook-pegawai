@@ -26,6 +26,12 @@ class Logbook extends Model
 
     public const STATUS_DITOLAK = 'Ditolak';
 
+    public const BANDING_MENUNGGU = 'Menunggu';
+
+    public const BANDING_DISETUJUI = 'Disetujui';
+
+    public const BANDING_DITOLAK = 'Ditolak';
+
     public const STATUS = [
         self::STATUS_MENUNGGU,
         self::STATUS_DISETUJUI,

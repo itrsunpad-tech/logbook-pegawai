@@ -74,8 +74,13 @@ class LogbookController extends Controller
 
     public function setujui(Logbook $logbook): RedirectResponse
     {
+        abort_if(in_array($logbook->status_banding, [Logbook::BANDING_DISETUJUI, Logbook::BANDING_DITOLAK], true), 403);
+
         $statusSebelumnya = $logbook->status;
         $logbook->status = Logbook::STATUS_DISETUJUI;
+        if ($logbook->status_banding === Logbook::BANDING_MENUNGGU) {
+            $logbook->status_banding = Logbook::BANDING_DISETUJUI;
+        }
         $logbook->keterangan_hc = null; // bersihkan alasan lama kalau sebelumnya pernah ditolak
         $logbook->save();
 
@@ -91,6 +96,8 @@ class LogbookController extends Controller
 
     public function tolak(Request $request, Logbook $logbook): RedirectResponse
     {
+        abort_if(in_array($logbook->status_banding, [Logbook::BANDING_DISETUJUI, Logbook::BANDING_DITOLAK], true), 403);
+
         $data = $request->validate([
             'keterangan_hc' => ['required', 'string', 'max:500'],
         ], [
@@ -100,6 +107,9 @@ class LogbookController extends Controller
 
         $statusSebelumnya = $logbook->status;
         $logbook->status = Logbook::STATUS_DITOLAK;
+        if ($logbook->status_banding === Logbook::BANDING_MENUNGGU) {
+            $logbook->status_banding = Logbook::BANDING_DITOLAK;
+        }
         $logbook->keterangan_hc = $data['keterangan_hc'];
         $logbook->save();
 

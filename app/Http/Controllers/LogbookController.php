@@ -97,6 +97,7 @@ class LogbookController extends Controller
     {
         abort_unless((int) $logbook->user_id === (int) $request->user()->id, 403);
         abort_unless($logbook->status === Logbook::STATUS_DITOLAK, 404);
+        abort_unless($logbook->status_banding === null, 404);
 
         $data = $request->validate([
             'keterangan_pegawai' => ['required', 'string', 'min:10', 'max:1000'],
@@ -108,6 +109,7 @@ class LogbookController extends Controller
 
         $logbook->keterangan_pegawai = $data['keterangan_pegawai'];
         $logbook->status = Logbook::STATUS_MENUNGGU;
+        $logbook->status_banding = Logbook::BANDING_MENUNGGU;
         $logbook->save();
 
         return redirect()
@@ -159,6 +161,7 @@ class LogbookController extends Controller
             'kegiatan'  => $item->ringkasan,
             'is_wfh'    => (bool) $item->is_wfh,
             'keterangan_pegawai' => $item->keterangan_pegawai,
+            'status_banding' => $item->status_banding,
         ];
 
         // Opsional: hanya dikirim kalau kolomnya memang ada di tabel logbooks

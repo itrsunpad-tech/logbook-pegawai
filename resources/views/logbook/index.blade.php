@@ -948,7 +948,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ? (OLD_BANDING || '')
             : '';
         qs('input[name="logbook_id"]', rwBandingForm).value = String(item.id);
-        rwBandingForm.classList.toggle('is-hidden', item.status !== 'Ditolak');
+        rwBandingForm.classList.toggle('is-hidden', item.status !== 'Ditolak' || Boolean(item.status_banding));
 
         rwModal.classList.add('is-open');
         rwModal.querySelector('.rw-body').scrollTop = 0;
@@ -1056,11 +1056,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const dateKey = dateKeyOf(y, m, day);
             const items = DATA[dateKey] || [];
 
-            // Hari kerja (Sen-Jum) yang sudah lewat, bukan libur nasional, dan belum ada logbook
-            const weekday = new Date(y, m - 1, day).getDay();
-            const isWeekday = weekday !== 0 && weekday !== 6;
-            const isMissing = isWeekday
-                && dateKey < HARI_INI
+            // Semua tanggal sampai hari ini yang bukan libur nasional dan belum ada logbook
+            const isMissing = dateKey <= HARI_INI
                 && !LIBUR[dateKey]
                 && items.length === 0;
             const adaPenolakan = items.some((item) => item.status === 'Ditolak');

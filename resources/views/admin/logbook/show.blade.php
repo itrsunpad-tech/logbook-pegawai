@@ -76,7 +76,8 @@
             @endif
 
             <div class="acc-actions">
-                @if ($lb->status !== \App\Models\Logbook::STATUS_DISETUJUI)
+                @php($bandingFinal = in_array($lb->status_banding, [\App\Models\Logbook::BANDING_DISETUJUI, \App\Models\Logbook::BANDING_DITOLAK], true))
+                @if (!$bandingFinal && $lb->status !== \App\Models\Logbook::STATUS_DISETUJUI)
                     <form method="POST" action="{{ route('admin.logbook.setujui', $lb) }}">
                         @csrf
                         @method('PATCH')
@@ -84,7 +85,7 @@
                     </form>
                 @endif
 
-                @if ($lb->status !== \App\Models\Logbook::STATUS_DITOLAK)
+                @if (!$bandingFinal && $lb->status !== \App\Models\Logbook::STATUS_DITOLAK)
                     <details class="acc-tolak">
                         <summary class="acc-btn acc-btn--no">Tolak</summary>
 
@@ -96,6 +97,9 @@
                             <button type="submit" class="acc-btn acc-btn--no">Kirim penolakan</button>
                         </form>
                     </details>
+                @endif
+                @if ($bandingFinal)
+                    <span class="acc-chip">Banding {{ strtolower($lb->status_banding) }}</span>
                 @endif
             </div>
 

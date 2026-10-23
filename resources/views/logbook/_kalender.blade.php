@@ -220,6 +220,11 @@
                 tanggal ===
                 HARI_INI;
 
+            const belumDiisi =
+                tanggal <= HARI_INI &&
+                !LIBUR[tanggal] &&
+                !(DATA[tanggal] || []).length;
+
 
             const masaDepan =
                 tanggal >
@@ -290,6 +295,10 @@
                     'libur'
                 );
 
+            }
+
+            if (belumDiisi) {
+                jenis.add('kosong');
             }
 
 

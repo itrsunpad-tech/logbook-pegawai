@@ -741,7 +741,7 @@
         }
 
         .lb-cal-day.is-today {
-            border: 2px solid var(--blue);
+            border: 1px solid var(--blue);
             background: #f5f9ff;
             color: var(--text);
             font-weight: 700;
