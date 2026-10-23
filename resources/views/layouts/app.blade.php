@@ -632,9 +632,26 @@
 
         .lb-declaration .lb-alert {
             margin-top: 8px;
-            padding: 6px 9px;
-            font-size: 10px;
+            padding: 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: #dc2626;
+            font-size: 11px;
             line-height: 1.4;
+        }
+
+        .lb-declaration .lb-alert > i {
+            margin-top: 1px;
+            flex: 0 0 auto;
+            font-size: 11px;
+        }
+
+        .lb-declaration .lb-alert > span > span {
+            display: block;
         }
 
         .lb-submit-wrap {
@@ -797,7 +814,7 @@
         .lb-dot--harian { background: var(--blue); }
         .lb-dot--lembur { background: var(--orange); }
         .lb-dot--oncall { background: var(--purple); }
-        .lb-dot--libur  { background: #0f766e; }
+        .lb-dot--libur  { background: #111827; }
         .lb-dot--kosong { background: #94a3b8; }
         .lb-cal-approved-check {
             width: 8px;

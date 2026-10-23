@@ -21,18 +21,19 @@
 
     </label>
 
-    @if (
-        in_array($jenisLama, ['lembur', 'oncall'], true)
-        && $errors->has('jam_selesai')
-        && str_contains($errors->first('jam_selesai'), 'belum memenuhi durasi minimal')
-    )
+    @if ($jenisLama === $jenisForm && $errors->any())
         <div
-            class="lb-alert lb-alert--error js-duration-error"
-            data-jenis="{{ $jenisLama }}"
+            class="lb-alert lb-alert--error js-form-warning"
+            data-jenis="{{ $jenisForm }}"
             role="alert"
             aria-live="assertive"
         >
-            {{ $errors->first('jam_selesai') }}
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            <span>
+                @foreach ($errors->all() as $message)
+                    <span>{{ $message }}</span>
+                @endforeach
+            </span>
         </div>
     @endif
 
