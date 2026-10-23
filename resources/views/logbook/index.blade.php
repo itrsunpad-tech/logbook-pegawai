@@ -689,7 +689,7 @@
             <div id="rw-keterangan-wrap" class="rw-section">
                 <h4 class="rw-section-title">
                     <i class="fa-solid fa-comment-dots"></i>
-                    Keterangan HC
+                    <span id="rw-keterangan-label">Keterangan HC</span>
                 </h4>
                 <div id="rw-keterangan" class="rw-text"></div>
             </div>
@@ -826,6 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rwStatus = qs('#rw-meta-status');
     const rwKegiatan = qs('#rw-kegiatan');
     const rwKeterangan = qs('#rw-keterangan');
+    const rwKeteranganLabel = qs('#rw-keterangan-label');
     const rwBandingForm = qs('#rw-banding-form');
     const rwBandingTextarea = qs('#rw-banding-textarea');
     const rwBandingHistoryWrap = qs('#rw-banding-history-wrap');
@@ -940,6 +941,9 @@ document.addEventListener('DOMContentLoaded', () => {
             item.keterangan_hc || '',
             'Belum ada keterangan dari HC.'
         );
+        rwKeteranganLabel.textContent = item.status_banding === 'Ditolak'
+            ? 'Alasan Banding Ditolak'
+            : 'Keterangan HC';
 
         rwBandingHistory.textContent = item.keterangan_pegawai || '';
         rwBandingHistoryWrap.classList.toggle('is-hidden', !item.keterangan_pegawai);
