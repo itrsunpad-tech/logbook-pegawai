@@ -91,5 +91,14 @@ Route::middleware(['auth', 'admin'])
 
         Route::patch('/logbook/{logbook}/tolak', [AdminLogbookController::class, 'tolak'])
             ->name('logbook.tolak');
+
+        Route::patch('/kepegawaian/{user}/data-pribadi', [KepegawaianController::class, 'updateDataPribadi'])
+            ->name('kepegawaian.update-data-pribadi');
+
+        Route::patch('/kepegawaian/{user}/pekerjaan', [KepegawaianController::class, 'updatePekerjaan'])
+            ->name('kepegawaian.update-pekerjaan');
+
+        Route::patch('/kepegawaian/{user}/perbankan', [KepegawaianController::class, 'updatePerbankan'])
+            ->name('kepegawaian.update-perbankan');
     });
 

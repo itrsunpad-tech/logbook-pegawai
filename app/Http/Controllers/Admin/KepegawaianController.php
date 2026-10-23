@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\EmployeeProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -13,7 +14,7 @@ use Illuminate\View\View;
 class KepegawaianController extends Controller
 {
     /** Tab detail yang sudah aktif. */
-    private const TAB = ['overview', 'kontak'];
+        private const TAB = ['overview', 'kontak', 'data-pribadi', 'pekerjaan', 'perbankan'];
 
     /**
      * Daftar pegawai + pencarian + filter "punya email".
@@ -129,4 +130,98 @@ class KepegawaianController extends Controller
             ->route('admin.kepegawaian.show', ['user' => $user, 'tab' => 'kontak'])
             ->with('success', 'Data kontak berhasil disimpan.');
     }
-}
+        /**
+     * Simpan tab Data Pribadi.
+     */
+    public function updateDataPribadi(Request $request, User $user): RedirectResponse
+    {
+        // NIK dan NPWP: buang titik/spasi/strip, sisakan angka saja
+        $request->merge([
+            'nik'  => $this->angkaSaja($request->input('nik')),
+            'npwp' => $this->angkaSaja($request->input('npwp')),
+        ]);
+
+        $data = $request->validate([
+            'nik'                 => ['nullable', 'digits:16'],
+            'tempat_lahir'        => ['nullable', 'string', 'max:100'],
+            'tanggal_lahir'       => ['nullable', 'date', 'before:today'],
+            'agama'               => ['nullable', Rule::in(EmployeeProfile::AGAMA)],
+            'jenis_kelamin'       => ['nullable', Rule::in(EmployeeProfile::JENIS_KELAMIN)],
+            'pendidikan_terakhir' => ['nullable', Rule::in(EmployeeProfile::PENDIDIKAN)],
+            'status_nikah'        => ['nullable', Rule::in(EmployeeProfile::STATUS_NIKAH)],
+            'jumlah_anak'         => ['nullable', 'integer', 'between:0,20'],
+            'nama_ibu_kandung'    => ['nullable', 'string', 'max:150'],
+            'alamat_domisili'     => ['nullable', 'string', 'max:500'],
+            'alamat_ktp'          => ['nullable', 'string', 'max:500'],
+            'npwp'                => ['nullable', 'digits_between:15,16'],
+        ], [
+            'nik.digits'           => 'NIK harus 16 digit angka.',
+            'npwp.digits_between'  => 'NPWP harus 15 atau 16 digit angka.',
+            'tanggal_lahir.date'   => 'Tanggal lahir tidak valid.',
+            'tanggal_lahir.before' => 'Tanggal lahir harus sebelum hari ini.',
+            'jumlah_anak.between'  => 'Jumlah anak harus antara 0 sampai 20.',
+            'jumlah_anak.integer'  => 'Jumlah anak harus berupa angka.',
+        ]);
+
+        $user->profile()->updateOrCreate([], $data);
+
+        return redirect()
+            ->route('admin.kepegawaian.show', ['user' => $user, 'tab' => 'data-pribadi'])
+            ->with('success', 'Data pribadi berhasil disimpan.');
+    }
+
+    /**
+     * Simpan tab Pekerjaan.
+     */
+    public function updatePekerjaan(Request $request, User $user): RedirectResponse
+    {
+        $data = $request->validate([
+            'tanggal_mulai_kerja' => ['nullable', 'date'],
+            'jabatan'             => ['nullable', 'string', 'max:100'],
+            'status_kepegawaian'  => ['nullable', Rule::in(EmployeeProfile::STATUS_KEPEGAWAIAN)],
+        ], [
+            'tanggal_mulai_kerja.date' => 'Tanggal mulai kerja tidak valid.',
+        ]);
+
+        $user->profile()->updateOrCreate([], $data);
+
+        return redirect()
+            ->route('admin.kepegawaian.show', ['user' => $user, 'tab' => 'pekerjaan'])
+            ->with('success', 'Data pekerjaan berhasil disimpan.');
+    }
+
+    /**
+     * Simpan tab Perbankan.
+     */
+    public function updatePerbankan(Request $request, User $user): RedirectResponse
+    {
+        // Nomor rekening: angka saja, nol di depan tetap dipertahankan (disimpan sebagai teks)
+        $request->merge([
+            'nomor_rekening' => $this->angkaSaja($request->input('nomor_rekening')),
+        ]);
+
+        $data = $request->validate([
+            'nama_bank'              => ['nullable', Rule::in(EmployeeProfile::BANK)],
+            'nomor_rekening'         => ['nullable', 'digits_between:5,25'],
+            'nama_pemegang_rekening' => ['nullable', 'string', 'max:150'],
+        ], [
+            'nomor_rekening.digits_between' => 'Nomor rekening harus 5 sampai 25 digit angka.',
+        ]);
+
+        $user->profile()->updateOrCreate([], $data);
+
+        return redirect()
+            ->route('admin.kepegawaian.show', ['user' => $user, 'tab' => 'perbankan'])
+            ->with('success', 'Data perbankan berhasil disimpan.');
+    }
+
+    /**
+     * Buang semua karakter selain angka. Hasil kosong dijadikan NULL.
+     */
+    private function angkaSaja(?string $nilai): ?string
+    {
+        $angka = preg_replace('/\D+/', '', (string) $nilai);
+
+        return $angka !== '' ? $angka : null;
+    }
+}   
