@@ -71,20 +71,19 @@ class StoreLogbookRequest extends FormRequest
                 $mulai = $this->menitDariTengahMalam($this->input('jam_mulai'));
                 $selesai = $this->menitDariTengahMalam($this->input('jam_selesai'));
 
-                // Jam selesai yang lebih kecil berarti kegiatan melewati tengah malam.
                 if ($selesai < $mulai) {
-                    $selesai += 24 * 60;
-                }
+                    $validator->errors()->add('jam_selesai', 'Jam selesai harus setelah jam mulai.');
+                } else {
+                    $durasiMinimal = ($jenis === 'lembur' ? LogbookController::MIN_JAM_LEMBUR : LogbookController::MIN_JAM_ONCALL) * 60;
 
-                $durasiMinimal = ($jenis === 'lembur' ? LogbookController::MIN_JAM_LEMBUR : LogbookController::MIN_JAM_ONCALL) * 60;
-
-                if (($selesai - $mulai) < $durasiMinimal) {
-                    $minimalJam = $durasiMinimal / 60;
-                    $label = $jenis === 'lembur' ? 'Lembur' : 'On call';
-                    $validator->errors()->add(
-                        'jam_selesai',
-                        "Durasi {$label} minimal {$minimalJam} jam."
-                    );
+                    if (($selesai - $mulai) < $durasiMinimal) {
+                        $minimalJam = $durasiMinimal / 60;
+                        $label = $jenis === 'lembur' ? 'Lembur' : 'On call';
+                        $validator->errors()->add(
+                            'jam_selesai',
+                            "Durasi {$label} minimal {$minimalJam} jam."
+                        );
+                    }
                 }
             }
 

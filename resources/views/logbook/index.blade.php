@@ -67,9 +67,7 @@
     }
 
 
-    /* =====================================================
-       MODAL DETAIL LOGBOOK
-    ====================================================== */
+    /* Modal detail logbook */
     .rw-modal {
         position: fixed;
         inset: 0;
@@ -361,7 +359,7 @@
         </div>
 
 
-        {{-- ===================== FORM HARIAN ===================== --}}
+        {{-- Form logbook harian --}}
         <form
             method="POST"
             action="{{ route('logbook.store') }}"
@@ -418,7 +416,7 @@
         </form>
 
 
-        {{-- ===================== FORM LEMBUR ===================== --}}
+        {{-- Form lembur --}}
         <form
             method="POST"
             action="{{ route('logbook.store') }}"
@@ -487,7 +485,7 @@
         </form>
 
 
-        {{-- ===================== FORM ON CALL ===================== --}}
+        {{-- Form on call --}}
         <form
             method="POST"
             action="{{ route('logbook.store') }}"
@@ -558,7 +556,7 @@
     </section>
 
 
-    {{-- ===================== KALENDER ===================== --}}
+    {{-- Kalender pengisian --}}
     <div id="kalender-utama">
         <div class="lb-card">
             <h2 class="lb-card-title">
@@ -594,7 +592,9 @@
                 <span><i class="lb-dot lb-dot--harian"></i> Harian</span>
                 <span><i class="lb-dot lb-dot--lembur"></i> Lembur</span>
                 <span><i class="lb-dot lb-dot--oncall"></i> On Call</span>
+                {{-- Libur nasional disembunyikan sementara.
                 <span><i class="lb-dot lb-dot--libur"></i> Libur Nasional</span>
+                --}}
                 <span><i class="lb-dot lb-dot--kosong"></i> Belum diisi</span>
                 <span><i class="lb-calendar-key lb-calendar-key--waiting"></i> Menunggu</span>
                 <span><i class="lb-calendar-key lb-calendar-key--approved"></i> Disetujui</span>
@@ -610,7 +610,7 @@
 </div>
 
 
-{{-- ===================== MODAL DETAIL TANGGAL (KALENDER) ===================== --}}
+{{-- Modal detail tanggal kalender --}}
 <div id="kal-modal" class="lb-modal" role="dialog" aria-modal="true">
     <div class="lb-modal-box">
 
@@ -646,7 +646,7 @@
 </div>
 
 
-{{-- ===================== MODAL DETAIL LOGBOOK ===================== --}}
+{{-- Modal detail logbook --}}
 <div
     id="rw-modal"
     class="rw-modal"
@@ -820,11 +820,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    /* =====================================================
-       MODAL DETAIL LOGBOOK (tombol "Detail" pada tanggal kalender)
-       Field yang dibaca dari tiap item:
-       jenis, detail, jam_kerja, kegiatan, status, keterangan_hc
-    ====================================================== */
+    // Detail logbook yang dibuka dari kalender.
     const rwModal = qs('#rw-modal');
     const rwSub = qs('#rw-modal-sub');
     const rwJenis = qs('#rw-meta-jenis');
@@ -978,15 +974,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    /* =====================================================
-       JENIS LOGBOOK (form muncul saat tombol diklik)
-    ====================================================== */
+    // Tampilkan form sesuai jenis logbook yang dipilih.
     const typeButtons = qsa('[data-jenis]');
     const forms = qsa('[data-jenis-panel]');
 
     function showJenis(jenis, clearDurationErrors = true) {
         if (clearDurationErrors) {
             qsa('.js-form-warning').forEach((message) => message.remove());
+            qsa('.js-time-order-warning').forEach((message) => message.remove());
         }
 
         forms.forEach((form) => form.classList.toggle('is-active', form.dataset.jenisPanel === jenis));
@@ -1001,9 +996,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (JENIS_LAMA) showJenis(JENIS_LAMA, false);
 
 
-    /* =====================================================
-       TOMBOL SUBMIT (aktif setelah pernyataan dicentang)
-    ====================================================== */
+    // Aktifkan tombol kirim setelah pernyataan dicentang.
     forms.forEach((form) => {
         const checkbox = qs('input[name="pernyataan"]', form);
         const submit = qs('button[type="submit"]', form);
@@ -1014,12 +1007,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
         checkbox.addEventListener('change', sync);
         sync();
+
+        form.addEventListener('submit', (event) => {
+            const mulai = qs('input[name="jam_mulai"]', form)?.value;
+            const selesai = qs('input[name="jam_selesai"]', form)?.value;
+
+            if (!mulai || !selesai || selesai > mulai) return;
+
+            event.preventDefault();
+            qs('.js-time-order-warning', form)?.remove();
+
+            const warning = document.createElement('div');
+            warning.className = 'lb-alert lb-alert--error js-time-order-warning';
+            warning.setAttribute('role', 'alert');
+            warning.setAttribute('aria-live', 'assertive');
+
+            const icon = document.createElement('i');
+            icon.className = 'fa-solid fa-circle-exclamation';
+            icon.setAttribute('aria-hidden', 'true');
+
+            const text = document.createElement('span');
+            text.textContent = 'Jam mulai dan jam selesai tidak valid.';
+            warning.append(icon, text);
+
+            const declaration = qs('.lb-declaration', form);
+            const submitWrap = qs('.lb-submit-wrap', declaration);
+            declaration.insertBefore(warning, submitWrap);
+        });
     });
 
 
-    /* =====================================================
-       KALENDER
-    ====================================================== */
+    // Render kalender dua bulan terakhir.
 
     const pad = (value) => String(value).padStart(2, '0');
     const dateKeyOf = (year, month, day) => `${year}-${pad(month)}-${pad(day)}`;
@@ -1096,7 +1114,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 dots.append(el('i', 'lb-dot lb-dot--kosong'));
             } else {
                 const jenisTerisi = [...new Set(items.map((item) => item.jenis))];
-                if (LIBUR[dateKey]) jenisTerisi.push('libur');
+                // Indikator libur nasional disembunyikan sementara.
+                // if (LIBUR[dateKey]) jenisTerisi.push('libur');
                 jenisTerisi.forEach((jenis) => {
                     dots.append(el('i', `lb-dot lb-dot--${jenis}`));
                 });
@@ -1113,9 +1132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     next.addEventListener('click', () => { monthIndex = 1; renderCalendar(); });
 
 
-    /* =====================================================
-       MODAL DETAIL TANGGAL
-    ====================================================== */
+    // Tampilkan detail logbook untuk tanggal yang dipilih.
     const modal = qs('#kal-modal');
     const modalTitle = qs('#kal-modal-judul');
     const modalSub = qs('#kal-modal-sub');
@@ -1161,10 +1178,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         modalList.innerHTML = '';
 
-        // Informasi libur
-        if (LIBUR[date]) {
-            modalList.append(modalItem('libur', `Libur: ${LIBUR[date]}`));
-        }
+        // Informasi libur nasional disembunyikan sementara.
+        // if (LIBUR[date]) modalList.append(modalItem('libur', `Libur: ${LIBUR[date]}`));
 
         // Logbook yang sudah ada
         items.forEach((item) => {
@@ -1197,7 +1212,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modalList.append(row);
         });
 
-        // Belum ada logbook dan bukan tanggal libur
+        // Tampilkan keadaan kosong jika tanggal bukan hari libur.
         if (!items.length && !LIBUR[date]) {
             modalList.append(
                 el('li', 'lb-modal-item lb-modal-empty', 'Belum ada aktivitas pada tanggal ini.')
