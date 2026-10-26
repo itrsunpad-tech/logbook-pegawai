@@ -284,18 +284,11 @@
                 );
 
 
-            /*
-             * Libur nasional.
-             */
-            if (
-                LIBUR[tanggal]
-            ) {
-
-                jenis.add(
-                    'libur'
-                );
-
+            /* Penanda libur nasional disembunyikan sementara.
+            if (LIBUR[tanggal]) {
+                jenis.add('libur');
             }
+            */
 
             if (belumDiisi) {
                 jenis.add('kosong');
@@ -392,9 +385,7 @@
     );
 
 
-    /* =====================================
-       MODAL
-    ===================================== */
+    // Modal detail tanggal.
 
     const modal =
         document.getElementById(
@@ -490,58 +481,21 @@
         modalList.innerHTML = '';
 
 
-        /*
-         * Libur nasional.
-         */
-        if (
-            LIBUR[tanggal]
-        ) {
+        /* Informasi libur nasional disembunyikan sementara.
+        if (LIBUR[tanggal]) {
+            const li = document.createElement('li');
+            li.className = 'lb-modal-item';
 
-            const li =
-                document.createElement(
-                    'li'
-                );
+            const dot = document.createElement('i');
+            dot.className = 'lb-dot lb-dot--libur';
+            li.appendChild(dot);
 
-
-            li.className =
-                'lb-modal-item';
-
-
-            const dot =
-                document.createElement(
-                    'i'
-                );
-
-
-            dot.className =
-                'lb-dot lb-dot--libur';
-
-
-            li.appendChild(
-                dot
-            );
-
-
-            const text =
-                document.createElement(
-                    'span'
-                );
-
-
-            text.textContent =
-                `Libur: ${LIBUR[tanggal]}`;
-
-
-            li.appendChild(
-                text
-            );
-
-
-            modalList.appendChild(
-                li
-            );
-
+            const text = document.createElement('span');
+            text.textContent = `Libur: ${LIBUR[tanggal]}`;
+            li.appendChild(text);
+            modalList.appendChild(li);
         }
+        */
 
 
         /*

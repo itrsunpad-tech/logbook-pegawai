@@ -362,10 +362,7 @@
         }
 
 
-        /* =====================================================
-           BATAS PENGISIAN (pill melayang)
-           Netral -> kuning (3 jam terakhir) -> merah (terlewat)
-        ====================================================== */
+        /* Batas pengisian logbook yang melayang */
         .deadline-float {
             position: fixed;
             left: 50%;
@@ -421,9 +418,7 @@
         }
 
 
-        /* =====================================================
-           LOGBOOK: PAGE, CARD
-        ====================================================== */
+        /* Halaman dan kartu logbook */
         .lb-page {
             width: 100%;
             max-width: 640px;
@@ -494,9 +489,7 @@
         }
 
 
-        /* =====================================================
-           LOGBOOK: PILIH JENIS
-        ====================================================== */
+        /* Pilihan jenis logbook */
         .lb-type-grid {
             margin-top: 12px;
             display: grid;
@@ -538,9 +531,7 @@
         }
 
 
-        /* =====================================================
-           LOGBOOK: FORM
-        ====================================================== */
+        /* Form logbook */
         .lb-form {
             display: none;
             scroll-margin-top: 90px; /* supaya tidak tertutup header sticky */
@@ -548,6 +539,7 @@
 
         .lb-form.is-active {
             display: block;
+            margin-top: 12px;
         }
 
         .lb-field {
@@ -675,9 +667,7 @@
         }
 
 
-        /* =====================================================
-           LOGBOOK: KALENDER
-        ====================================================== */
+        /* Kalender logbook */
         .lb-cal-nav {
             margin-top: 12px;
             display: grid;
@@ -899,9 +889,7 @@
         }
 
 
-        /* =====================================================
-           LOGBOOK: MODAL TANGGAL
-        ====================================================== */
+        /* Modal tanggal kalender */
         .lb-modal {
             position: fixed;
             inset: 0;
@@ -1001,9 +989,7 @@
         }
 
 
-        /* =====================================================
-           WARNA PER JENIS LOGBOOK (selaras dengan titik kalender)
-        ====================================================== */
+        /* Warna jenis logbook dan titik kalender */
         .lb-type-button[data-jenis="harian"] i,
         .lb-modal-type-button[data-open-jenis="harian"] i { color: var(--blue); }
 
@@ -1040,10 +1026,7 @@
         .lb-form[data-jenis-panel="oncall"] .lb-submit-button { background: #7c3aed; }
 
 
-        /* =====================================================
-           RIWAYATKU: TOMBOL FILTER & HASIL
-           (tata letak filter dan modal detail ada di logbook/index)
-        ====================================================== */
+        /* Tombol filter dan hasil Riwayatku */
         .riwayat-view-button {
             height: 32px;
             padding: 0 12px;
@@ -1617,7 +1600,7 @@
     </main>
 
 
-    {{-- ===================== BATAS PENGISIAN (MELAYANG) ===================== --}}
+    {{-- Batas pengisian logbook --}}
     @isset($batas)
         <div
             id="deadline-float"
