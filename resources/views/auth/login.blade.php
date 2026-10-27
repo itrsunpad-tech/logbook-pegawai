@@ -14,11 +14,11 @@
 
     <style>
         :root {
-            --accent: #2563eb;
-            --accent-dark: #1d4ed8;
-            --ink: #0f172a;
-            --text: #475569;
-            --muted: #64748b;
+            --accent: #0b57d0;
+            --accent-dark: #0842a0;
+            --ink: #101f35;
+            --text: #26364b;
+            --muted: #566b84;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,7 +29,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background: #f1f5f9;
+            background: radial-gradient(ellipse at 15% 0%, rgba(37, 99, 235, 0.1), transparent 38%), #f2f5fa;
             color: var(--text);
             font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
         }
@@ -40,8 +40,9 @@
             max-width: 320px;
             overflow: hidden;
             background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 14px 34px rgba(29, 78, 216, 0.14);
+            border: 1px solid #d7e1ef;
+            border-radius: 16px;
+            box-shadow: 0 12px 32px rgba(24, 49, 83, 0.12), 0 2px 5px rgba(24, 49, 83, 0.05);
             animation: rise 0.6s ease-out both;
         }
 
@@ -154,7 +155,7 @@
 
         .card-body h2 {
             color: var(--ink);
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             text-align: center;
         }
@@ -165,7 +166,7 @@
             border-radius: 8px;
             background: #fef2f2;
             color: #b91c1c;
-            font-size: 12px;
+            font-size: 13px;
             line-height: 1.55;
         }
 
@@ -182,7 +183,7 @@
             border-radius: 8px;
             background: #fff;
             color: var(--ink);
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
             text-decoration: none;
             transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.2s ease, transform 0.15s ease;
@@ -201,7 +202,7 @@
             position: absolute;
             right: 16px;
             color: var(--accent);
-            font-size: 12px;
+            font-size: 13px;
             opacity: 0;
             transform: translateX(-6px);
             transition: opacity 0.2s ease, transform 0.2s ease;
@@ -221,11 +222,11 @@
             align-items: flex-start;
             gap: 7px;
             color: var(--muted);
-            font-size: 12px;
+            font-size: 13px;
             line-height: 1.6;
         }
 
-        .note i { margin-top: 3px; color: var(--accent); font-size: 12px; }
+        .note i { margin-top: 3px; color: var(--accent); font-size: 13px; }
 
         /* ===== Animasi halus ===== */
         @keyframes rise {

@@ -20,6 +20,9 @@ class User extends Authenticatable
     /** Pilihan kategori pegawai (kolom employee_category). */
     public const KATEGORI = ['Medis', 'Non-Medis'];
 
+    /** Unit yang tersedia di Overview Kepegawaian. */
+    public const UNIT_KERJA = ['Reguler', 'IT', 'Gizi', 'Lab', 'Linen', 'Hemodialisa'];
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 

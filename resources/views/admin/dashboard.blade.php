@@ -22,7 +22,7 @@
         .adm-sub {
             margin-top: 4px;
             color: var(--muted);
-            font-size: 12px;
+            font-size: 13px;
         }
 
         .adm-stats,
@@ -42,7 +42,7 @@
         .adm-stat-label {
             margin-top: 2px;
             color: var(--muted);
-            font-size: 11px;
+            font-size: 12px;
         }
 
         .adm-menu-item {
@@ -50,15 +50,18 @@
             flex-direction: column;
             gap: 6px;
             padding: 16px;
-            background: #fff;
+            background: linear-gradient(160deg, #fff 0%, #fafdff 100%);
             border: 1px solid var(--border);
-            border-radius: 14px;
-            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05);
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(24, 49, 83, 0.075), 0 1px 3px rgba(24, 49, 83, 0.045);
+            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
         }
 
         a.adm-menu-item:hover {
             border-color: var(--accent-border);
-            background: var(--accent-soft);
+            background: linear-gradient(160deg, #fff 0%, var(--accent-soft) 100%);
+            box-shadow: 0 12px 28px rgba(24, 82, 166, 0.13);
+            transform: translateY(-2px);
         }
 
         .adm-menu-item i {
@@ -68,19 +71,24 @@
 
         .adm-menu-name {
             color: var(--text-dark);
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 700;
         }
 
         .adm-menu-desc {
             color: var(--muted);
-            font-size: 11px;
+            font-size: 12px;
             line-height: 1.5;
         }
 
         .adm-menu-item.is-disabled {
             opacity: 0.55;
             cursor: not-allowed;
+        }
+
+        .adm-menu-item:focus-visible {
+            outline: 3px solid rgba(40, 120, 240, 0.3);
+            outline-offset: 3px;
         }
 
         .adm-badge {
@@ -90,7 +98,7 @@
             background: var(--surface);
             border: 1px solid var(--border);
             color: var(--muted);
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 700;
         }
     </style>

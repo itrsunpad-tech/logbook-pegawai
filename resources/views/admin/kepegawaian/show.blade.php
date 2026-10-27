@@ -104,14 +104,16 @@
 
                 <div>
                     <label class="lb-label" for="employee_unit">Unit kerja / divisi</label>
-                    <input type="text" id="employee_unit" name="employee_unit" class="lb-input"
-                           list="daftar-unit" maxlength="100" placeholder="Ketik atau pilih unit"
-                           value="{{ old('employee_unit', $user->employee_unit) }}">
-                    <datalist id="daftar-unit">
+                    <select id="employee_unit" name="employee_unit" class="lb-select">
+                        <option value="">&mdash; Pilih unit &mdash;</option>
                         @foreach ($daftarUnit as $unit)
-                            <option value="{{ $unit }}">
+                            <option value="{{ $unit }}"
+                                @selected(old('employee_unit', $user->employee_unit) === $unit)>
+                                {{ $unit }}
+                            </option>
                         @endforeach
-                    </datalist>
+                    </select>
+                    <div class="kp-help">Pilihan jadwal logbook pegawai mengikuti unit ini.</div>
                     @error('employee_unit')
                         <div class="kp-error">{{ $message }}</div>
                     @enderror

@@ -61,11 +61,16 @@ class KepegawaianController extends Controller
 
         $user->load('profile');
 
-        // Saran isian untuk kolom unit (dari unit yang sudah pernah diisi)
+        // Daftar dropdown mencakup unit baku dan unit lama yang sudah tercatat.
         $daftarUnit = User::whereNotNull('employee_unit')
             ->distinct()
             ->orderBy('employee_unit')
-            ->pluck('employee_unit');
+            ->pluck('employee_unit')
+            ->merge(User::UNIT_KERJA)
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
 
         return view('admin.kepegawaian.show', compact('user', 'tab', 'daftarUnit'));
     }
@@ -78,7 +83,10 @@ class KepegawaianController extends Controller
         $data = $request->validate([
             'name'              => ['required', 'string', 'max:255'],
             'employee_category' => ['nullable', Rule::in(User::KATEGORI)],
-            'employee_unit'     => ['nullable', 'string', 'max:100'],
+            'employee_unit'     => ['nullable', 'string', 'max:100', Rule::in(
+                User::query()->whereNotNull('employee_unit')->distinct()->pluck('employee_unit')
+                    ->merge(User::UNIT_KERJA)->filter()->unique()->values()->all()
+            )],
         ], [
             'name.required'        => 'Nama lengkap wajib diisi.',
             'employee_category.in' => 'Kategori tidak valid.',
@@ -224,4 +232,4 @@ class KepegawaianController extends Controller
 
         return $angka !== '' ? $angka : null;
     }
-}   
+}

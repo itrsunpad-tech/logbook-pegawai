@@ -6,6 +6,111 @@
 
 @push('styles')
 <style>
+    .lb-dinas-toggle { display: flex; align-items: center; gap: 9px; color: var(--text); font-size: 13px; font-weight: 600; }
+    .lb-dinas-toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
+    .lb-dinas-fields { margin-top: 10px; padding: 12px; border: 1px solid var(--accent-soft-border); border-radius: 10px; background: #f8fbff; }
+
+    .lb-file-picker {
+        position: relative;
+        min-height: 96px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        overflow: hidden;
+        border: 1px dashed #b8c7dc;
+        border-radius: 11px;
+        background: linear-gradient(135deg, #f8fbff, #f1f6fd);
+        color: var(--text);
+        cursor: pointer;
+        transition: border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+    .lb-file-picker:hover { border-color: var(--accent); background: #eff6ff; }
+    .lb-file-picker:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, .12); }
+    .lb-file-picker.is-selected { border: 1px solid #22a06b; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); box-shadow: 0 0 0 3px rgba(34, 160, 107, .1); }
+    .lb-file-picker.is-selected .lb-file-picker-icon { background: #dcfce7; color: #15803d; }
+    .lb-file-picker.is-selected .lb-file-picker-copy strong { color: #15803d; }
+    .lb-file-picker-name[hidden] { display: none; }
+    .lb-file-picker-icon { width: 36px; height: 36px; flex: 0 0 36px; display: grid; place-items: center; border-radius: 10px; background: #e0ecff; color: var(--accent); font-size: 15px; }
+    .lb-file-picker-copy { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .lb-file-picker-copy strong { font-size: 13px; font-weight: 700; }
+    .lb-file-picker-copy small { color: var(--muted); font-size: 12px; font-weight: 600; }
+    .lb-file-picker-name { max-width: 100%; overflow: hidden; color: var(--accent); font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    .lb-required { color: #dc2626; font-weight: 700; }
+    .lb-file-picker input[type="file"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .lb-file-picker input[type="file"]:disabled { cursor: not-allowed; }
+    .lb-file-picker:has(input:disabled) { opacity: .58; cursor: not-allowed; }
+
+    .lb-date-control { position: relative; }
+    .lb-date-control.is-open { z-index: 90; }
+    .lb-date-range-hint { margin-top: 5px; color: var(--muted-light); font-size: 11px; font-weight: 600; line-height: 1.4; }
+    .lb-date-control.is-enhanced .lb-date-native { display: none; }
+    .lb-date-display,
+    .lb-date-trigger { display: none; }
+    .lb-date-popover {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        z-index: 80;
+        width: min(292px, calc(100vw - 48px));
+        padding: 11px;
+        display: none;
+        border: 1px solid #d8e2ef;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 18px 42px rgba(24, 49, 83, .18), 0 3px 8px rgba(24, 49, 83, .06);
+    }
+    .lb-date-popover.is-open { display: block; }
+    .lb-date-head { display: grid; grid-template-columns: 32px 1fr 32px; align-items: center; gap: 7px; }
+    .lb-date-month { color: var(--text-dark); font-size: 14px; font-weight: 700; text-align: center; text-transform: capitalize; }
+    .lb-date-nav {
+        width: 32px; height: 32px; display: grid; place-items: center;
+        border: 1px solid var(--border); border-radius: 9px; background: #f7f9fc;
+        color: var(--muted); transition: .15s ease;
+    }
+    .lb-date-nav:hover { border-color: var(--accent-soft-border); background: var(--accent-soft); color: var(--accent); }
+    .lb-date-nav:disabled { opacity: .4; cursor: not-allowed; }
+    .lb-date-weekdays,
+    .lb-date-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+    .lb-date-weekdays { margin-top: 10px; }
+    .lb-date-weekday { padding: 3px 0; color: var(--muted-light); font-size: 10px; font-weight: 700; text-align: center; }
+    .lb-date-days { margin-top: 4px; }
+    .lb-date-day {
+        aspect-ratio: 1; display: grid; place-items: center;
+        border: 1px solid transparent; border-radius: 8px; background: transparent;
+        color: var(--text); font-size: 11px; font-weight: 600; transition: .15s ease;
+    }
+    .lb-date-day:hover:not(:disabled) { border-color: var(--accent-soft-border); background: var(--accent-soft); color: var(--accent); }
+    .lb-date-day.is-today { color: var(--accent); box-shadow: inset 0 0 0 1px #a9c8ff; }
+    .lb-date-day.is-selected { border-color: var(--accent); background: var(--accent); color: #fff; box-shadow: 0 3px 8px rgba(11, 87, 208, .22); }
+    .lb-date-day:disabled { color: #c1cad6; cursor: not-allowed; }
+    .lb-date-foot { margin-top: 8px; padding-top: 8px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #edf1f6; }
+    .lb-date-clear { padding: 6px 9px; border: 0; border-radius: 8px; background: transparent; color: #66758a; font-size: 11px; font-weight: 700; }
+    .lb-date-clear:hover { background: #f1f4f8; color: #334155; }
+    .lb-date-today { padding: 6px 9px; border: 0; border-radius: 8px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; }
+    .lb-date-today:hover { background: #dceaff; }
+
+    .lb-date-control.is-enhanced .lb-date-display {
+        width: 100%; min-height: 40px; padding: 9px 42px 9px 12px;
+        display: block; border: 1px solid var(--border-input); border-radius: 10px;
+        background: #f7f9fc; color: var(--text-dark); font-size: 13px; font-weight: 600;
+        cursor: pointer; outline: none; transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+    .lb-date-control.is-enhanced .lb-date-display:focus { border-color: var(--accent-border); background: #fff; box-shadow: 0 0 0 3px rgba(11, 87, 208, .14); }
+    .lb-date-control.is-enhanced .lb-date-trigger {
+        position: absolute; top: 1px; right: 1px; width: 40px; height: calc(100% - 2px);
+        display: grid; place-items: center; border: 0; border-radius: 0 9px 9px 0;
+        background: transparent; color: var(--muted); cursor: pointer;
+    }
+    .lb-date-control.is-enhanced .lb-date-trigger:hover { color: var(--accent); background: var(--accent-soft); }
+    @media (max-width: 700px) {
+        .lb-date-control.is-enhanced .lb-date-display { min-height: 44px; padding: 10px 42px 10px 12px; font-size: 16px; }
+        .lb-date-control.is-enhanced .lb-date-trigger { width: 42px; }
+        .lb-date-popover { width: min(292px, calc(100vw - 32px)); padding: 10px; }
+    }
+
     .rw-detail-btn {
         height: 30px;
         padding: 0 11px;
@@ -17,7 +122,7 @@
         border-radius: 8px;
         background: #fff;
         color: var(--accent);
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 700;
         transition: background 0.15s ease, border-color 0.15s ease;
     }
@@ -63,7 +168,14 @@
 
     .rw-banding-error {
         color: #b91c1c;
-        font-size: 11px;
+        font-size: 12px;
+    }
+
+    .lb-shift-help {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
     }
 
 
@@ -113,14 +225,14 @@
 
     .rw-title {
         color: var(--text-dark);
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 700;
     }
 
     .rw-sub {
         margin-top: 3px;
         color: var(--muted-light);
-        font-size: 12px;
+        font-size: 13px;
     }
 
     .rw-close {
@@ -169,7 +281,7 @@
     .rw-meta-label,
     .rw-section-title {
         color: var(--muted-light);
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 700;
         letter-spacing: 0.45px;
         text-transform: uppercase;
@@ -182,6 +294,35 @@
         line-height: 1.4;
     }
 
+    .rw-dinas-badge {
+        margin-left: 5px;
+        padding: 3px 8px;
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid #d9e0e9;
+        border-radius: 999px;
+        background: #f3f5f8;
+        color: #475569;
+        font-size: 10px;
+        font-weight: 700;
+        vertical-align: middle;
+    }
+
+    .rw-proof-link {
+        min-height: 38px;
+        padding: 0 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--accent-soft-border);
+        border-radius: 9px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .rw-proof-link:hover { border-color: var(--accent-border); background: #dceaff; }
+
     .rw-status {
         min-height: 22px;
         padding: 0 9px;
@@ -190,7 +331,7 @@
         gap: 5px;
         box-sizing: border-box;
         border-radius: 999px;
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 700;
         line-height: 1;
     }
@@ -201,7 +342,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 10px;
+        font-size: 11px;
         line-height: 1;
     }
 
@@ -247,7 +388,7 @@
         border-radius: 10px;
         background: #fff;
         color: var(--text);
-        font-size: 13px;
+        font-size: 14px;
         line-height: 1.65;
         overflow-wrap: anywhere;
     }
@@ -288,7 +429,7 @@
         border-radius: 9px;
         background: #fff;
         color: var(--text);
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 700;
     }
 
@@ -347,13 +488,13 @@
                 <button type="button" data-jenis="lembur" class="lb-type-button">
                     <i class="fa-solid fa-business-time"></i>
                     Lembur
-                    <span class="lb-type-sub">Maks 1 kali per hari, tidak bisa digabung dengan On Call</span>
+                    <span class="lb-type-sub">Maks. 1x/hari · tidak digabung On Call</span>
                 </button>
 
                 <button type="button" data-jenis="oncall" class="lb-type-button lb-type-button--wide">
                     <i class="fa-solid fa-phone"></i>
                     On Call
-                    <span class="lb-type-sub">Maks {{ $maksOncall }} kali per hari, tidak bisa digabung dengan Lembur</span>
+                    <span class="lb-type-sub">Maks. {{ $maksOncall }}x/hari · tidak digabung Lembur</span>
                 </button>
             </div>
         </div>
@@ -363,7 +504,9 @@
         <form
             method="POST"
             action="{{ route('logbook.store') }}"
+            enctype="multipart/form-data"
             data-jenis-panel="harian"
+            id="harian-form"
             class="lb-card lb-form"
         >
             @csrf
@@ -375,10 +518,11 @@
             </h2>
 
             <div class="lb-field">
-                <label class="lb-label">Tanggal *</label>
+                    <label class="lb-label">Tanggal <span class="lb-required">*</span></label>
                 <input
                     type="date"
                     name="tanggal"
+                    id="harian-tanggal"
                     value="{{ $o('harian', 'tanggal') }}"
                     required
                     class="lb-input js-tanggal"
@@ -386,30 +530,114 @@
             </div>
 
             <div class="lb-field">
-                <label class="lb-label">Shift / Jadwal *</label>
-                <select name="shift_id" required class="lb-select">
-                    <option value="">-- Pilih Shift --</option>
+                <label class="lb-label">Shift / Jadwal <span class="lb-required">*</span></label>
+                <select name="shift_id" required class="lb-select" id="harian-shift-select"
+                        @disabled($shifts->isEmpty())>
+                    @if (! $shiftDefaultId)
+                        <option value="">-- Pilih Shift --</option>
+                    @endif
 
-                    @foreach ($shifts as $shift)
-                        <option
-                            value="{{ $shift->id }}"
-                            @selected($o('harian', 'shift_id') == $shift->id)
-                        >
-                            {{ $shift->label }}
-                        </option>
+                    @foreach ($opsiShift as $label => $items)
+                        @continue($items->isEmpty())
+                        <optgroup label="{{ $label }}">
+                            @foreach ($items as $shift)
+                                <option
+                                    value="{{ $shift->id }}"
+                                    data-tipe="{{ \App\Support\WorkSchedule::tipe($shift) }}"
+                                    @selected($o('harian', 'shift_id', $shiftDefaultId) == $shift->id)
+                                >
+                                    {{ $shift->nama === 'LIBUR' ? 'Libur' : $shift->nama }}
+                                </option>
+                            @endforeach
+                        </optgroup>
                     @endforeach
                 </select>
+                @error('shift_id')
+                    <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
+                @enderror
+                @if ($shifts->isEmpty())
+                    <div class="lb-alert" role="status">Unit kerja belum diatur atau belum memiliki jadwal. Hubungi admin.</div>
+                @else
+                    <div class="lb-shift-help">Pilihan jadwal disesuaikan dengan unit kerja.</div>
+                @endif
             </div>
 
-            <div class="lb-field">
-                <label class="lb-label">Ringkasan Kegiatan *</label>
+            <div class="lb-field" id="harian-dl-box" style="display:none">
+                <label class="lb-dinas-toggle">
+                    <input type="checkbox" name="is_dinas_luar" value="1"
+                           @checked($o('harian', 'is_dinas_luar'))>
+                    <span>Dinas Luar</span>
+                </label>
+                @error('is_dinas_luar')
+                    <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="lb-dinas-fields" id="harian-dinas-fields" style="display:none">
+                <div class="lb-field" style="margin-top:0">
+                    <label class="lb-label" for="harian-dinas-ringkasan">Deskripsi Pekerjaan Dinas Luar <span class="lb-required">*</span></label>
+                    <textarea id="harian-dinas-ringkasan" name="ringkasan" rows="4"
+                              class="lb-textarea" placeholder="Jelaskan pekerjaan dinas luar..."
+                              disabled>{{ $o('harian', 'is_dinas_luar') ? $o('harian', 'ringkasan') : '' }}</textarea>
+                    @if ($o('harian', 'is_dinas_luar'))
+                        @error('ringkasan')
+                            <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
+                        @enderror
+                    @endif
+                </div>
+                <div class="lb-field">
+                    <label class="lb-label" for="harian-dinas-bukti">Upload Bukti <span class="lb-required">*</span></label>
+                    <label class="lb-file-picker">
+                        <span class="lb-file-picker-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                        <span class="lb-file-picker-copy">
+                            <strong class="lb-file-picker-prompt">Upload bukti</strong>
+                            <small class="lb-file-picker-hint">PNG, JPG, atau PDF - maksimal 5 MB</small>
+                            <small class="lb-file-picker-name" hidden></small>
+                        </span>
+                        <input type="file" id="harian-dinas-bukti" name="bukti" disabled
+                               accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf">
+                    </label>
+                    @if ($o('harian', 'is_dinas_luar'))
+                        @error('bukti')
+                            <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
+                        @enderror
+                    @endif
+                </div>
+            </div>
+
+            <div class="lb-field" id="harian-ringkasan-box">
+                <label class="lb-label" id="harian-ringkasan-label">Ringkasan Kegiatan <span class="lb-required">*</span></label>
                 <textarea
+                    id="harian-ringkasan-input"
                     name="ringkasan"
                     rows="4"
-                    required
                     class="lb-textarea"
                     placeholder="Jelaskan kegiatan yang dilakukan..."
-                >{{ $o('harian', 'ringkasan') }}</textarea>
+                >{{ $o('harian', 'is_dinas_luar') ? '' : $o('harian', 'ringkasan') }}</textarea>
+                @if (! $o('harian', 'is_dinas_luar'))
+                    @error('ringkasan')
+                        <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
+                    @enderror
+                @endif
+            </div>
+
+            <div class="lb-field" id="harian-bukti-box" style="display:none">
+                <label class="lb-label">Upload Bukti <span class="lb-required">*</span></label>
+                <label class="lb-file-picker">
+                    <span class="lb-file-picker-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                    <span class="lb-file-picker-copy">
+                        <strong class="lb-file-picker-prompt">Upload bukti</strong>
+                        <small class="lb-file-picker-hint">PNG, JPG, atau PDF - maksimal 5 MB</small>
+                        <small class="lb-file-picker-name" hidden></small>
+                    </span>
+                    <input type="file" name="bukti" id="harian-sakit-bukti" disabled
+                           accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf">
+                </label>
+                @error('bukti')
+                    @if (! $o('harian', 'is_dinas_luar'))
+                        <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
+                    @endif
+                @enderror
             </div>
 
             @include('logbook._pernyataan', ['jenisForm' => 'harian'])
@@ -432,7 +660,7 @@
             </h2>
 
             <div class="lb-field">
-                <label class="lb-label">Tanggal *</label>
+                <label class="lb-label">Tanggal <span class="lb-required">*</span></label>
                 <input
                     type="date"
                     name="tanggal"
@@ -444,7 +672,7 @@
 
             <div class="lb-two-column">
                 <div class="lb-field">
-                    <label class="lb-label">Jam Mulai *</label>
+                    <label class="lb-label">Jam Mulai <span class="lb-required">*</span></label>
                     <input
                         type="time"
                         name="jam_mulai"
@@ -455,7 +683,7 @@
                 </div>
 
                 <div class="lb-field">
-                    <label class="lb-label">Jam Selesai *</label>
+                    <label class="lb-label">Jam Selesai <span class="lb-required">*</span></label>
                     <input
                         type="time"
                         name="jam_selesai"
@@ -471,7 +699,7 @@
             </p>
 
             <div class="lb-field">
-                <label class="lb-label">Ringkasan Kegiatan *</label>
+                <label class="lb-label">Ringkasan Kegiatan <span class="lb-required">*</span></label>
                 <textarea
                     name="ringkasan"
                     rows="4"
@@ -501,7 +729,7 @@
             </h2>
 
             <div class="lb-field">
-                <label class="lb-label">Tanggal *</label>
+                <label class="lb-label">Tanggal <span class="lb-required">*</span></label>
                 <input
                     type="date"
                     name="tanggal"
@@ -513,7 +741,7 @@
 
             <div class="lb-two-column">
                 <div class="lb-field">
-                    <label class="lb-label">Jam Mulai *</label>
+                    <label class="lb-label">Jam Mulai <span class="lb-required">*</span></label>
                     <input
                         type="time"
                         name="jam_mulai"
@@ -524,7 +752,7 @@
                 </div>
 
                 <div class="lb-field">
-                    <label class="lb-label">Jam Selesai *</label>
+                    <label class="lb-label">Jam Selesai <span class="lb-required">*</span></label>
                     <input
                         type="time"
                         name="jam_selesai"
@@ -540,7 +768,7 @@
             </p>
 
             <div class="lb-field">
-                <label class="lb-label">Ringkasan Kegiatan *</label>
+                <label class="lb-label">Ringkasan Kegiatan <span class="lb-required">*</span></label>
                 <textarea
                     name="ringkasan"
                     rows="4"
@@ -692,6 +920,18 @@
                 <div id="rw-kegiatan" class="rw-text"></div>
             </div>
 
+            <div id="rw-bukti-wrap" class="rw-section is-hidden">
+                <h4 class="rw-section-title">
+                    <i class="fa-solid fa-paperclip"></i>
+                    Bukti Pendukung
+                </h4>
+                <a id="rw-bukti-link" class="rw-proof-link" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+                    Lihat bukti yang diunggah
+                    <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                </a>
+            </div>
+
             <div id="rw-keterangan-wrap" class="rw-section">
                 <h4 class="rw-section-title">
                     <i class="fa-solid fa-comment-dots"></i>
@@ -781,10 +1021,238 @@ document.addEventListener('DOMContentLoaded', () => {
     let LIBUR = readData('libur');
     const HARI_INI = readData('hariIni');
     const DIBUKA = readData('dibuka');
+    const HARI_INI_KEY = HARI_INI;
     const JENIS_LAMA = readData('jenisLama');
     const BANDING_URL = serverData.bandingUrl;
     const OLD_BANDING = readData('oldBanding');
     const OLD_BANDING_ID = readData('oldBandingId');
+
+    // Kalender kustom yang sama dipakai di desktop dan ponsel.
+    const parseDateKey = (key) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(key || '')) return null;
+        const [year, month, day] = key.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    };
+    const dateToKey = (date) => [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0'),
+    ].join('-');
+    const dateToDisplay = (key) => {
+        const date = parseDateKey(key);
+        return date ? new Intl.DateTimeFormat('id-ID', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+        }).format(date) : '';
+    };
+    const todayDate = parseDateKey(HARI_INI) || new Date();
+    const earliestDate = new Date(todayDate.getFullYear(), todayDate.getMonth() - 1, 1);
+    const earliestDateKey = dateToKey(earliestDate);
+    const formatMonthYear = (date) => new Intl.DateTimeFormat('id-ID', {
+        month: 'long', year: 'numeric',
+    }).format(date);
+    const rangeHintText = `Pilihan tanggal mengikuti kalender pengisian: ${formatMonthYear(earliestDate)}–${formatMonthYear(todayDate)}.`;
+    const firstAllowedMonth = earliestDate.getFullYear() * 12 + earliestDate.getMonth();
+    const currentAllowedMonth = todayDate.getFullYear() * 12 + todayDate.getMonth();
+    const withinCalendarRange = (date) => {
+        const month = date.getFullYear() * 12 + date.getMonth();
+        return month >= firstAllowedMonth && month <= currentAllowedMonth;
+    };
+    const initialCalendarDate = (key) => {
+        const date = parseDateKey(key);
+        return date && withinCalendarRange(date) && dateToKey(date) <= HARI_INI ? date : todayDate;
+    };
+
+    function setupDatePickers() {
+        let datePickerIndex = 0;
+        qsa('input[type="date"][name="tanggal"]').forEach((nativeInput) => {
+            const control = document.createElement('div');
+            control.className = 'lb-date-control is-enhanced';
+            if (!nativeInput.id) nativeInput.id = `logbook-date-${++datePickerIndex}`;
+            const fieldLabel = nativeInput.closest('.lb-field')?.querySelector('.lb-label');
+            nativeInput.classList.add('lb-date-native');
+            nativeInput.required = false;
+            nativeInput.parentNode.insertBefore(control, nativeInput);
+            control.append(nativeInput);
+
+            const rangeHint = el('div', 'lb-date-range-hint', rangeHintText);
+            rangeHint.setAttribute('aria-live', 'polite');
+            control.after(rangeHint);
+
+            const display = document.createElement('input');
+            display.type = 'text';
+            display.className = 'lb-date-display';
+            display.id = `${nativeInput.id}-display`;
+            display.readOnly = true;
+            display.required = true;
+            display.autocomplete = 'off';
+            display.placeholder = 'dd/mm/yyyy';
+            display.setAttribute('aria-label', 'Pilih tanggal');
+            display.setAttribute('aria-haspopup', 'dialog');
+            if (fieldLabel) {
+                fieldLabel.htmlFor = display.id;
+                fieldLabel.id ||= `${nativeInput.id}-label`;
+                display.setAttribute('aria-labelledby', fieldLabel.id);
+                nativeInput.setAttribute('aria-labelledby', fieldLabel.id);
+            }
+
+            const trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'lb-date-trigger';
+            trigger.setAttribute('aria-label', 'Buka kalender');
+            trigger.innerHTML = '<i class="fa-regular fa-calendar" aria-hidden="true"></i>';
+
+            const popover = document.createElement('div');
+            popover.className = 'lb-date-popover';
+            popover.setAttribute('role', 'dialog');
+            popover.setAttribute('aria-label', 'Pilih tanggal');
+
+            control.append(display, trigger, popover);
+
+            let visibleMonth = initialCalendarDate(nativeInput.value);
+            visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1);
+
+            const close = () => {
+                popover.classList.remove('is-open');
+                control.classList.remove('is-open');
+                display.setAttribute('aria-expanded', 'false');
+            };
+
+            const selectDate = (key) => {
+                nativeInput.value = key;
+                display.value = dateToDisplay(key);
+                nativeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                nativeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1);
+                close();
+            };
+
+            const render = () => {
+                popover.replaceChildren();
+
+                const head = el('div', 'lb-date-head');
+                const previous = el('button', 'lb-date-nav');
+                previous.type = 'button';
+                previous.setAttribute('aria-label', 'Bulan sebelumnya');
+                previous.innerHTML = '<i class="fa-solid fa-chevron-left" aria-hidden="true"></i>';
+                const monthName = el('div', 'lb-date-month', new Intl.DateTimeFormat('id-ID', {
+                    month: 'long', year: 'numeric',
+                }).format(visibleMonth));
+                const next = el('button', 'lb-date-nav');
+                next.type = 'button';
+                next.setAttribute('aria-label', 'Bulan berikutnya');
+                next.innerHTML = '<i class="fa-solid fa-chevron-right" aria-hidden="true"></i>';
+                const visibleMonthIndex = visibleMonth.getFullYear() * 12 + visibleMonth.getMonth();
+                previous.disabled = visibleMonthIndex <= firstAllowedMonth;
+                next.disabled = visibleMonthIndex >= currentAllowedMonth;
+                head.append(previous, monthName, next);
+
+                previous.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    if (previous.disabled) return;
+                    visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
+                    render();
+                });
+                next.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    if (next.disabled) return;
+                    visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
+                    render();
+                });
+                popover.append(head);
+
+                const weekdayRow = el('div', 'lb-date-weekdays');
+                ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].forEach((name) => {
+                    weekdayRow.append(el('span', 'lb-date-weekday', name));
+                });
+                popover.append(weekdayRow);
+
+                const dayGrid = el('div', 'lb-date-days');
+                const firstDay = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1).getDay();
+                const daysInMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0).getDate();
+                const todayKey = HARI_INI_KEY;
+                const selectedKey = nativeInput.value;
+
+                for (let cell = 0; cell < firstDay; cell++) dayGrid.append(el('span'));
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day);
+                    const key = dateToKey(date);
+                    const dayButton = el('button', 'lb-date-day', String(day));
+                    dayButton.type = 'button';
+                    dayButton.disabled = key < earliestDateKey || key > HARI_INI;
+                    dayButton.setAttribute('aria-label', new Intl.DateTimeFormat('id-ID', {
+                        dateStyle: 'full',
+                    }).format(date));
+                    if (key === todayKey) dayButton.classList.add('is-today');
+                    if (key === selectedKey) {
+                        dayButton.classList.add('is-selected');
+                        dayButton.setAttribute('aria-pressed', 'true');
+                    }
+                    dayButton.addEventListener('click', () => selectDate(key));
+                    dayGrid.append(dayButton);
+                }
+                popover.append(dayGrid);
+
+                const foot = el('div', 'lb-date-foot');
+                const clear = el('button', 'lb-date-clear', 'Hapus tanggal');
+                clear.type = 'button';
+                clear.addEventListener('click', () => {
+                    nativeInput.value = '';
+                    display.value = '';
+                    nativeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    nativeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    close();
+                });
+                const today = el('button', 'lb-date-today', 'Hari ini');
+                today.type = 'button';
+                today.addEventListener('click', () => selectDate(todayKey));
+                foot.append(clear, today);
+                popover.append(foot);
+            };
+
+            const open = () => {
+                visibleMonth = initialCalendarDate(nativeInput.value);
+                visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1);
+                render();
+                popover.classList.add('is-open');
+                control.classList.add('is-open');
+                display.setAttribute('aria-expanded', 'true');
+            };
+
+            display.addEventListener('click', () => popover.classList.contains('is-open') ? close() : open());
+            display.addEventListener('keydown', (event) => {
+                if (['Enter', ' ', 'ArrowDown'].includes(event.key)) {
+                    event.preventDefault();
+                    open();
+                }
+            });
+            trigger.addEventListener('click', () => popover.classList.contains('is-open') ? close() : open());
+            nativeInput.addEventListener('change', () => { display.value = dateToDisplay(nativeInput.value); });
+            display.value = dateToDisplay(nativeInput.value);
+
+        });
+
+        document.addEventListener('click', (event) => {
+            qsa('.lb-date-control.is-open').forEach((control) => {
+                if (!control.contains(event.target)) {
+                    control.querySelector('.lb-date-popover')?.classList.remove('is-open');
+                    control.classList.remove('is-open');
+                    control.querySelector('.lb-date-display')?.setAttribute('aria-expanded', 'false');
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                qsa('.lb-date-control.is-open').forEach((control) => {
+                    control.querySelector('.lb-date-popover')?.classList.remove('is-open');
+                    control.classList.remove('is-open');
+                    control.querySelector('.lb-date-display')?.setAttribute('aria-expanded', 'false');
+                });
+            }
+        });
+    }
+
+    setupDatePickers();
 
     // Label & jenis yang dikenal (dipakai juga untuk kelas warna)
     const JENIS_LABEL = {
@@ -829,6 +1297,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const rwKegiatan = qs('#rw-kegiatan');
     const rwKeterangan = qs('#rw-keterangan');
     const rwKeteranganLabel = qs('#rw-keterangan-label');
+    const rwBuktiWrap = qs('#rw-bukti-wrap');
+    const rwBuktiLink = qs('#rw-bukti-link');
     const rwBandingForm = qs('#rw-banding-form');
     const rwBandingTextarea = qs('#rw-banding-textarea');
     const rwBandingHistoryWrap = qs('#rw-banding-history-wrap');
@@ -920,6 +1390,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 JENIS_LABEL[item.jenis] || item.jenis || 'Logbook'
             )
         );
+        if (item.is_dinas_luar) {
+            rwJenis.append(el('span', 'rw-dinas-badge', 'Dinas Luar'));
+        }
+
+        rwBuktiWrap.classList.toggle('is-hidden', !item.bukti_url);
+        if (item.bukti_url) rwBuktiLink.href = item.bukti_url;
 
         const jamKerja = item.jam_kerja
             || (item.jam_mulai && item.jam_selesai ? `${item.jam_mulai} – ${item.jam_selesai}` : '')
@@ -977,6 +1453,106 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tampilkan form sesuai jenis logbook yang dipilih.
     const typeButtons = qsa('[data-jenis]');
     const forms = qsa('[data-jenis-panel]');
+    const shiftSelect = qs('#harian-shift-select');
+    const dinasBox = qs('#harian-dl-box');
+    const dinasCheckbox = qs('#harian-dl-box input');
+    const ringkasanBox = qs('#harian-ringkasan-box');
+    const ringkasanInput = qs('#harian-ringkasan-input');
+    const ringkasanLabel = qs('#harian-ringkasan-label');
+    const buktiBox = qs('#harian-bukti-box');
+    const sakitBuktiInput = qs('#harian-sakit-bukti');
+    const dinasFields = qs('#harian-dinas-fields');
+    const dinasRingkasanInput = qs('#harian-dinas-ringkasan');
+    const dinasBuktiInput = qs('#harian-dinas-bukti');
+
+    const syncFileName = (input) => {
+        const picker = input.closest('.lb-file-picker');
+        const name = qs('.lb-file-picker-name', picker);
+        const prompt = qs('.lb-file-picker-prompt', picker);
+        const icon = qs('.lb-file-picker-icon i', picker);
+        const file = input.files?.[0];
+        picker?.classList.toggle('is-selected', Boolean(file));
+        if (name) {
+            name.textContent = file?.name || '';
+            name.hidden = !file;
+        }
+        if (prompt) prompt.textContent = file ? 'Bukti berhasil dipilih' : 'Upload bukti';
+        if (icon) icon.className = file ? 'fa-solid fa-circle-check' : 'fa-solid fa-cloud-arrow-up';
+    };
+
+    const validateFileSize = (input) => {
+        const file = input.files?.[0];
+        if (file && file.size > 5 * 1024 * 1024) {
+            alert('Ukuran bukti maksimal 5 MB.');
+            input.value = '';
+            syncFileName(input);
+        }
+    };
+
+    const applyShiftFields = () => {
+        if (!shiftSelect || !dinasCheckbox || !ringkasanInput || !sakitBuktiInput) return;
+
+        const tipe = shiftSelect.selectedOptions[0]?.dataset.tipe || '';
+        const isKerja = tipe === 'kerja';
+        if (!isKerja && dinasCheckbox.checked) {
+            dinasCheckbox.checked = false;
+            dinasRingkasanInput.value = '';
+            dinasBuktiInput.value = '';
+            syncFileName(dinasBuktiInput);
+        }
+
+        const dinasLuar = isKerja && dinasCheckbox.checked;
+        const sakit = tipe === 'sakit';
+        const ringkasanTampil = tipe !== 'libur' && !dinasLuar;
+
+        dinasBox.style.display = isKerja ? '' : 'none';
+        dinasCheckbox.disabled = !isKerja;
+        dinasFields.style.display = dinasLuar ? '' : 'none';
+
+        ringkasanBox.style.display = ringkasanTampil ? '' : 'none';
+        ringkasanInput.disabled = !ringkasanTampil;
+        ringkasanInput.required = ringkasanTampil;
+
+        dinasRingkasanInput.disabled = !dinasLuar;
+        dinasRingkasanInput.required = dinasLuar;
+        dinasRingkasanInput.minLength = 10;
+        dinasRingkasanInput.maxLength = 2000;
+        dinasBuktiInput.disabled = !dinasLuar;
+        dinasBuktiInput.required = dinasLuar;
+
+        buktiBox.style.display = sakit ? '' : 'none';
+        sakitBuktiInput.disabled = !sakit;
+        sakitBuktiInput.required = sakit;
+        if (!sakit) {
+            sakitBuktiInput.value = '';
+            syncFileName(sakitBuktiInput);
+        }
+
+        const labelKeterangan = sakit || tipe === 'izin';
+        ringkasanLabel.innerHTML = dinasLuar
+            ? 'Deskripsi Pekerjaan Dinas Luar <span class="lb-required">*</span>'
+            : `${labelKeterangan ? 'Keterangan' : 'Ringkasan Kegiatan'} <span class="lb-required">*</span>`;
+        ringkasanInput.placeholder = labelKeterangan
+            ? 'Jelaskan keterangan...'
+            : 'Jelaskan kegiatan yang dilakukan...';
+    };
+
+    shiftSelect?.addEventListener('change', applyShiftFields);
+    dinasCheckbox?.addEventListener('change', () => {
+        if (!dinasCheckbox.checked) {
+            dinasRingkasanInput.value = '';
+            dinasBuktiInput.value = '';
+            syncFileName(dinasBuktiInput);
+        }
+        applyShiftFields();
+    });
+    [sakitBuktiInput, dinasBuktiInput].forEach((input) => {
+        input?.addEventListener('change', () => {
+            validateFileSize(input);
+            syncFileName(input);
+        });
+    });
+    applyShiftFields();
 
     function showJenis(jenis, clearDurationErrors = true) {
         if (clearDurationErrors) {

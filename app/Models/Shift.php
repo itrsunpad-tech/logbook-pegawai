@@ -20,13 +20,15 @@ class Shift extends Model
 
     public function getLabelAttribute(): string
     {
+        $nama = $this->nama === 'LIBUR' ? 'Libur' : $this->nama;
+
         if (! $this->jam_mulai || ! $this->jam_selesai) {
-            return $this->nama;
+            return $nama;
         }
 
         return sprintf(
             '%s (%s - %s)',
-            $this->nama,
+            $nama,
             substr($this->jam_mulai, 0, 5),
             substr($this->jam_selesai, 0, 5)
         );

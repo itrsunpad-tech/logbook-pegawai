@@ -46,6 +46,9 @@ Route::middleware('auth')
         Route::post('/', [LogbookController::class, 'store'])
             ->name('store');
 
+        Route::get('/{logbook}/bukti', [LogbookController::class, 'bukti'])
+            ->name('bukti');
+
         Route::patch('/{logbook}/banding', [LogbookController::class, 'banding'])
             ->name('banding');
     });

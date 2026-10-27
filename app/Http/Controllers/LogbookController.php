@@ -6,12 +6,18 @@ use App\Http\Requests\StoreLogbookRequest;
 use App\Models\Holiday;
 use App\Models\Logbook;
 use App\Models\Shift;
+use App\Models\User;
+use App\Support\WorkSchedule;
 use App\Notifications\LogbookStatusChanged;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 
 class LogbookController extends Controller
 {
@@ -40,10 +46,23 @@ class LogbookController extends Controller
             ->latest('id')
             ->get();
 
+        $unit = Auth::user()->employee_unit;
+        $namaShiftDiizinkan = WorkSchedule::shiftNames($unit);
         $shifts = Shift::query()
-            ->orderBy('urutan')
-            ->orderBy('nama')
-            ->get();
+            ->whereIn('nama', $namaShiftDiizinkan)
+            ->get()
+            ->sortBy(fn (Shift $shift) => array_search($shift->nama, $namaShiftDiizinkan, true))
+            ->values();
+        $grupShift = WorkSchedule::groups($unit);
+        $opsiShift = [
+            'Office hour' => $shifts->whereIn('nama', $grupShift['oh']),
+            'Shift' => $shifts->whereIn('nama', $grupShift['shift']),
+            'Status' => $shifts->whereIn('nama', config('work_schedules.common', [])),
+        ];
+        $namaDefaultShift = WorkSchedule::defaultShiftName($unit);
+        $shiftDefaultId = $namaDefaultShift
+            ? $shifts->firstWhere('nama', $namaDefaultShift)?->id
+            : null;
 
         // Kalender: bulan lalu + bulan berjalan
         [$mulaiKalender, $akhirKalender] = $this->rentangKalender();
@@ -60,6 +79,8 @@ class LogbookController extends Controller
         return view('logbook.index', compact(
             'logbooks',
             'shifts',
+            'opsiShift',
+            'shiftDefaultId',
             'batas',
             'dibuka',
             'maksOncall',
@@ -75,22 +96,101 @@ class LogbookController extends Controller
     public function store(StoreLogbookRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $harian = $data['jenis'] === 'harian';
+        $userId = (int) $request->user()->id;
 
-        Logbook::create([
-            'user_id'     => Auth::id(),
-            'jenis'       => $data['jenis'],
-            'tanggal'     => $data['tanggal'],
-            'shift_id'    => $harian ? $data['shift_id'] : null,
-            'jam_mulai'   => $harian ? null : $data['jam_mulai'],
-            'jam_selesai' => $harian ? null : $data['jam_selesai'],
-            'ringkasan'   => $data['ringkasan'],
-            'is_wfh'      => false,
-        ]);
+        $buktiPath = null;
+
+        try {
+            DB::transaction(function () use ($data, $userId, $request, &$buktiPath): void {
+                // Serialkan submit dari akun yang sama sebelum memeriksa batas harian.
+                User::query()->whereKey($userId)->lockForUpdate()->firstOrFail();
+
+                $entriTanggal = Logbook::query()
+                    ->where('user_id', $userId)
+                    ->whereDate('tanggal', $data['tanggal'])
+                    ->lockForUpdate()
+                    ->get(['jenis', 'status']);
+
+                if ($entriTanggal->contains(fn ($item) => in_array(
+                    $item->status,
+                    [Logbook::STATUS_DISETUJUI, Logbook::STATUS_DITOLAK],
+                    true
+                ))) {
+                    throw ValidationException::withMessages([
+                        'tanggal' => 'Tanggal ini sudah final dan tidak dapat diisi ulang.',
+                    ]);
+                }
+
+                if ($data['jenis'] === 'harian' && $entriTanggal->contains('jenis', 'harian')) {
+                    throw ValidationException::withMessages([
+                        'tanggal' => 'Logbook harian tanggal ini sudah diisi.',
+                    ]);
+                }
+
+                if (in_array($data['jenis'], ['lembur', 'oncall'], true)) {
+                    $jenisSudahAda = $entriTanggal->first(fn ($item) => in_array(
+                        $item->jenis,
+                        ['lembur', 'oncall'],
+                        true
+                    ))?->jenis;
+
+                    if ($jenisSudahAda !== null) {
+                        $namaJenis = $jenisSudahAda === 'lembur' ? 'Lembur' : 'On Call';
+                        $pesan = $jenisSudahAda === $data['jenis']
+                            ? "{$namaJenis} tanggal ini sudah diisi (maksimal 1 kali)."
+                            : "Sudah ada {$namaJenis}. Pilih Lembur atau On Call, tidak bisa keduanya.";
+
+                        throw ValidationException::withMessages(['tanggal' => $pesan]);
+                    }
+                }
+
+                $harian = $data['jenis'] === 'harian';
+                $shift = $harian ? Shift::find($data['shift_id']) : null;
+                $tipeShift = WorkSchedule::tipe($shift);
+                $dinasLuar = $tipeShift === 'kerja' && $request->boolean('is_dinas_luar');
+                $perluBukti = $tipeShift === 'sakit' || $dinasLuar;
+
+                if ($perluBukti && $request->hasFile('bukti')) {
+                    $buktiPath = $request->file('bukti')->store("bukti/{$userId}", 'local');
+                }
+
+                Logbook::create([
+                    'user_id'       => $userId,
+                    'jenis'         => $data['jenis'],
+                    'tanggal'       => $data['tanggal'],
+                    'shift_id'      => $harian ? $data['shift_id'] : null,
+                    'jam_mulai'     => $harian ? null : $data['jam_mulai'],
+                    'jam_selesai'   => $harian ? null : $data['jam_selesai'],
+                    'ringkasan'     => $tipeShift === 'libur' ? 'Libur' : ($data['ringkasan'] ?? ''),
+                    'is_wfh'        => false,
+                    'is_dinas_luar' => $dinasLuar,
+                    'bukti_path'    => $buktiPath,
+                    'harian_unik'   => $harian ? 1 : null,
+                ]);
+            });
+        } catch (Throwable $exception) {
+            if ($buktiPath) {
+                Storage::disk('local')->delete($buktiPath);
+            }
+
+            throw $exception;
+        }
 
         return redirect()
             ->route('logbook.index')
             ->with('success', 'Logbook berhasil disimpan.');
+    }
+
+    public function bukti(Request $request, Logbook $logbook)
+    {
+        $user = $request->user();
+        abort_unless((int) $user->id === (int) $logbook->user_id || $user->isAdmin(), 403);
+        abort_unless(
+            $logbook->bukti_path && Storage::disk('local')->exists($logbook->bukti_path),
+            404
+        );
+
+        return Storage::disk('local')->response($logbook->bukti_path);
     }
 
     public function banding(Request $request, Logbook $logbook): RedirectResponse
@@ -160,6 +260,8 @@ class LogbookController extends Controller
             'jam_kerja' => $item->shift?->nama ?? $jam, // harian: nama shift, lembur/on call: rentang jam
             'kegiatan'  => $item->ringkasan,
             'is_wfh'    => (bool) $item->is_wfh,
+            'is_dinas_luar' => (bool) $item->is_dinas_luar,
+            'bukti_url' => $item->bukti_path ? route('logbook.bukti', $item, false) : null,
             'keterangan_pegawai' => $item->keterangan_pegawai,
             'status_banding' => $item->status_banding,
         ];

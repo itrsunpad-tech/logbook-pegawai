@@ -28,6 +28,24 @@
         <div class="acc-alert" role="alert">{{ $errors->first() }}</div>
     @endif
 
+    {{-- Riwayat semua status dari pegawai ini dapat ditelusuri melalui tab Semua. --}}
+    @php
+        $tabs = [
+            \App\Models\Logbook::STATUS_MENUNGGU => $riwayatStatus->get(\App\Models\Logbook::STATUS_MENUNGGU, 0),
+            \App\Models\Logbook::STATUS_DISETUJUI => $riwayatStatus->get(\App\Models\Logbook::STATUS_DISETUJUI, 0),
+            \App\Models\Logbook::STATUS_DITOLAK => $riwayatStatus->get(\App\Models\Logbook::STATUS_DITOLAK, 0),
+            'semua' => $riwayatStatus->sum(),
+        ];
+    @endphp
+    <nav class="acc-tabs" aria-label="Filter riwayat status logbook">
+        @foreach ($tabs as $nama => $total)
+            <a href="{{ route('admin.logbook.pegawai', array_merge(request()->except(['page', 'status']), ['user' => $user->id, 'status' => $nama])) }}"
+               class="acc-tab {{ $status === $nama ? 'is-active' : '' }}">
+                {{ $nama === 'semua' ? 'Semua · Riwayat' : $nama }} <b>{{ $total }}</b>
+            </a>
+        @endforeach
+    </nav>
+
     {{-- Daftar logbook pegawai ini --}}
     @forelse ($logbooks as $lb)
         @php
@@ -57,8 +75,16 @@
                     @if ($lb->is_wfh)
                         <span class="acc-chip">WFH</span>
                     @endif
+                    @if ($lb->is_dinas_luar)
+                        <span class="acc-chip">Dinas Luar</span>
+                    @endif
                     <span class="st {{ $kelasStatus }}">{{ $lb->status }}</span>
                 </div>
+            </div>
+
+            <div class="acc-submitted">
+                <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                Dikirim {{ $lb->created_at?->format('d/m/Y, H:i') }}
             </div>
 
             @if ($detail !== '')
@@ -66,6 +92,16 @@
             @endif
 
             <div class="acc-summary">{{ $lb->ringkasan }}</div>
+
+            @if ($lb->bukti_path)
+                <div class="acc-evidence-row">
+                    <a href="{{ route('logbook.bukti', $lb) }}" class="acc-evidence" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+                        <span>Lihat bukti</span>
+                        <i class="fa-solid fa-arrow-up-right-from-square acc-evidence-open" aria-hidden="true"></i>
+                    </a>
+                </div>
+            @endif
 
             @if ($lb->keterangan_hc)
                 <div class="acc-hc"><strong>Keterangan HC:</strong> {{ $lb->keterangan_hc }}</div>

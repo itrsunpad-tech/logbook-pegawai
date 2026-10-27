@@ -47,12 +47,15 @@ class Logbook extends Model
         'jam_selesai',
         'ringkasan',
         'is_wfh',
+        'is_dinas_luar',
+        'bukti_path',
         'harian_unik',
     ];
 
     protected $casts = [
         'tanggal' => 'date',
         'is_wfh' => 'boolean',
+        'is_dinas_luar' => 'boolean',
     ];
 
     public function user(): BelongsTo

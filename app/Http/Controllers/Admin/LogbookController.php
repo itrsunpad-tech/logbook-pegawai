@@ -69,7 +69,13 @@ class LogbookController extends Controller
             ->simplePaginate(30)
             ->withQueryString();
 
-        return view('admin.logbook.show', compact('user', 'logbooks', 'status'));
+        $riwayatStatus = Logbook::query()
+            ->where('user_id', $user->id)
+            ->selectRaw('status, COUNT(*) AS total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        return view('admin.logbook.show', compact('user', 'logbooks', 'status', 'riwayatStatus'));
     }
 
     public function setujui(Logbook $logbook): RedirectResponse

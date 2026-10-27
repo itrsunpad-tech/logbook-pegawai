@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use App\Http\Controllers\LogbookController;
 use App\Models\Logbook;
+use App\Models\Shift;
+use App\Support\WorkSchedule;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,21 +26,45 @@ class StoreLogbookRequest extends FormRequest
      */
     public function rules(): array
     {
+        $tipeShift = $this->tipeShift();
+        $dinasLuar = $tipeShift === 'kerja' && $this->boolean('is_dinas_luar');
+        $perluBukti = $tipeShift === 'sakit' || $dinasLuar;
+        $tanggalMinimum = now()->startOfMonth()->subMonth()->toDateString();
+
         return [
             'jenis'       => ['required', Rule::in(['harian', 'lembur', 'oncall'])],
-            'tanggal'     => ['required', 'date', 'before_or_equal:today'],
+            'tanggal'     => ['required', 'date', 'after_or_equal:' . $tanggalMinimum, 'before_or_equal:today'],
 
             // Harian
-            'shift_id'    => ['required_if:jenis,harian', 'nullable', 'exists:shifts,id'],
+            'shift_id'    => ['required_if:jenis,harian', 'nullable', 'integer', 'exists:shifts,id'],
 
             // Lembur & On Call
             'jam_mulai'   => ['required_if:jenis,lembur,oncall', 'nullable', 'date_format:H:i'],
             'jam_selesai' => ['required_if:jenis,lembur,oncall', 'nullable', 'date_format:H:i', 'different:jam_mulai'],
 
             // Semua jenis
-            'ringkasan'   => ['required', 'string', 'min:10', 'max:2000'],
+            'ringkasan'   => [
+                $tipeShift === 'libur' ? 'nullable' : 'required',
+                'string', 'min:10', 'max:2000',
+            ],
+            'is_dinas_luar' => ['nullable', 'boolean'],
+            'bukti' => [
+                $perluBukti ? 'required' : 'nullable',
+                'file', 'mimes:png,jpg,jpeg,pdf', 'max:5120',
+            ],
             'pernyataan'  => ['accepted'],
         ];
+    }
+
+    private function tipeShift(): ?string
+    {
+        if ($this->input('jenis') !== 'harian') {
+            return null;
+        }
+
+        $id = $this->input('shift_id');
+
+        return WorkSchedule::tipe(is_numeric($id) ? Shift::find($id) : null);
     }
 
     /**
@@ -53,6 +79,26 @@ class StoreLogbookRequest extends FormRequest
             }
 
             $jenis = $this->input('jenis');
+
+            if ($jenis === 'harian') {
+                $unit = $this->user()->employee_unit;
+                $shift = \App\Models\Shift::find($this->input('shift_id'));
+                $namaShiftDiizinkan = WorkSchedule::shiftNames($unit);
+
+                if (trim((string) $unit) === '') {
+                    $validator->errors()->add('shift_id', 'Unit kerja Anda belum diatur. Hubungi admin.');
+                    return;
+                }
+
+                if (! $shift || ! in_array($shift->nama, $namaShiftDiizinkan, true)) {
+                    $validator->errors()->add('shift_id', 'Jadwal tersebut tidak tersedia untuk unit Anda.');
+                    return;
+                }
+
+                if ($this->boolean('is_dinas_luar') && $this->tipeShift() !== 'kerja') {
+                    $validator->errors()->add('is_dinas_luar', 'Dinas Luar hanya dapat dipilih untuk shift kerja.');
+                }
+            }
 
             $tanggalTerkunci = Logbook::query()
                 ->where('user_id', $this->user()->id)
@@ -129,6 +175,7 @@ class StoreLogbookRequest extends FormRequest
             'jam_mulai'   => 'jam mulai',
             'jam_selesai' => 'jam selesai',
             'ringkasan'   => 'ringkasan kegiatan',
+            'bukti'       => 'bukti',
             'pernyataan'  => 'pernyataan',
         ];
     }
@@ -141,12 +188,16 @@ class StoreLogbookRequest extends FormRequest
             'date'                  => ':attribute tidak valid.',
             'date_format'           => ':attribute harus berformat jam:menit.',
             'before_or_equal'       => ':attribute tidak boleh melebihi hari ini.',
+            'after_or_equal'        => ':attribute hanya bisa diisi mulai awal bulan lalu.',
             'exists'                => ':attribute yang dipilih tidak valid.',
             'in'                    => ':attribute tidak valid.',
             'different'             => 'Jam selesai tidak boleh sama dengan jam mulai.',
             'min'                   => ':attribute minimal :min karakter.',
             'max'                   => ':attribute maksimal :max karakter.',
             'pernyataan.accepted'   => 'Pernyataan harus dicentang sebelum mengirim.',
+            'bukti.mimes'           => 'Bukti harus berformat PNG, JPG, atau PDF.',
+            'bukti.max'             => 'Ukuran bukti maksimal 5 MB.',
+            'bukti.uploaded'        => 'Bukti gagal diunggah. Periksa ukuran file (maksimal 5 MB).',
         ];
     }
 }
