@@ -29,6 +29,7 @@
     }
     .lb-file-picker:hover { border-color: var(--accent); background: #eff6ff; }
     .lb-file-picker:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, .12); }
+    .lb-file-picker.is-dragging { border-color: var(--accent); background: #e8f1ff; box-shadow: 0 0 0 3px rgba(37, 99, 235, .12); }
     .lb-file-picker.is-selected { border: 1px solid #22a06b; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); box-shadow: 0 0 0 3px rgba(34, 160, 107, .1); }
     .lb-file-picker.is-selected .lb-file-picker-icon { background: #dcfce7; color: #15803d; }
     .lb-file-picker.is-selected .lb-file-picker-copy strong { color: #15803d; }
@@ -38,6 +39,8 @@
     .lb-file-picker-copy strong { font-size: 13px; font-weight: 700; }
     .lb-file-picker-copy small { color: var(--muted); font-size: 12px; font-weight: 600; }
     .lb-file-picker-name { max-width: 100%; overflow: hidden; color: var(--accent); font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    .lb-file-picker-error { display: block; margin-top: 5px; color: #b91c1c; font-size: 12px; font-weight: 600; }
+    .lb-file-picker-error[hidden] { display: none; }
     .lb-required { color: #dc2626; font-weight: 700; }
     .lb-file-picker input[type="file"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
     .lb-file-picker input[type="file"]:disabled { cursor: not-allowed; }
@@ -309,16 +312,16 @@
     }
 
     .rw-proof-link {
-        min-height: 38px;
-        padding: 0 13px;
+        min-height: 32px;
+        padding: 0 10px;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         border: 1px solid var(--accent-soft-border);
         border-radius: 9px;
         background: var(--accent-soft);
         color: var(--accent);
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 700;
     }
     .rw-proof-link:hover { border-color: var(--accent-border); background: #dceaff; }
@@ -546,7 +549,7 @@
                                     data-tipe="{{ \App\Support\WorkSchedule::tipe($shift) }}"
                                     @selected($o('harian', 'shift_id', $shiftDefaultId) == $shift->id)
                                 >
-                                    {{ $shift->nama === 'LIBUR' ? 'Libur' : $shift->nama }}
+                                    {{ \App\Support\WorkSchedule::label($shift) }}
                                 </option>
                             @endforeach
                         </optgroup>
@@ -586,17 +589,18 @@
                     @endif
                 </div>
                 <div class="lb-field">
-                    <label class="lb-label" for="harian-dinas-bukti">Upload Bukti <span class="lb-required">*</span></label>
+                    <label class="lb-label" for="harian-dinas-bukti">SURAT TUGAS <span class="lb-required">*</span></label>
                     <label class="lb-file-picker">
                         <span class="lb-file-picker-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
                         <span class="lb-file-picker-copy">
-                            <strong class="lb-file-picker-prompt">Upload bukti</strong>
-                            <small class="lb-file-picker-hint">PNG, JPG, atau PDF - maksimal 5 MB</small>
+                            <strong class="lb-file-picker-prompt" data-empty-label="Pilih surat tugas">Pilih surat tugas</strong>
+                            <small class="lb-file-picker-hint">PNG, JPG, atau PDF - maksimal 5 MB · Klik atau tarik file</small>
                             <small class="lb-file-picker-name" hidden></small>
                         </span>
                         <input type="file" id="harian-dinas-bukti" name="bukti" disabled
                                accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf">
                     </label>
+                    <small class="lb-file-picker-error" data-file-error-for="harian-dinas-bukti" hidden></small>
                     @if ($o('harian', 'is_dinas_luar'))
                         @error('bukti')
                             <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
@@ -626,13 +630,14 @@
                 <label class="lb-file-picker">
                     <span class="lb-file-picker-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
                     <span class="lb-file-picker-copy">
-                        <strong class="lb-file-picker-prompt">Upload bukti</strong>
-                        <small class="lb-file-picker-hint">PNG, JPG, atau PDF - maksimal 5 MB</small>
+                        <strong class="lb-file-picker-prompt" data-empty-label="Pilih bukti">Pilih bukti</strong>
+                        <small class="lb-file-picker-hint">PNG, JPG, atau PDF - maksimal 5 MB · Klik atau tarik file</small>
                         <small class="lb-file-picker-name" hidden></small>
                     </span>
                     <input type="file" name="bukti" id="harian-sakit-bukti" disabled
                            accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf">
                 </label>
+                <small class="lb-file-picker-error" data-file-error-for="harian-sakit-bukti" hidden></small>
                 @error('bukti')
                     @if (! $o('harian', 'is_dinas_luar'))
                         <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
@@ -927,7 +932,7 @@
                 </h4>
                 <a id="rw-bukti-link" class="rw-proof-link" target="_blank" rel="noopener">
                     <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
-                    Lihat bukti yang diunggah
+                    <span id="rw-bukti-label">Lihat bukti pendukung</span>
                     <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
                 </a>
             </div>
@@ -1299,6 +1304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rwKeteranganLabel = qs('#rw-keterangan-label');
     const rwBuktiWrap = qs('#rw-bukti-wrap');
     const rwBuktiLink = qs('#rw-bukti-link');
+    const rwBuktiLabel = qs('#rw-bukti-label');
     const rwBandingForm = qs('#rw-banding-form');
     const rwBandingTextarea = qs('#rw-banding-textarea');
     const rwBandingHistoryWrap = qs('#rw-banding-history-wrap');
@@ -1395,7 +1401,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         rwBuktiWrap.classList.toggle('is-hidden', !item.bukti_url);
-        if (item.bukti_url) rwBuktiLink.href = item.bukti_url;
+        if (item.bukti_url) {
+            rwBuktiLink.href = item.bukti_url;
+            if (rwBuktiLabel) rwBuktiLabel.textContent = item.is_dinas_luar ? 'Lihat bukti surat tugas' : 'Lihat bukti pendukung';
+        }
 
         const jamKerja = item.jam_kerja
             || (item.jam_mulai && item.jam_selesai ? `${item.jam_mulai} – ${item.jam_selesai}` : '')
@@ -1470,24 +1479,58 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = qs('.lb-file-picker-name', picker);
         const prompt = qs('.lb-file-picker-prompt', picker);
         const icon = qs('.lb-file-picker-icon i', picker);
+        const error = qs(`[data-file-error-for="${input.id}"]`);
         const file = input.files?.[0];
         picker?.classList.toggle('is-selected', Boolean(file));
+        if (error) { error.textContent = ''; error.hidden = true; }
         if (name) {
             name.textContent = file?.name || '';
             name.hidden = !file;
         }
-        if (prompt) prompt.textContent = file ? 'Bukti berhasil dipilih' : 'Upload bukti';
+        if (prompt) prompt.textContent = file ? 'File siap diunggah' : (prompt.dataset.emptyLabel || 'Pilih file');
         if (icon) icon.className = file ? 'fa-solid fa-circle-check' : 'fa-solid fa-cloud-arrow-up';
     };
 
     const validateFileSize = (input) => {
         const file = input.files?.[0];
         if (file && file.size > 5 * 1024 * 1024) {
-            alert('Ukuran bukti maksimal 5 MB.');
+            const error = qs(`[data-file-error-for="${input.id}"]`);
             input.value = '';
             syncFileName(input);
+            if (error) {
+                error.textContent = 'Ukuran file maksimal 5 MB. Silakan pilih file yang lebih kecil.';
+                error.hidden = false;
+            }
+            return false;
         }
+        return true;
     };
+
+    const setupFilePicker = (input) => {
+        const picker = input.closest('.lb-file-picker');
+        if (!picker) return;
+        input.addEventListener('change', () => {
+            if (validateFileSize(input)) syncFileName(input);
+        });
+        ['dragenter', 'dragover'].forEach((eventName) => picker.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            if (!input.disabled) picker.classList.add('is-dragging');
+        }));
+        ['dragleave', 'drop'].forEach((eventName) => picker.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            picker.classList.remove('is-dragging');
+        }));
+        picker.addEventListener('drop', (event) => {
+            if (input.disabled) return;
+            const file = event.dataTransfer?.files?.[0];
+            if (!file) return;
+            const transfer = new DataTransfer();
+            transfer.items.add(file);
+            input.files = transfer.files;
+            if (validateFileSize(input)) syncFileName(input);
+        });
+    };
+    [sakitBuktiInput, dinasBuktiInput].forEach((input) => input && setupFilePicker(input));
 
     const applyShiftFields = () => {
         if (!shiftSelect || !dinasCheckbox || !ringkasanInput || !sakitBuktiInput) return;
@@ -1545,12 +1588,6 @@ document.addEventListener('DOMContentLoaded', () => {
             syncFileName(dinasBuktiInput);
         }
         applyShiftFields();
-    });
-    [sakitBuktiInput, dinasBuktiInput].forEach((input) => {
-        input?.addEventListener('change', () => {
-            validateFileSize(input);
-            syncFileName(input);
-        });
     });
     applyShiftFields();
 

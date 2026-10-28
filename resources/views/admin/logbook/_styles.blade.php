@@ -87,23 +87,23 @@
     .acc-submitted i { color: var(--accent); }
     .acc-evidence-row { display: flex; }
     .acc-evidence {
-        min-height: 38px;
-        padding: 0 13px;
+        min-height: 32px;
+        padding: 0 10px;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         border: 1px solid #b8d1fb;
         border-radius: 10px;
         background: linear-gradient(135deg, #f1f6ff, #e8f1ff);
         color: #164eaa;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 700;
         box-shadow: 0 2px 7px rgba(24, 82, 166, .08);
         transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease;
     }
     .acc-evidence:hover { border-color: #78a9f8; background: #e4efff; box-shadow: 0 5px 12px rgba(24, 82, 166, .14); transform: translateY(-1px); }
-    .acc-evidence > i:first-child { font-size: 14px; }
-    .acc-evidence-open { margin-left: 2px; color: #5376a8; font-size: 10px; }
+    .acc-evidence > i:first-child { font-size: 12px; }
+    .acc-evidence-open { margin-left: 1px; color: #5376a8; font-size: 9px; }
     .acc-hc {
         padding: 8px 10px; border-left: 3px solid var(--red);
         background: #fff7f7; color: #b91c1c; font-size: 12px; line-height: 1.5;

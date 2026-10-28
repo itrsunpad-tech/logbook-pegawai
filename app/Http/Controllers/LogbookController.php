@@ -190,7 +190,11 @@ class LogbookController extends Controller
             404
         );
 
-        return Storage::disk('local')->response($logbook->bukti_path);
+        $namaFile = basename($logbook->bukti_path);
+
+        return Storage::disk('local')->response($logbook->bukti_path, $namaFile, [
+            'X-Content-Type-Options' => 'nosniff',
+        ], 'inline');
     }
 
     public function banding(Request $request, Logbook $logbook): RedirectResponse

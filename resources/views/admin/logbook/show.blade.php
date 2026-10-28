@@ -97,7 +97,7 @@
                 <div class="acc-evidence-row">
                     <a href="{{ route('logbook.bukti', $lb) }}" class="acc-evidence" target="_blank" rel="noopener">
                         <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
-                        <span>Lihat bukti</span>
+                        <span>{{ $lb->is_dinas_luar ? 'Lihat bukti surat tugas' : 'Lihat bukti pendukung' }}</span>
                         <i class="fa-solid fa-arrow-up-right-from-square acc-evidence-open" aria-hidden="true"></i>
                     </a>
                 </div>

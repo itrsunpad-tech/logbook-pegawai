@@ -58,6 +58,26 @@ class WorkSchedule
         return count($jadwalKerja) === 1 ? $jadwalKerja[0] : null;
     }
 
+    /** Label jadwal untuk tampilan dropdown tanpa mengubah nama yang tersimpan. */
+    public static function label(?Shift $shift): string
+    {
+        if (! $shift) {
+            return '';
+        }
+
+        if ($shift->nama === 'LIBUR') {
+            return 'Libur';
+        }
+
+        if (preg_match('/^OH\s+(.+)$/u', $shift->nama, $matches)) {
+            $unit = preg_replace('/\s*,\s*/u', ', ', $matches[1]);
+
+            return 'Office Hour (' . $unit . ')';
+        }
+
+        return $shift->nama;
+    }
+
     /** kerja | libur | sakit | izin | null */
     public static function tipe(?Shift $shift): ?string
     {

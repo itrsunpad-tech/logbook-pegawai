@@ -1373,7 +1373,7 @@
             background: var(--toast-color);
             opacity: 0.55;
             transform-origin: left;
-            animation: toast-timer 4s linear forwards;
+            animation: toast-timer 6s linear forwards;
         }
 
         .toast.is-leaving {
@@ -1926,7 +1926,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     /* ---------------------------------
-       Toast: hilang otomatis setelah 4 detik
+       Toast: hilang otomatis setelah 6 detik
     ---------------------------------- */
     document.querySelectorAll('.toast').forEach((toast) => {
         const dismiss = () => {
@@ -1935,7 +1935,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         toast.querySelector('.toast-close').addEventListener('click', dismiss);
-        setTimeout(dismiss, 4000);
+        setTimeout(dismiss, 6000);
     });
 
 });
