@@ -11,10 +11,18 @@ use Illuminate\Support\Facades\Route;
 
 // Login
 Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route(Auth::user()->isAdmin() ? 'admin.dashboard' : 'logbook.index');
+    }
+
     return redirect()->route('login');
 });
 
 Route::get('/login', function () {
+    if (Auth::check()) {
+        return redirect()->route(Auth::user()->isAdmin() ? 'admin.dashboard' : 'logbook.index');
+    }
+
     return view('auth.login');
 })->name('login');
 

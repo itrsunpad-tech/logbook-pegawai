@@ -34,7 +34,7 @@
             font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
         }
 
-        /* ===== Kartu ===== */
+        /* Kartu */
         .card {
             width: 100%;
             max-width: 320px;
@@ -46,7 +46,7 @@
             animation: rise 0.6s ease-out both;
         }
 
-        /* Bagian atas biru */
+        /* Bagian atas biru dengan gradasi berlapis */
         .card-top {
             position: relative;
             display: flex;
@@ -56,15 +56,16 @@
             text-align: center;
             color: #fff;
             background:
-                radial-gradient(circle at 85% 0%, rgba(255, 255, 255, 0.22), transparent 55%),
-                linear-gradient(165deg, #1d4ed8 0%, #2563eb 50%, #38bdf8 100%);
+                radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.28), transparent 50%),
+                radial-gradient(circle at 0% 100%, rgba(56, 189, 248, 0.45), transparent 60%),
+                linear-gradient(160deg, #1e3a8a 0%, #1d4ed8 35%, #2563eb 65%, #38bdf8 100%);
         }
 
-        /* Riak lembut di sekitar ikon */
+        /* Wadah logo + riak lembut di sekitarnya */
         .icon-wrap {
             position: relative;
-            width: 44px;
-            height: 44px;
+            width: 52px;
+            height: 52px;
             display: grid;
             place-items: center;
         }
@@ -80,9 +81,13 @@
 
         .ripple.r2 { animation-delay: 1.8s; }
 
+        /* Logo UNPAD sebagai siluet putih */
         .card-top .icon {
-            font-size: 32px;
-            line-height: 1;
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            position: relative;
+            filter: brightness(0) invert(1);
             animation: float 4.5s ease-in-out infinite;
         }
 
@@ -138,18 +143,6 @@
         /* Logo RS di fasad: muncul pelan setelah garis gedung selesai */
         .sil .late { opacity: 0; animation: lateIn 0.8s 1.4s ease forwards; }
 
-        /* Garis denyut (ECG): garis dasar redup + denyut terang yang berjalan pelan */
-        .sil .ecg-base { stroke-width: 4; stroke-opacity: 0.28; }
-
-        .sil .ecg-pulse {
-            stroke-width: 5;
-            stroke-opacity: 0.95;
-            stroke-dasharray: 0.16 0.84;
-            stroke-dashoffset: 0.16;
-            animation: pulse 3.6s linear infinite;
-        }
-
-
         /* Bagian bawah putih */
         .card-body { padding: 22px 26px 24px; }
 
@@ -198,6 +191,8 @@
 
         .google-button:active { transform: translateY(0) scale(0.99); }
 
+        .google-button .label { white-space: nowrap; }
+
         .google-button .arrow {
             position: absolute;
             right: 16px;
@@ -208,27 +203,57 @@
             transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
-        .google-button:hover .arrow { opacity: 1; transform: translateX(0); }
+        /* Panah bergeser halus saat hover (berhenti saat kursor keluar) */
+        .google-button:hover .arrow {
+            opacity: 1;
+            transform: translateX(0);
+            animation: nudge 1.2s ease-in-out infinite;
+        }
+
         .google-button:hover .google-icon { transform: scale(1.08); }
 
         .google-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
         .google-icon { width: 18px; height: 18px; flex-shrink: 0; transition: transform 0.2s ease; }
 
+        /* Spinner untuk status loading */
+        .spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            border: 2px solid rgba(11, 87, 208, 0.25);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Status loading: tombol tidak bisa diklik ulang */
+        .google-button.is-loading {
+            cursor: progress;
+            pointer-events: none;
+            background: #f8fafc;
+        }
+
+        .google-button.is-loading .google-icon,
+        .google-button.is-loading .arrow { display: none; }
+
+        .google-button.is-loading .spinner { display: inline-block; }
+
         .note {
             margin-top: 14px;
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            gap: 7px;
+            gap: 6px;
             color: var(--muted);
-            font-size: 13px;
-            line-height: 1.6;
+            font-size: 11.5px;
+            line-height: 1.5;
         }
 
         .note i { margin-top: 3px; color: var(--accent); font-size: 13px; }
 
-        /* ===== Animasi halus ===== */
+        /* Animasi halus */
         @keyframes rise {
             from { opacity: 0; transform: translateY(12px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -258,14 +283,18 @@
             to { opacity: 1; }
         }
 
-        @keyframes pulse {
-            from { stroke-dashoffset: 0.16; }
-            to   { stroke-dashoffset: -0.84; }
-        }
-
         @keyframes glow {
             0%, 100% { stroke-opacity: 0.12; }
             40%, 60% { stroke-opacity: 0.6; }
+        }
+
+        @keyframes nudge {
+            0%, 100% { transform: translateX(0); }
+            50%      { transform: translateX(3px); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         @media (max-width: 420px) {
@@ -278,11 +307,12 @@
             .card, .card-top .icon { animation: none; }
             .ripple { animation: none; display: none; }
             .sil .late { animation: none; opacity: 1; }
-            .sil .ecg-pulse { animation: none; stroke-dasharray: none; stroke-opacity: 0.6; }
             .sil .s, .sil .ln { animation: none; stroke-dashoffset: 0; }
             .sil .s { fill: rgba(255, 255, 255, 0.10); }
             .sil .win { animation: none; stroke-opacity: 0.25; }
+            .google-button:hover .arrow { animation: none; }
             .google-button, .google-button .arrow, .google-icon { transition: none; }
+            .spinner { animation-duration: 1.6s; }
         }
     </style>
 </head>
@@ -295,13 +325,13 @@
             <div class="icon-wrap" aria-hidden="true">
                 <span class="ripple"></span>
                 <span class="ripple r2"></span>
-                <i class="fa-solid fa-book icon"></i>
+                <img src="{{ asset('images/logo-unpad.png') }}" alt="" class="icon">
             </div>
             <h1>Logbook Pegawai</h1>
             <p>Catat kegiatan harian dan absensi Anda.</p>
 
             <!-- Siluet gedung rumah sakit -->
-            <svg class="sil" viewBox="260 262 900 520" aria-hidden="true">
+            <svg class="sil" viewBox="260 262 900 445" aria-hidden="true">
                 <defs>
                     <filter id="logo-mono" color-interpolation-filters="sRGB">
                         <feColorMatrix type="matrix"
@@ -322,6 +352,7 @@
                 <path class="s" pathLength="1" d="M905 485 H1012 L1148 568 V586 H905 Z"/>
                 <path class="ln" pathLength="1" d="M953 586 V645 M1033 586 V645 M1113 586 V645"/>
                 <path class="s" pathLength="1" d="M300 597 H700 L735 625 H260 Z"/>
+                
                 <!-- jendela menyala bergantian -->
                 <g class="late">
                     <path class="win" d="M456 346 H558" style="animation-delay:0s"/>
@@ -338,17 +369,15 @@
                     <path class="win" d="M875 444 H975" style="animation-delay:-0.9s"/>
                 </g>
                 <g class="late">
-                    <!-- logo RS UNPAD: warna bawaan + outline putih tipis agar terbaca di atas biru -->
+                    <!-- logo RS UNPAD: warna bawaan + outline putih tipis -->
                     <image href="{{ asset('images/logo-rsup-unpad.png') }}" x="410" y="421" width="130" height="47" preserveAspectRatio="xMidYMid meet" filter="url(#logo-mono)" opacity="0.75"/>
                 </g>
                 <path class="ln ground" pathLength="1" d="M262 700 H1150"/>
-                <path class="ecg-base" d="M262 738 H480 L505 738 L520 720 L536 768 L556 702 L576 774 L592 738 L615 738 H800 L825 738 L840 720 L856 768 L876 702 L896 774 L912 738 L935 738 H1150"/>
-                <path class="ecg-pulse" pathLength="1" d="M262 738 H480 L505 738 L520 720 L536 768 L556 702 L576 774 L592 738 L615 738 H800 L825 738 L840 720 L856 768 L876 702 L896 774 L912 738 L935 738 H1150"/>
             </svg>
         </header>
 
         <section class="card-body">
-            <h2>Masuk ke aplikasi</h2>
+            <h2>Selamat Datang Kembali</h2>
 
             @if ($errors->any() || session('error'))
                 <div class="alert" role="alert">
@@ -356,14 +385,15 @@
                 </div>
             @endif
 
-            <a href="{{ route('google.login') }}" class="google-button">
+            <a href="{{ route('google.login') }}" class="google-button" id="google-login">
                 <svg class="google-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="#4285F4" d="M21.35 12.27c0-.78-.07-1.53-.22-2.25H12v4.26h5.23a4.47 4.47 0 0 1-1.94 2.93v2.44h3.14c1.84-1.69 2.92-4.18 2.92-7.38z"/>
                     <path fill="#34A853" d="M12 21.9c2.63 0 4.83-.87 6.44-2.35l-3.14-2.44c-.87.58-1.98.93-3.3.93-2.54 0-4.69-1.72-5.46-4.03H3.3v2.52A9.73 9.73 0 0 0 12 21.9z"/>
                     <path fill="#FBBC05" d="M6.54 14.01a5.86 5.86 0 0 1 0-3.74V7.75H3.3a9.8 9.8 0 0 0 0 8.78l3.24-2.52z"/>
                     <path fill="#EA4335" d="M12 6.24c1.43 0 2.71.49 3.72 1.46l2.79-2.79C16.82 3.35 14.62 2.4 12 2.4a9.73 9.73 0 0 0-8.7 5.35l3.24 2.52C7.31 7.96 9.46 6.24 12 6.24z"/>
                 </svg>
-                <span>Login dengan Google</span>
+                <span class="spinner" aria-hidden="true"></span>
+                <span class="label">Login dengan Google</span>
                 <i class="fa-solid fa-arrow-right arrow" aria-hidden="true"></i>
             </a>
 
@@ -374,6 +404,37 @@
         </section>
 
     </main>
+
+    <script>
+        (function () {
+            var btn = document.getElementById('google-login');
+            if (!btn) return;
+
+            var label = btn.querySelector('.label');
+            var originalText = label.textContent;
+
+            function setLoading(on) {
+                btn.classList.toggle('is-loading', on);
+                btn.setAttribute('aria-busy', on ? 'true' : 'false');
+                btn.setAttribute('aria-disabled', on ? 'true' : 'false');
+                label.textContent = on ? 'Menghubungkan...' : originalText;
+            }
+
+            btn.addEventListener('click', function (e) {
+                // Cegah klik ganda saat proses sedang berjalan
+                if (btn.classList.contains('is-loading')) {
+                    e.preventDefault();
+                    return;
+                }
+                setLoading(true);
+            });
+
+            // Reset tombol jika halaman dikembalikan dari cache (misalnya tombol Back)
+            window.addEventListener('pageshow', function (e) {
+                if (e.persisted) setLoading(false);
+            });
+        })();
+    </script>
 
 </body>
 </html>
