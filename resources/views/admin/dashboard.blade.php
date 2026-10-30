@@ -151,12 +151,12 @@
                 <span class="adm-badge">Segera hadir</span>
             </div>
 
-            <div class="adm-menu-item is-disabled">
+            <a href="{{ route('admin.sidik-jari.index') }}" class="adm-menu-item">
                 <i class="fa-solid fa-fingerprint"></i>
                 <span class="adm-menu-name">Rekap Sidik Jari</span>
-                <span class="adm-menu-desc">Data dari mesin sidik jari (eksperimental).</span>
-                <span class="adm-badge">Tahap berikutnya</span>
-            </div>
+                <span class="adm-menu-desc">Monitoring absensi langsung dari mesin sidik jari.</span>
+                <span class="adm-badge">Live</span>
+            </a>
 
             <a href="{{ route('admin.kepegawaian.index') }}" class="adm-menu-item">
                 <i class="fa-solid fa-users-gear"></i>

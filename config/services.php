@@ -41,4 +41,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'fingerprint' => [
+    'token' => env('FINGERPRINT_API_TOKEN'),
+    ],
+
 ];
