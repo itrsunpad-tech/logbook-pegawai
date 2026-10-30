@@ -5,6 +5,7 @@ use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LogbookController as AdminLogbookController;
 use App\Http\Controllers\Admin\KepegawaianController;
+use App\Http\Controllers\Admin\SidikJariController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -89,6 +90,13 @@ Route::middleware(['auth', 'admin'])
 
         Route::patch('/kepegawaian/{user}/kontak', [KepegawaianController::class, 'updateKontak'])
             ->name('kepegawaian.update-kontak');
+
+        // Sidik jari (live)
+        Route::get('/sidik-jari', [SidikJariController::class, 'index'])
+            ->name('sidik-jari.index');
+
+        Route::get('/sidik-jari/terbaru', [SidikJariController::class, 'terbaru'])
+            ->name('sidik-jari.terbaru');
 
         // ACC logbook
         Route::get('/logbook', [AdminLogbookController::class, 'index'])
