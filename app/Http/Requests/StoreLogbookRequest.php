@@ -27,7 +27,8 @@ class StoreLogbookRequest extends FormRequest
     public function rules(): array
     {
         $tipeShift = $this->tipeShift();
-        $dinasLuar = $tipeShift === 'kerja' && $this->boolean('is_dinas_luar');
+        $dinasLuar = $this->boolean('is_dinas_luar')
+            && ($tipeShift === 'kerja' || $this->dinasLuarTanpaFingerprint());
         $perluBukti = $tipeShift === 'sakit' || $dinasLuar;
         $tanggalMinimum = now()->startOfMonth()->subMonth()->toDateString();
 
@@ -36,7 +37,10 @@ class StoreLogbookRequest extends FormRequest
             'tanggal'     => ['required', 'date', 'after_or_equal:' . $tanggalMinimum, 'before_or_equal:today'],
 
             // Harian
-            'shift_id'    => ['required_if:jenis,harian', 'nullable', 'integer', 'exists:shifts,id'],
+            'shift_id'    => [
+                Rule::requiredIf(fn () => $this->input('jenis') === 'harian' && ! $this->dinasLuarTanpaFingerprint()),
+                'nullable', 'integer', 'exists:shifts,id',
+            ],
 
             // Lembur & On Call
             'jam_mulai'   => ['required_if:jenis,lembur,oncall', 'nullable', 'date_format:H:i'],
@@ -67,6 +71,15 @@ class StoreLogbookRequest extends FormRequest
         return WorkSchedule::tipe(is_numeric($id) ? Shift::find($id) : null);
     }
 
+    /** Dinas luar unit Gizi pada masa uji tidak bergantung pada catatan fingerprint/jadwal. */
+    private function dinasLuarTanpaFingerprint(): bool
+    {
+        return $this->input('jenis') === 'harian'
+            && WorkSchedule::unitKey($this->user()?->employee_unit) === 'Gizi'
+            && $this->boolean('is_dinas_luar')
+            && ! $this->filled('shift_id');
+    }
+
     /**
      * Cek aturan yang butuh data di database.
      */
@@ -90,12 +103,14 @@ class StoreLogbookRequest extends FormRequest
                     return;
                 }
 
-                if (! $shift || ! in_array($shift->nama, $namaShiftDiizinkan, true)) {
+                $dinasLuarTanpaFingerprint = $this->dinasLuarTanpaFingerprint();
+
+                if (! $dinasLuarTanpaFingerprint && (! $shift || ! in_array($shift->nama, $namaShiftDiizinkan, true))) {
                     $validator->errors()->add('shift_id', 'Jadwal tersebut tidak tersedia untuk unit Anda.');
                     return;
                 }
 
-                if ($this->boolean('is_dinas_luar') && $this->tipeShift() !== 'kerja') {
+                if ($this->boolean('is_dinas_luar') && ! $dinasLuarTanpaFingerprint && $this->tipeShift() !== 'kerja') {
                     $validator->errors()->add('is_dinas_luar', 'Dinas Luar hanya dapat dipilih untuk shift kerja.');
                 }
             }

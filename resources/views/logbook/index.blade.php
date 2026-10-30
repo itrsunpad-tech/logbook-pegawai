@@ -534,7 +534,7 @@
             </div>
 
             <div class="lb-field">
-                <label class="lb-label" for="{{ $unitKey === 'Gizi' ? 'harian-shift-display' : 'harian-shift-select' }}">Shift / Jadwal <span class="lb-required">*</span></label>
+                <label class="lb-label" for="{{ $unitKey === 'Gizi' && $shifts->isNotEmpty() ? 'harian-shift-display' : 'harian-shift-select' }}">Shift / Jadwal <span class="lb-required">*</span></label>
                 @if ($unitKey === 'Gizi' && $shifts->isNotEmpty())
                     <input type="text" id="harian-shift-display" class="lb-select" readonly
                            placeholder="Menunggu fingerprint" aria-describedby="harian-shift-help" aria-required="true">
@@ -1584,16 +1584,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         dateInput.dispatchEvent(new Event('change', { bubbles: true }));
                     }
                     shiftHelp.textContent = `Fingerprint pukul ${result.waktu_fingerprint} WIB terdeteksi. Jadwal terisi otomatis.`;
-                    if (schedulePollingTimer) {
-                        window.clearInterval(schedulePollingTimer);
-                        schedulePollingTimer = null;
-                    }
+                    stopSchedulePolling();
                 } else {
                     shiftHelp.textContent = result.message || 'Jadwal belum dapat dicocokkan dari fingerprint.';
-                    if (result.status !== 'waiting' && schedulePollingTimer) {
-                        window.clearInterval(schedulePollingTimer);
-                        schedulePollingTimer = null;
-                    }
+                    if (result.status !== 'waiting') stopSchedulePolling();
                 }
 
                 shiftSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -1601,6 +1595,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (sequence !== requestSequence) return;
                 shiftHelp.textContent = 'Data fingerprint belum dapat diperiksa. Coba lagi sebentar.';
                 clearSchedule();
+            }
+        };
+
+        const stopSchedulePolling = () => {
+            requestSequence++;
+            if (schedulePollingTimer) {
+                window.clearInterval(schedulePollingTimer);
+                schedulePollingTimer = null;
             }
         };
 
@@ -1613,14 +1615,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dateInput?.addEventListener('logbook:date-selected', () => {
             clearSchedule();
-            if (schedulePollingTimer) {
-                window.clearInterval(schedulePollingTimer);
-                schedulePollingTimer = null;
+            if (dinasCheckbox?.checked) {
+                stopSchedulePolling();
+                shiftHelp.textContent = 'Dinas luar tidak memerlukan fingerprint. Isi deskripsi dan unggah surat tugas.';
+                return;
             }
+            stopSchedulePolling();
             startSchedulePolling();
         });
 
-        startSchedulePolling();
+        dinasCheckbox?.addEventListener('change', () => {
+            if (dinasCheckbox.checked && !shiftSelect.value) {
+                stopSchedulePolling();
+                shiftHelp.textContent = 'Dinas luar tidak memerlukan fingerprint. Isi deskripsi dan unggah surat tugas.';
+            } else if (!dinasCheckbox.checked && !shiftSelect.value) {
+                startSchedulePolling();
+            }
+        });
+
+        if (dinasCheckbox?.checked && !shiftSelect.value) {
+            shiftHelp.textContent = 'Dinas luar tidak memerlukan fingerprint. Isi deskripsi dan unggah surat tugas.';
+        } else {
+            startSchedulePolling();
+        }
     }
 
     const applyShiftFields = () => {
@@ -1628,20 +1645,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tipe = shiftSelect.selectedOptions[0]?.dataset.tipe || '';
         const isKerja = tipe === 'kerja';
-        if (!isKerja && dinasCheckbox.checked) {
+        const bolehDinasLuarTanpaShift = autoFingerprintSchedule && !shiftSelect.value;
+        if (!isKerja && !bolehDinasLuarTanpaShift && dinasCheckbox.checked) {
             dinasCheckbox.checked = false;
             dinasRingkasanInput.value = '';
             dinasBuktiInput.value = '';
             syncFileName(dinasBuktiInput);
         }
 
-        const dinasLuar = isKerja && dinasCheckbox.checked;
+        const dinasLuar = dinasCheckbox.checked && (isKerja || bolehDinasLuarTanpaShift);
         const sakit = tipe === 'sakit';
         const ringkasanTampil = tipe !== 'libur' && !dinasLuar;
 
-        dinasBox.style.display = isKerja ? '' : 'none';
-        dinasCheckbox.disabled = !isKerja;
+        dinasBox.style.display = isKerja || autoFingerprintSchedule ? '' : 'none';
+        dinasCheckbox.disabled = !isKerja && !autoFingerprintSchedule;
         dinasFields.style.display = dinasLuar ? '' : 'none';
+        if (shiftDisplay && !shiftSelect.value) {
+            shiftDisplay.value = dinasCheckbox.checked
+                ? 'Tidak perlu fingerprint untuk Dinas Luar'
+                : '';
+        }
 
         ringkasanBox.style.display = ringkasanTampil ? '' : 'none';
         ringkasanInput.disabled = !ringkasanTampil;
@@ -1709,11 +1732,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const needsAutoSchedule = form.id === 'harian-form' && autoFingerprintSchedule;
         const sync = () => {
-            submit.disabled = !checkbox.checked || (needsAutoSchedule && !shiftSelect?.value);
+            const tanpaJadwalUntukDinasLuar = needsAutoSchedule && dinasCheckbox?.checked;
+            submit.disabled = !checkbox.checked || (needsAutoSchedule && !shiftSelect?.value && !tanpaJadwalUntukDinasLuar);
         };
 
         checkbox.addEventListener('change', sync);
         if (needsAutoSchedule) shiftSelect?.addEventListener('change', sync);
+        if (needsAutoSchedule) dinasCheckbox?.addEventListener('change', sync);
         sync();
 
         form.addEventListener('submit', (event) => {
@@ -1956,7 +1981,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (input) {
                 input.value = selectedDate;
-                input.dispatchEvent(new Event('change'));
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                input.dispatchEvent(new Event('logbook:date-selected', { bubbles: true }));
             }
         });
     });

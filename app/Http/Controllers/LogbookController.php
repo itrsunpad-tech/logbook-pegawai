@@ -230,7 +230,12 @@ class LogbookController extends Controller
                 $harian = $data['jenis'] === 'harian';
                 $shift = $harian ? Shift::find($data['shift_id']) : null;
                 $tipeShift = WorkSchedule::tipe($shift);
-                $dinasLuar = $tipeShift === 'kerja' && $request->boolean('is_dinas_luar');
+                $dinasLuarTanpaFingerprint = $harian
+                    && WorkSchedule::unitKey($request->user()->employee_unit) === 'Gizi'
+                    && $request->boolean('is_dinas_luar')
+                    && empty($data['shift_id']);
+                $dinasLuar = $request->boolean('is_dinas_luar')
+                    && ($tipeShift === 'kerja' || $dinasLuarTanpaFingerprint);
                 $perluBukti = $tipeShift === 'sakit' || $dinasLuar;
 
                 if ($perluBukti && $request->hasFile('bukti')) {
@@ -241,7 +246,7 @@ class LogbookController extends Controller
                     'user_id'       => $userId,
                     'jenis'         => $data['jenis'],
                     'tanggal'       => $data['tanggal'],
-                    'shift_id'      => $harian ? $data['shift_id'] : null,
+                    'shift_id'      => $harian ? ($data['shift_id'] ?? null) : null,
                     'jam_mulai'     => $harian ? null : $data['jam_mulai'],
                     'jam_selesai'   => $harian ? null : $data['jam_selesai'],
                     'ringkasan'     => $tipeShift === 'libur' ? 'Libur' : ($data['ringkasan'] ?? ''),
