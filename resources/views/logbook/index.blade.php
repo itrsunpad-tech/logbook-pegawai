@@ -49,6 +49,7 @@
     .lb-date-control { position: relative; }
     .lb-date-control.is-open { z-index: 90; }
     .lb-date-range-hint { margin-top: 5px; color: var(--muted-light); font-size: 11px; font-weight: 600; line-height: 1.4; }
+    .lb-select--auto-hidden { position: absolute; width: 1px; height: 1px; padding: 0; opacity: 0; pointer-events: none; }
     .lb-date-control.is-enhanced .lb-date-native { display: none; }
     .lb-date-display,
     .lb-date-trigger { display: none; }
@@ -533,8 +534,14 @@
             </div>
 
             <div class="lb-field">
-                <label class="lb-label">Shift / Jadwal <span class="lb-required">*</span></label>
-                <select name="shift_id" required class="lb-select" id="harian-shift-select"
+                <label class="lb-label" for="{{ $unitKey === 'Gizi' ? 'harian-shift-display' : 'harian-shift-select' }}">Shift / Jadwal <span class="lb-required">*</span></label>
+                @if ($unitKey === 'Gizi' && $shifts->isNotEmpty())
+                    <input type="text" id="harian-shift-display" class="lb-select" readonly
+                           placeholder="Menunggu fingerprint" aria-describedby="harian-shift-help" aria-required="true">
+                @endif
+                <select name="shift_id" @required($unitKey !== 'Gizi') class="lb-select {{ $unitKey === 'Gizi' && $shifts->isNotEmpty() ? 'lb-select--auto-hidden' : '' }}"
+                        id="harian-shift-select" data-auto-fingerprint="{{ $unitKey === 'Gizi' ? 'true' : 'false' }}"
+                        @if ($unitKey === 'Gizi' && $shifts->isNotEmpty()) aria-hidden="true" tabindex="-1" @endif
                         @disabled($shifts->isEmpty())>
                     @if (! $shiftDefaultId)
                         <option value="">-- Pilih Shift --</option>
@@ -559,9 +566,13 @@
                     <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
                 @enderror
                 @if ($shifts->isEmpty())
-                    <div class="lb-alert" role="status">Unit kerja belum diatur atau belum memiliki jadwal. Hubungi admin.</div>
+                    <div class="lb-alert" role="status">
+                        {{ $unitKey === 'Gizi' ? 'Jadwal untuk unit Gizi belum tersedia di database. Hubungi admin.' : 'Unit kerja belum diatur atau belum memiliki jadwal. Hubungi admin.' }}
+                    </div>
+                @elseif ($unitKey === 'Gizi')
+                    <div class="lb-shift-help" id="harian-shift-help" role="status">Tanggal bisa dipilih manual atau terisi otomatis saat fingerprint terdeteksi.</div>
                 @else
-                    <div class="lb-shift-help">Pilihan jadwal disesuaikan dengan unit kerja.</div>
+                    <div class="lb-shift-help" id="harian-shift-help">Pilihan jadwal disesuaikan dengan unit kerja.</div>
                 @endif
             </div>
 
@@ -1046,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateToDisplay = (key) => {
         const date = parseDateKey(key);
         return date ? new Intl.DateTimeFormat('id-ID', {
-            day: '2-digit', month: '2-digit', year: 'numeric',
+            day: 'numeric', month: 'long', year: 'numeric',
         }).format(date) : '';
     };
     const todayDate = parseDateKey(HARI_INI) || new Date();
@@ -1127,6 +1138,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 display.value = dateToDisplay(key);
                 nativeInput.dispatchEvent(new Event('input', { bubbles: true }));
                 nativeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                nativeInput.dispatchEvent(new Event('logbook:date-selected', { bubbles: true }));
                 visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1);
                 close();
             };
@@ -1205,6 +1217,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     display.value = '';
                     nativeInput.dispatchEvent(new Event('input', { bubbles: true }));
                     nativeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    nativeInput.dispatchEvent(new Event('logbook:date-selected', { bubbles: true }));
                     close();
                 });
                 const today = el('button', 'lb-date-today', 'Hari ini');
@@ -1463,6 +1476,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const typeButtons = qsa('[data-jenis]');
     const forms = qsa('[data-jenis-panel]');
     const shiftSelect = qs('#harian-shift-select');
+    const shiftDisplay = qs('#harian-shift-display');
+    const shiftHelp = qs('#harian-shift-help');
+    const dateInput = qs('#harian-tanggal');
+    const autoFingerprintSchedule = shiftSelect?.dataset.autoFingerprint === 'true';
     const dinasBox = qs('#harian-dl-box');
     const dinasCheckbox = qs('#harian-dl-box input');
     const ringkasanBox = qs('#harian-ringkasan-box');
@@ -1531,6 +1548,80 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     [sakitBuktiInput, dinasBuktiInput].forEach((input) => input && setupFilePicker(input));
+
+    if (autoFingerprintSchedule && shiftSelect && shiftHelp) {
+        const scheduleUrl = @json(route('logbook.fingerprint-schedule'));
+        let requestSequence = 0;
+        let schedulePollingTimer = null;
+
+        const clearSchedule = () => {
+            shiftSelect.value = '';
+            if (shiftDisplay) shiftDisplay.value = '';
+            shiftSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+
+        const refreshFingerprintSchedule = async () => {
+            const sequence = ++requestSequence;
+            clearSchedule();
+            shiftHelp.textContent = 'Memeriksa fingerprint terbaru...';
+
+            try {
+                const params = new URLSearchParams();
+                if (dateInput?.value) params.set('tanggal', dateInput.value);
+                const url = params.size ? `${scheduleUrl}?${params.toString()}` : scheduleUrl;
+                const response = await fetch(url, {
+                    headers: { Accept: 'application/json' },
+                    cache: 'no-store',
+                });
+                const result = await response.json();
+                if (sequence !== requestSequence) return;
+
+                if (result.status === 'matched' && result.shift) {
+                    shiftSelect.value = String(result.shift.id);
+                    if (shiftDisplay) shiftDisplay.value = result.shift.label;
+                    if (dateInput && result.tanggal) {
+                        dateInput.value = result.tanggal;
+                        dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    shiftHelp.textContent = `Fingerprint pukul ${result.waktu_fingerprint} WIB terdeteksi. Jadwal terisi otomatis.`;
+                    if (schedulePollingTimer) {
+                        window.clearInterval(schedulePollingTimer);
+                        schedulePollingTimer = null;
+                    }
+                } else {
+                    shiftHelp.textContent = result.message || 'Jadwal belum dapat dicocokkan dari fingerprint.';
+                    if (result.status !== 'waiting' && schedulePollingTimer) {
+                        window.clearInterval(schedulePollingTimer);
+                        schedulePollingTimer = null;
+                    }
+                }
+
+                shiftSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            } catch (error) {
+                if (sequence !== requestSequence) return;
+                shiftHelp.textContent = 'Data fingerprint belum dapat diperiksa. Coba lagi sebentar.';
+                clearSchedule();
+            }
+        };
+
+        const startSchedulePolling = () => {
+            if (!schedulePollingTimer) {
+                schedulePollingTimer = window.setInterval(refreshFingerprintSchedule, 10000);
+            }
+            refreshFingerprintSchedule();
+        };
+
+        dateInput?.addEventListener('logbook:date-selected', () => {
+            clearSchedule();
+            if (schedulePollingTimer) {
+                window.clearInterval(schedulePollingTimer);
+                schedulePollingTimer = null;
+            }
+            startSchedulePolling();
+        });
+
+        startSchedulePolling();
+    }
 
     const applyShiftFields = () => {
         if (!shiftSelect || !dinasCheckbox || !ringkasanInput || !sakitBuktiInput) return;
@@ -1616,9 +1707,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!checkbox || !submit) return;
 
-        const sync = () => { submit.disabled = !checkbox.checked; };
+        const needsAutoSchedule = form.id === 'harian-form' && autoFingerprintSchedule;
+        const sync = () => {
+            submit.disabled = !checkbox.checked || (needsAutoSchedule && !shiftSelect?.value);
+        };
 
         checkbox.addEventListener('change', sync);
+        if (needsAutoSchedule) shiftSelect?.addEventListener('change', sync);
         sync();
 
         form.addEventListener('submit', (event) => {

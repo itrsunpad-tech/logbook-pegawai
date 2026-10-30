@@ -69,6 +69,14 @@ class WorkSchedule
             return 'Libur';
         }
 
+        if ($shift->nama === 'OH IT,Gizi') {
+            return 'OH (IT,Gizi)';
+        }
+
+        if ($shift->nama === 'Pagi Gizi & Linen') {
+            return 'Shift Pagi (Gizi & Linen)';
+        }
+
         if (preg_match('/^OH\s+(.+)$/u', $shift->nama, $matches)) {
             $unit = preg_replace('/\s*,\s*/u', ', ', $matches[1]);
 

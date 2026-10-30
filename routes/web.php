@@ -52,6 +52,9 @@ Route::middleware('auth')
         Route::get('/', [LogbookController::class, 'index'])
             ->name('index');
 
+        Route::get('/jadwal-fingerprint', [LogbookController::class, 'jadwalFingerprint'])
+            ->name('fingerprint-schedule');
+
         Route::post('/', [LogbookController::class, 'store'])
             ->name('store');
 

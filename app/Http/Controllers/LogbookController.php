@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLogbookRequest;
 use App\Models\Holiday;
+use App\Models\FingerprintLog;
 use App\Models\Logbook;
 use App\Models\Shift;
 use App\Models\User;
@@ -11,6 +12,7 @@ use App\Support\WorkSchedule;
 use App\Notifications\LogbookStatusChanged;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -47,6 +49,7 @@ class LogbookController extends Controller
             ->get();
 
         $unit = Auth::user()->employee_unit;
+        $unitKey = WorkSchedule::unitKey($unit);
         $namaShiftDiizinkan = WorkSchedule::shiftNames($unit);
         $shifts = Shift::query()
             ->whereIn('nama', $namaShiftDiizinkan)
@@ -80,6 +83,7 @@ class LogbookController extends Controller
             'logbooks',
             'shifts',
             'opsiShift',
+            'unitKey',
             'shiftDefaultId',
             'batas',
             'dibuka',
@@ -91,6 +95,85 @@ class LogbookController extends Controller
             'libur',
             'notifikasiStatus'
         ));
+    }
+
+    /**
+     * Saran jadwal uji untuk unit Gizi berdasarkan fingerprint terbaru pada jam 14-15 WIB.
+     * Hanya membaca log milik akun yang sedang login.
+     */
+    public function jadwalFingerprint(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'tanggal' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
+        $user = $request->user();
+        if (WorkSchedule::unitKey($user->employee_unit) !== 'Gizi') {
+            return response()->json([
+                'status' => 'unit_not_supported',
+                'message' => 'Saran otomatis sidik jari saat ini disiapkan untuk unit Gizi.',
+            ]);
+        }
+
+        if (! $user->fingerprint_id) {
+            return response()->json([
+                'status' => 'fingerprint_not_registered',
+                'message' => 'ID sidik jari akun ini belum didaftarkan oleh admin.',
+            ]);
+        }
+
+        $zona = FingerprintLog::TZ_TAMPIL;
+        $tanggal = $data['tanggal'] ?? Carbon::now($zona)->toDateString();
+        $mulaiHari = Carbon::createFromFormat('Y-m-d', $tanggal, $zona)->startOfDay();
+        $awalJendelaUji = $mulaiHari->copy()->setTime(14, 0)->utc();
+        $akhirJendelaUji = $mulaiHari->copy()->setTime(16, 0)->utc();
+
+        $fingerprint = FingerprintLog::query()
+            ->where('fingerprint_id', $user->fingerprint_id)
+            ->where('punched_at', '>=', $awalJendelaUji)
+            ->where('punched_at', '<', $akhirJendelaUji)
+            ->orderByDesc('punched_at')
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $fingerprint) {
+            $tanggalLabel = Carbon::createFromFormat('Y-m-d', $tanggal, $zona)
+                ->locale('id')
+                ->translatedFormat('d F Y');
+
+            return response()->json([
+                'status' => 'waiting',
+                'message' => 'Menunggu fingerprint tanggal ' . $tanggalLabel . ' pada pukul 14.00-15.59.',
+            ]);
+        }
+
+        $waktuTap = $fingerprint->punched_at->copy()->setTimezone($zona);
+        $namaShift = $waktuTap->hour === 14 ? 'Pagi Gizi & Linen' : 'OH IT,Gizi';
+        $shift = Shift::query()
+            ->whereIn('nama', WorkSchedule::shiftNames($user->employee_unit))
+            ->where('nama', $namaShift)
+            ->first();
+
+        if (! $shift) {
+            return response()->json([
+                'status' => 'schedule_unavailable',
+                'message' => 'Jadwal Gizi belum tersedia di database. Admin perlu memuat jadwal terlebih dahulu.',
+                'waktu_fingerprint' => $waktuTap->format('H:i'),
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'matched',
+            'message' => 'Jadwal otomatis dicocokkan dari fingerprint.',
+            'shift' => [
+                'id' => $shift->id,
+                'nama' => $shift->nama,
+                'label' => WorkSchedule::label($shift),
+                'tipe' => WorkSchedule::tipe($shift),
+            ],
+            'tanggal' => $waktuTap->toDateString(),
+            'waktu_fingerprint' => $waktuTap->format('H:i'),
+        ]);
     }
 
     public function store(StoreLogbookRequest $request): RedirectResponse
