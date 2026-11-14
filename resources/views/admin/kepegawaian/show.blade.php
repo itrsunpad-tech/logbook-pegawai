@@ -18,7 +18,7 @@
         <div class="kp-row-main">
             <div class="kp-title">{{ $user->name }}</div>
             <div class="kp-meta">
-                {{ collect([$user->employee_unit, $user->employee_category])->filter()->implode(' · ') ?: 'Unit dan kategori belum diisi' }}
+                {{ collect([$user->employee_unit, $user->employee_category, $user->work_hour_type])->filter()->implode(' · ') ?: 'Unit dan kategori belum diisi' }}
             </div>
 
             <div class="kp-chips">
@@ -104,17 +104,77 @@
 
                 <div>
                     <label class="lb-label" for="employee_unit">Unit kerja / divisi</label>
-                    <select id="employee_unit" name="employee_unit" class="lb-select">
-                        <option value="">&mdash; Pilih unit &mdash;</option>
-                        @foreach ($daftarUnit as $unit)
-                            <option value="{{ $unit }}"
-                                @selected(old('employee_unit', $user->employee_unit) === $unit)>
-                                {{ $unit }}
+                    <div class="searchable-select" id="unit-searchable">
+                        {{-- Native select tersembunyi untuk submit form & validasi --}}
+                        <select id="employee_unit" name="employee_unit" class="searchable-select-hidden" tabindex="-1" aria-hidden="true">
+                            <option value="">&mdash; Pilih unit &mdash;</option>
+                            @foreach ($daftarUnit as $unit)
+                                <option value="{{ $unit }}"
+                                    @selected(old('employee_unit', $user->employee_unit) === $unit)>
+                                    {{ $unit }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        {{-- Tombol trigger dropdown --}}
+                        <button type="button" class="searchable-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                            <span class="searchable-select-label {{ !old('employee_unit', $user->employee_unit) ? 'is-placeholder' : '' }}">
+                                {{ old('employee_unit', $user->employee_unit) ?: '— Pilih unit / posisi —' }}
+                            </span>
+                            <i class="fa-solid fa-chevron-down searchable-select-arrow"></i>
+                        </button>
+
+                        {{-- Panel dropdown mengambang dengan pencarian --}}
+                        <div class="searchable-select-dropdown" role="listbox">
+                            <div class="searchable-select-search">
+                                <i class="fa-solid fa-magnifying-glass searchable-select-search-icon"></i>
+                                <input type="text" class="searchable-select-input" placeholder="Cari posisi / unit..." autocomplete="off">
+                                <button type="button" class="searchable-select-clear" title="Hapus pencarian" style="display: none;">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+
+                            <ul class="searchable-select-list">
+                                <li class="searchable-select-item {{ !old('employee_unit', $user->employee_unit) ? 'is-selected' : '' }}" data-value="">
+                                    <span>&mdash; Pilih unit / posisi &mdash;</span>
+                                    @if (!old('employee_unit', $user->employee_unit))
+                                        <i class="fa-solid fa-check searchable-select-check"></i>
+                                    @endif
+                                </li>
+                                @foreach ($daftarUnit as $unit)
+                                    @php $isSelected = old('employee_unit', $user->employee_unit) === $unit; @endphp
+                                    <li class="searchable-select-item {{ $isSelected ? 'is-selected' : '' }}" data-value="{{ $unit }}">
+                                        <span>{{ $unit }}</span>
+                                        @if ($isSelected)
+                                            <i class="fa-solid fa-check searchable-select-check"></i>
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ul>
+
+                            <div class="searchable-select-empty" style="display: none;">
+                                <i class="fa-regular fa-folder-open"></i> Tidak ada unit atau posisi yang cocok
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kp-help">Pilihan jadwal logbook pegawai mengikuti unit ini.</div>
+                    @error('employee_unit')
+                        <div class="kp-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="lb-label" for="work_hour_type">Jenis jam kerja</label>
+                    <select id="work_hour_type" name="work_hour_type" class="lb-select">
+                        <option value="">&mdash; Pilih jenis &mdash;</option>
+                        @foreach (\App\Models\User::JENIS_JAM_KERJA as $jenis)
+                            <option value="{{ $jenis }}"
+                                @selected(old('work_hour_type', $user->work_hour_type) === $jenis)>
+                                {{ $jenis }}
                             </option>
                         @endforeach
                     </select>
-                    <div class="kp-help">Pilihan jadwal logbook pegawai mengikuti unit ini.</div>
-                    @error('employee_unit')
+                    @error('work_hour_type')
                         <div class="kp-error">{{ $message }}</div>
                     @enderror
                 </div>
@@ -194,3 +254,173 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const root = document.getElementById('unit-searchable');
+    if (!root) return;
+
+    const hiddenSelect = root.querySelector('.searchable-select-hidden');
+    const trigger = root.querySelector('.searchable-select-trigger');
+    const triggerLabel = root.querySelector('.searchable-select-label');
+    const dropdown = root.querySelector('.searchable-select-dropdown');
+    const searchInput = root.querySelector('.searchable-select-input');
+    const clearBtn = root.querySelector('.searchable-select-clear');
+    const items = Array.from(root.querySelectorAll('.searchable-select-item'));
+    const emptyState = root.querySelector('.searchable-select-empty');
+    const list = root.querySelector('.searchable-select-list');
+
+    let highlightedIndex = -1;
+
+    function openDropdown() {
+        document.querySelectorAll('.searchable-select.is-open').forEach(el => {
+            if (el !== root) el.classList.remove('is-open');
+        });
+
+        root.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        filterOptions('');
+        setTimeout(() => searchInput.focus(), 60);
+    }
+
+    function closeDropdown() {
+        root.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+        clearHighlight();
+    }
+
+    function selectOption(val, label) {
+        hiddenSelect.value = val;
+        triggerLabel.textContent = label || '— Pilih unit / posisi —';
+        if (val) {
+            triggerLabel.classList.remove('is-placeholder');
+        } else {
+            triggerLabel.classList.add('is-placeholder');
+        }
+
+        items.forEach(item => {
+            const isMatch = item.dataset.value === val;
+            item.classList.toggle('is-selected', isMatch);
+            const oldCheck = item.querySelector('.searchable-select-check');
+            if (oldCheck) oldCheck.remove();
+            if (isMatch) {
+                const check = document.createElement('i');
+                check.className = 'fa-solid fa-check searchable-select-check';
+                item.appendChild(check);
+            }
+        });
+
+        hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        closeDropdown();
+        trigger.focus();
+    }
+
+    function filterOptions(term) {
+        const query = term.trim().toLowerCase();
+        let visibleCount = 0;
+        clearHighlight();
+
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            const matches = query === '' || text.includes(query);
+            item.style.display = matches ? 'flex' : 'none';
+            if (matches) visibleCount++;
+        });
+
+        if (visibleCount === 0) {
+            list.style.display = 'none';
+            emptyState.style.display = 'block';
+        } else {
+            list.style.display = 'block';
+            emptyState.style.display = 'none';
+        }
+
+        clearBtn.style.display = query.length > 0 ? 'flex' : 'none';
+    }
+
+    function getVisibleItems() {
+        return items.filter(item => item.style.display !== 'none');
+    }
+
+    function clearHighlight() {
+        items.forEach(i => i.classList.remove('is-highlighted'));
+        highlightedIndex = -1;
+    }
+
+    function highlightItem(index) {
+        const visible = getVisibleItems();
+        if (visible.length === 0) return;
+
+        items.forEach(i => i.classList.remove('is-highlighted'));
+        highlightedIndex = Math.max(0, Math.min(index, visible.length - 1));
+        const target = visible[highlightedIndex];
+        if (target) {
+            target.classList.add('is-highlighted');
+            target.scrollIntoView({ block: 'nearest' });
+        }
+    }
+
+    // Toggle on trigger click
+    trigger.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (root.classList.contains('is-open')) {
+            closeDropdown();
+        } else {
+            openDropdown();
+        }
+    });
+
+    // Option item click
+    items.forEach(item => {
+        item.addEventListener('click', function () {
+            selectOption(this.dataset.value, this.querySelector('span')?.textContent.trim() || this.dataset.value);
+        });
+    });
+
+    // Real-time search
+    searchInput.addEventListener('input', function () {
+        filterOptions(this.value);
+    });
+
+    // Clear search
+    clearBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        searchInput.value = '';
+        filterOptions('');
+        searchInput.focus();
+    });
+
+    // Keyboard navigation
+    searchInput.addEventListener('keydown', function (e) {
+        const visible = getVisibleItems();
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            highlightItem(highlightedIndex + 1);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            highlightItem(highlightedIndex - 1);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlightedIndex >= 0 && highlightedIndex < visible.length) {
+                const target = visible[highlightedIndex];
+                selectOption(target.dataset.value, target.querySelector('span')?.textContent.trim() || target.dataset.value);
+            }
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            closeDropdown();
+            trigger.focus();
+        }
+    });
+
+    // Close on click outside
+    document.addEventListener('click', function (e) {
+        if (!root.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+});
+</script>
+@endpush

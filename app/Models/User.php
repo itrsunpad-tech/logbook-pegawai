@@ -18,10 +18,72 @@ class User extends Authenticatable
     public const ROLE_ADMIN = 'admin';
 
     /** Pilihan kategori pegawai (kolom employee_category). */
-    public const KATEGORI = ['Medis', 'Non-Medis'];
+    public const KATEGORI = ['Nakes', 'Non-Nakes'];
 
-    /** Unit yang tersedia di Overview Kepegawaian. */
-    public const UNIT_KERJA = ['Reguler', 'IT', 'Gizi', 'Lab', 'Linen', 'Hemodialisa'];
+    /** Unit / Posisi yang tersedia di Overview Kepegawaian (dari Job Position). */
+    public const UNIT_KERJA = [
+        'Direktur Keuangan dan Administrasi',
+        'Direktur Umum dan Operasional',
+        'Direktur Utama',
+        'Kepala Casemix',
+        'Kepala Instalasi Bedah Sentral',
+        'Kepala Instalasi Farmasi',
+        'Kepala Instalasi Gizi',
+        'Kepala Instalasi IGD',
+        'Kepala Instalasi Kamar Jenazah',
+        'Kepala Instalasi Laboratorium',
+        'Kepala Instalasi Perawatan Intensive',
+        'Kepala Instalasi Radiologi',
+        'Kepala Instalasi Rawat Inap',
+        'Kepala Instalasi Rawat Jalan',
+        'Ketua Komite',
+        'Koordinator Bidan',
+        'Koordinator IT',
+        'Koordinator Perawat',
+        'Koordinator Perawat Bedah Sentral',
+        'Koordinator Perawat Perinatologi',
+        'Koordinator Perawat Rawat Inap',
+        'Koordinator Perawat Rawat Jalan',
+        'Manajer General Affair dan Aset',
+        'Manajer HSSE',
+        'Manajer Human Capital',
+        'Manajer Keperawatan',
+        'Manajer Keuangan',
+        'Manajer Pelayanan Medik',
+        'Manajer Penunjang Medis',
+        'Manajer SIMRS',
+        'Satuan Pengawas Internal (SPI)',
+        'Sekper',
+        'Staff',
+        'Staff Administrasi',
+        'Staff Ambulans',
+        'Staff Bidan',
+        'Staff Casemix',
+        'Staff Coder',
+        'Staff CSSD',
+        'Staff Farmasi',
+        'Staff General Affair dan Aset',
+        'Staff Gizi',
+        'Staff HSSE',
+        'Staff Human Capital',
+        'Staff IPSRS',
+        'Staff IT',
+        'Staff Keuangan',
+        'Staff Laboratorium',
+        'Staff Legal',
+        'Staff Linen',
+        'Staff Logistik',
+        'Staff Marketing',
+        'Staff NA',
+        'Staff Pendaftaran',
+        'Staff Perawat',
+        'Staff Radiologi',
+        'Staff Rekam Medis',
+        'Staff Sekretaris',
+    ];
+
+    /** Pilihan jenis jam kerja pegawai (kolom work_hour_type). */
+    public const JENIS_JAM_KERJA = ['Office Hour', 'Shift'];
 
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -37,6 +99,9 @@ class User extends Authenticatable
         'password',
         'google_id',
         'avatar',
+        'employee_category',
+        'employee_unit',
+        'work_hour_type',
     ];
 
     /**
@@ -72,7 +137,7 @@ class User extends Authenticatable
         return $this->role === self::ROLE_ADMIN;
     }
 
-        /**
+    /**
      * Semua logbook milik user ini.
      */
     public function logbooks(): HasMany
@@ -80,7 +145,7 @@ class User extends Authenticatable
         return $this->hasMany(Logbook::class);
     }
 
-        /**
+    /**
      * Profil detail pegawai (satu-ke-satu).
      */
     public function profile(): HasOne
@@ -97,7 +162,7 @@ class User extends Authenticatable
             ->explode(' ')
             ->filter()
             ->take(2)
-            ->map(fn ($kata) => mb_strtoupper(mb_substr($kata, 0, 1)))
+            ->map(fn($kata) => mb_strtoupper(mb_substr($kata, 0, 1)))
             ->implode('');
     }
 }

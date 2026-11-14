@@ -148,7 +148,7 @@ class LogbookController extends Controller
         }
 
         $waktuTap = $fingerprint->punched_at->copy()->setTimezone($zona);
-        $namaShift = $waktuTap->hour === 14 ? 'Pagi Gizi & Linen' : 'OH IT,Gizi';
+        $namaShift = $waktuTap->hour === 14 ? 'Pagi Gizi & Linen' : 'OH Reguler';
         $shift = Shift::query()
             ->whereIn('nama', WorkSchedule::shiftNames($user->employee_unit))
             ->where('nama', $namaShift)

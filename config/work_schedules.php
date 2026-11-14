@@ -5,31 +5,31 @@ return [
     'units' => [
         'Reguler' => [
             'oh' => ['OH Reguler'],
-            'shift' => ['Pagi Reguler', 'Siang Reguler', 'Malam Reguler'],
+            'shift' => ['Pagi Reguler', 'Siang Reguler', 'Malam Reguler', 'Middle'],
         ],
         'IT' => [
-            'oh' => ['OH IT,Gizi'],
+            'oh' => ['OH Reguler'],
             'shift' => [],
         ],
         'Gizi' => [
-            'oh' => ['OH IT,Gizi'],
-            'shift' => ['Pagi Gizi & Linen', 'Siang Gizi & Linen'],
+            'oh' => ['OH Reguler'],
+            'shift' => ['Pagi Gizi & Linen', 'Siang Gizi & Linen', 'Middle'],
         ],
         'Lab' => [
-            'oh' => ['OH Lab'],
+            'oh' => ['OH Reguler'],
             'shift' => [],
         ],
         'Linen' => [
             'oh' => [],
-            'shift' => ['Pagi Gizi & Linen', 'Siang Gizi & Linen'],
+            'shift' => ['Pagi Gizi & Linen', 'Siang Gizi & Linen', 'Middle'],
         ],
         'Hemodialisa' => [
             'oh' => [],
-            'shift' => ['Pagi Hemodialisa', 'Siang Hemodialisa'],
+            'shift' => ['Pagi Hemodialisa', 'Siang Hemodialisa', 'Middle'],
         ],
     ],
 
     // Unit lama/tidak dikenal hanya mendapat pilihan status umum.
-    'default' => ['LIBUR', 'Sakit', 'Izin'],
-    'common' => ['LIBUR', 'Sakit', 'Izin'],
+    'default' => ['Sakit', 'Izin'],
+    'common' => ['Sakit', 'Izin'],
 ];

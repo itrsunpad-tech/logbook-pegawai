@@ -87,9 +87,11 @@ class KepegawaianController extends Controller
                 User::query()->whereNotNull('employee_unit')->distinct()->pluck('employee_unit')
                     ->merge(User::UNIT_KERJA)->filter()->unique()->values()->all()
             )],
+            'work_hour_type'    => ['nullable', Rule::in(User::JENIS_JAM_KERJA)],
         ], [
             'name.required'        => 'Nama lengkap wajib diisi.',
             'employee_category.in' => 'Kategori tidak valid.',
+            'work_hour_type.in'    => 'Jenis jam kerja tidak valid.',
         ]);
 
         // forceFill: lewat $fillable, aman karena hanya data tervalidasi dari rute admin

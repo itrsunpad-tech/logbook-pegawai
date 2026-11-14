@@ -6,8 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Shift extends Model
 {
+    public const JENIS_OFFICE_HOUR = 'Office Hour';
+
+    public const JENIS_SHIFT = 'Shift';
+
+    public const JENIS = [self::JENIS_OFFICE_HOUR, self::JENIS_SHIFT];
+
     protected $fillable = [
         'nama',
+        'jenis',
         'jam_mulai',
         'jam_selesai',
         'is_kerja',
