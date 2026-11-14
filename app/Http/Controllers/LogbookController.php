@@ -194,16 +194,12 @@ class LogbookController extends Controller
         }
 
         $waktuTap = $fingerprint->punched_at->copy()->setTimezone($zona);
-<<<<<<< HEAD
-        $namaShift = $waktuTap->hour === 14 ? 'Pagi Gizi & Linen' : 'OH Reguler';
-=======
         // Jam OH dan shift siang tumpang tindih (13.00-16.00); waktu mulai
         // shift siang dipakai sebagai batas agar tap masuk mulai pukul 13.00
         // diklasifikasikan sebagai shift siang.
         $namaShift = $waktuTap->format('H:i:s') < '13:00:00'
-            ? 'OH IT,Gizi'
+            ? 'OH Reguler'
             : 'Siang Gizi & Linen';
->>>>>>> f947faa74445f1b0e16dfc4b5361d5dde6f72cf8
         $shift = Shift::query()
             ->whereIn('nama', WorkSchedule::shiftNames($user->employee_unit))
             ->where('nama', $namaShift)
