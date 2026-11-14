@@ -12,8 +12,13 @@ return [
             'shift' => [],
         ],
         'Gizi' => [
+<<<<<<< HEAD
             'oh' => ['OH Reguler'],
             'shift' => ['Pagi Gizi & Linen', 'Siang Gizi & Linen', 'Middle'],
+=======
+            'oh' => ['OH IT,Gizi'],
+            'shift' => ['Siang Gizi & Linen'],
+>>>>>>> f947faa74445f1b0e16dfc4b5361d5dde6f72cf8
         ],
         'Lab' => [
             'oh' => ['OH Reguler'],

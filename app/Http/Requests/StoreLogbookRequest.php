@@ -12,6 +12,13 @@ use Illuminate\Validation\Rule;
 
 class StoreLogbookRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('jenis') === 'harian' && $this->boolean('is_cuti') && $this->filled('cuti_mulai')) {
+            $this->merge(['tanggal' => $this->input('cuti_mulai')]);
+        }
+    }
+
     /**
      * Hanya user yang sudah login yang boleh menyimpan logbook.
      */
@@ -29,16 +36,26 @@ class StoreLogbookRequest extends FormRequest
         $tipeShift = $this->tipeShift();
         $dinasLuar = $this->boolean('is_dinas_luar')
             && ($tipeShift === 'kerja' || $this->dinasLuarTanpaFingerprint());
-        $perluBukti = $tipeShift === 'sakit' || $dinasLuar;
+        $cuti = $this->input('jenis') === 'harian' && $this->boolean('is_cuti');
+        $izinSakit = $this->input('jenis') === 'harian' && $this->boolean('is_izin_sakit');
+        $perluBukti = $dinasLuar || $cuti;
+        $melengkapiBuktiIzinSakit = $this->melengkapiBuktiIzinSakit();
         $tanggalMinimum = now()->startOfMonth()->subMonth()->toDateString();
 
         return [
             'jenis'       => ['required', Rule::in(['harian', 'lembur', 'oncall'])],
-            'tanggal'     => ['required', 'date', 'after_or_equal:' . $tanggalMinimum, 'before_or_equal:today'],
+            'tanggal'     => $cuti
+                ? ['required', 'date']
+                : ['required', 'date', 'after_or_equal:' . $tanggalMinimum, 'before_or_equal:today'],
+            'cuti_mulai'  => [$cuti ? 'required' : 'nullable', 'date'],
+            'cuti_selesai' => [$cuti ? 'required' : 'nullable', 'date', 'after_or_equal:cuti_mulai'],
 
             // Harian
             'shift_id'    => [
-                Rule::requiredIf(fn () => $this->input('jenis') === 'harian' && ! $this->dinasLuarTanpaFingerprint()),
+                Rule::requiredIf(fn () => $this->input('jenis') === 'harian'
+                    && ! $this->dinasLuarTanpaFingerprint()
+                    && ! $this->boolean('is_cuti')
+                    && ! $this->boolean('is_izin_sakit')),
                 'nullable', 'integer', 'exists:shifts,id',
             ],
 
@@ -48,10 +65,12 @@ class StoreLogbookRequest extends FormRequest
 
             // Semua jenis
             'ringkasan'   => [
-                $tipeShift === 'libur' ? 'nullable' : 'required',
+                $tipeShift === 'libur' || $melengkapiBuktiIzinSakit ? 'nullable' : 'required',
                 'string', 'min:10', 'max:2000',
             ],
             'is_dinas_luar' => ['nullable', 'boolean'],
+            'is_izin_sakit' => ['nullable', 'boolean'],
+            'is_cuti' => ['nullable', 'boolean'],
             'bukti' => [
                 $perluBukti ? 'required' : 'nullable',
                 'file', 'mimes:png,jpg,jpeg,pdf', 'max:5120',
@@ -60,10 +79,35 @@ class StoreLogbookRequest extends FormRequest
         ];
     }
 
+    /** Pengguna boleh hanya mengunggah bukti untuk entri Izin/Sakit yang sudah ada. */
+    private function melengkapiBuktiIzinSakit(): bool
+    {
+        if ($this->input('jenis') !== 'harian'
+            || ! $this->boolean('is_izin_sakit')
+            || ! $this->hasFile('bukti')
+            || ! $this->user()
+            || ! $this->filled('tanggal')) {
+            return false;
+        }
+
+        return Logbook::query()
+            ->where('user_id', $this->user()->id)
+            ->whereDate('tanggal', $this->input('tanggal'))
+            ->where('jenis', 'harian')
+            ->where('is_izin_sakit', true)
+            ->whereNull('bukti_path')
+            ->whereNotIn('status', [Logbook::STATUS_DISETUJUI, Logbook::STATUS_DITOLAK])
+            ->exists();
+    }
+
     private function tipeShift(): ?string
     {
         if ($this->input('jenis') !== 'harian') {
             return null;
+        }
+
+        if ($this->boolean('is_izin_sakit')) {
+            return 'izin_sakit';
         }
 
         $id = $this->input('shift_id');
@@ -92,6 +136,71 @@ class StoreLogbookRequest extends FormRequest
             }
 
             $jenis = $this->input('jenis');
+            if ($jenis !== 'harian' && collect(['is_dinas_luar', 'is_izin_sakit', 'is_cuti'])
+                ->contains(fn ($field) => $this->boolean($field))) {
+                $validator->errors()->add('jenis', 'Pilihan ini hanya tersedia untuk logbook harian.');
+                return;
+            }
+
+            $pilihanKhusus = collect([
+                $this->boolean('is_dinas_luar'),
+                $this->boolean('is_izin_sakit'),
+                $this->boolean('is_cuti'),
+            ])->filter()->count();
+
+            if ($pilihanKhusus > 1) {
+                $validator->errors()->add('is_cuti', 'Pilih satu jenis pengajuan saja.');
+                return;
+            }
+
+            if ($jenis === 'harian' && $this->boolean('is_cuti')) {
+                $mulaiCuti = $this->input('cuti_mulai');
+                $selesaiCuti = $this->input('cuti_selesai');
+                if ($mulaiCuti && $selesaiCuti) {
+                    $beririsan = Logbook::query()
+                        ->where('user_id', $this->user()->id)
+                        ->where(function ($query) use ($mulaiCuti, $selesaiCuti) {
+                            $query->where(function ($harian) use ($mulaiCuti, $selesaiCuti) {
+                                $harian->whereBetween('tanggal', [$mulaiCuti, $selesaiCuti])
+                                    ->where(function ($bukanCutiDitolak) {
+                                        $bukanCutiDitolak->whereNull('is_cuti')
+                                            ->orWhere('is_cuti', false)
+                                            ->orWhere(function ($cutiAktif) {
+                                                $cutiAktif->where('is_cuti', true)
+                                                    ->whereIn('status', [Logbook::STATUS_MENUNGGU, Logbook::STATUS_DISETUJUI]);
+                                            });
+                                    });
+                            })->orWhere(function ($cuti) use ($selesaiCuti, $mulaiCuti) {
+                                    $cuti->where('is_cuti', true)
+                                        ->whereIn('status', [Logbook::STATUS_MENUNGGU, Logbook::STATUS_DISETUJUI])
+                                        ->where('tanggal', '<=', $selesaiCuti)
+                                        ->where('cuti_selesai', '>=', $mulaiCuti);
+                                });
+                        })
+                        ->exists();
+
+                    if ($beririsan) {
+                        $validator->errors()->add('cuti_mulai', 'Rentang cuti bertabrakan dengan logbook yang sudah ada.');
+                        return;
+                    }
+                }
+            }
+
+            if ($jenis === 'harian' && ! $this->boolean('is_cuti')) {
+                $tanggal = $this->input('tanggal');
+                $adaDalamRentangCuti = Logbook::query()
+                    ->where('user_id', $this->user()->id)
+                    ->where('is_cuti', true)
+                    ->whereIn('status', [Logbook::STATUS_MENUNGGU, Logbook::STATUS_DISETUJUI])
+                    ->where('tanggal', '<=', $tanggal)
+                    ->where('cuti_selesai', '>=', $tanggal)
+                    ->exists();
+
+                if ($adaDalamRentangCuti) {
+                    $validator->errors()->add('tanggal', 'Tanggal ini berada dalam rentang cuti yang sudah diajukan.');
+                    return;
+                }
+            }
 
             if ($jenis === 'harian') {
                 $unit = $this->user()->employee_unit;
@@ -104,9 +213,16 @@ class StoreLogbookRequest extends FormRequest
                 }
 
                 $dinasLuarTanpaFingerprint = $this->dinasLuarTanpaFingerprint();
+                $cuti = $this->boolean('is_cuti');
+                $izinSakit = $this->boolean('is_izin_sakit');
 
-                if (! $dinasLuarTanpaFingerprint && (! $shift || ! in_array($shift->nama, $namaShiftDiizinkan, true))) {
+                if (! $dinasLuarTanpaFingerprint && ! $cuti && ! $izinSakit && (! $shift || ! in_array($shift->nama, $namaShiftDiizinkan, true))) {
                     $validator->errors()->add('shift_id', 'Jadwal tersebut tidak tersedia untuk unit Anda.');
+                    return;
+                }
+
+                if ($izinSakit && $this->filled('shift_id')) {
+                    $validator->errors()->add('shift_id', 'Izin/Sakit tidak menggunakan shift atau fingerprint.');
                     return;
                 }
 
@@ -115,9 +231,13 @@ class StoreLogbookRequest extends FormRequest
                 }
             }
 
+            $tanggalCek = $this->boolean('is_cuti') ? $this->input('cuti_mulai') : $this->input('tanggal');
             $tanggalTerkunci = Logbook::query()
                 ->where('user_id', $this->user()->id)
-                ->whereDate('tanggal', $this->input('tanggal'))
+                ->whereDate('tanggal', $tanggalCek)
+                ->where(function ($query) {
+                    $query->whereNull('is_cuti')->orWhere('is_cuti', false);
+                })
                 ->whereIn('status', [Logbook::STATUS_DISETUJUI, Logbook::STATUS_DITOLAK])
                 ->exists();
 
@@ -148,11 +268,26 @@ class StoreLogbookRequest extends FormRequest
                 }
             }
 
+            if ($this->boolean('is_cuti')) {
+                return;
+            }
+
             $logbookTanggal = Logbook::query()
                 ->where('user_id', $this->user()->id)
                 ->whereDate('tanggal', $this->input('tanggal'));
 
-            if ($jenis === 'harian' && (clone $logbookTanggal)->where('jenis', 'harian')->exists()) {
+            if ($jenis === 'harian'
+                && (clone $logbookTanggal)->where('jenis', 'harian')
+                    ->where(function ($query) {
+                        $query->whereNull('is_cuti')
+                            ->orWhere('is_cuti', false)
+                            ->orWhere(function ($cutiAktif) {
+                                $cutiAktif->where('is_cuti', true)
+                                    ->whereIn('status', [Logbook::STATUS_MENUNGGU, Logbook::STATUS_DISETUJUI]);
+                            });
+                    })
+                    ->exists()
+                && ! $this->melengkapiBuktiIzinSakit()) {
                 $validator->errors()->add('tanggal', 'Logbook harian tanggal ini sudah diisi.');
             }
 
@@ -186,6 +321,8 @@ class StoreLogbookRequest extends FormRequest
         return [
             'jenis'       => 'jenis logbook',
             'tanggal'     => 'tanggal',
+            'cuti_mulai'  => 'tanggal mulai cuti',
+            'cuti_selesai' => 'tanggal selesai cuti',
             'shift_id'    => 'shift',
             'jam_mulai'   => 'jam mulai',
             'jam_selesai' => 'jam selesai',

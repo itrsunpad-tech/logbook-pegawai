@@ -53,7 +53,7 @@
                 ? substr($lb->jam_mulai, 0, 5) . ' - ' . substr($lb->jam_selesai, 0, 5)
                 : null;
 
-            $jenisLabel = ['harian' => 'Harian', 'lembur' => 'Lembur', 'oncall' => 'On Call'][$lb->jenis] ?? $lb->jenis;
+            $jenisLabel = $lb->is_cuti ? 'Cuti' : ($lb->is_izin_sakit ? 'Izin/Sakit' : (['harian' => 'Harian', 'lembur' => 'Lembur', 'oncall' => 'On Call'][$lb->jenis] ?? $lb->jenis));
 
             $kelasStatus = match ($lb->status) {
                 \App\Models\Logbook::STATUS_DISETUJUI => 'st--ok',
@@ -61,14 +61,19 @@
                 default                               => 'st--wait',
             };
 
-            $detail = collect([$lb->shift?->nama ? 'Shift: ' . $lb->shift->nama : null, $jam])
-                ->filter()->implode(' | ');
+            $detail = $lb->is_cuti
+                ? 'Rentang cuti: ' . $lb->tanggal->locale('id')->translatedFormat('d F Y') . ' – ' . $lb->cuti_selesai?->locale('id')->translatedFormat('d F Y')
+                : ($lb->is_izin_sakit ? 'Izin/Sakit' : collect([$lb->shift?->nama ? 'Shift: ' . $lb->shift->nama : null, $jam])->filter()->implode(' | '));
         @endphp
 
         <div class="lb-card acc-item">
 
             <div class="acc-top">
-                <div class="acc-date">{{ $lb->tanggal->format('d/m/Y') }}</div>
+                <div class="acc-date">
+                    {{ $lb->is_cuti
+                        ? $lb->tanggal->format('d/m/Y') . ' – ' . $lb->cuti_selesai?->format('d/m/Y')
+                        : $lb->tanggal->format('d/m/Y') }}
+                </div>
 
                 <div class="acc-badges">
                     <span class="acc-chip">{{ $jenisLabel }}</span>
@@ -101,6 +106,8 @@
                         <i class="fa-solid fa-arrow-up-right-from-square acc-evidence-open" aria-hidden="true"></i>
                     </a>
                 </div>
+            @elseif ($lb->is_izin_sakit || in_array($lb->shift?->nama, ['Izin', 'Sakit'], true))
+                <div class="acc-no-evidence" role="status">Belum ada dokumen pendukung.</div>
             @endif
 
             @if ($lb->keterangan_hc)

@@ -98,7 +98,7 @@ class LogbookController extends Controller
     }
 
     /**
-     * Saran jadwal uji untuk unit Gizi berdasarkan fingerprint terbaru pada jam 14-15 WIB.
+     * Cocokkan jadwal unit Gizi dari tap masuk pertama pada rentang kerja hari itu.
      * Hanya membaca log milik akun yang sedang login.
      */
     public function jadwalFingerprint(Request $request): JsonResponse
@@ -124,31 +124,86 @@ class LogbookController extends Controller
 
         $zona = FingerprintLog::TZ_TAMPIL;
         $tanggal = $data['tanggal'] ?? Carbon::now($zona)->toDateString();
+        $waktuSekarang = Carbon::now($zona);
+        $hariIni = $waktuSekarang->toDateString();
+        if ($tanggal > $hariIni) {
+            return response()->json([
+                'status' => 'future_date',
+                'message' => 'Fingerprint untuk tanggal mendatang belum tersedia.',
+            ]);
+        }
+
         $mulaiHari = Carbon::createFromFormat('Y-m-d', $tanggal, $zona)->startOfDay();
-        $awalJendelaUji = $mulaiHari->copy()->setTime(14, 0)->utc();
-        $akhirJendelaUji = $mulaiHari->copy()->setTime(16, 0)->utc();
+        $awalRentangKerja = $mulaiHari->copy()->setTime(8, 0)->utc();
+        $akhirRentangKerja = $mulaiHari->copy()->setTime(20, 0)->utc();
 
         $fingerprint = FingerprintLog::query()
             ->where('fingerprint_id', $user->fingerprint_id)
-            ->where('punched_at', '>=', $awalJendelaUji)
-            ->where('punched_at', '<', $akhirJendelaUji)
-            ->orderByDesc('punched_at')
-            ->orderByDesc('id')
+            ->where('punch_state', 0)
+            ->where('punched_at', '>=', $awalRentangKerja)
+            ->where('punched_at', '<', $akhirRentangKerja)
+            ->orderBy('punched_at')
+            ->orderBy('id')
             ->first();
 
         if (! $fingerprint) {
             $tanggalLabel = Carbon::createFromFormat('Y-m-d', $tanggal, $zona)
                 ->locale('id')
                 ->translatedFormat('d F Y');
+            $fingerprintKeluar = FingerprintLog::query()
+                ->where('fingerprint_id', $user->fingerprint_id)
+                ->where('punch_state', 1)
+                ->where('punched_at', '>=', $awalRentangKerja)
+                ->where('punched_at', '<', $akhirRentangKerja)
+                ->orderByDesc('punched_at')
+                ->orderByDesc('id')
+                ->first();
+
+            if ($fingerprintKeluar) {
+                $waktuKeluar = $fingerprintKeluar->punched_at->copy()->setTimezone($zona);
+                $pesanCheckOut = 'Tap Check Out pukul ' . $waktuKeluar->format('H:i')
+                    . ' WIB tercatat, tetapi jadwal hanya dicocokkan dari Check In.';
+
+                if ($tanggal === $hariIni && $waktuSekarang->lt($mulaiHari->copy()->setTime(20, 0))) {
+                    return response()->json([
+                        'status' => 'waiting',
+                        'check_out_found' => true,
+                        'waktu_fingerprint' => $waktuKeluar->format('H:i'),
+                        'message' => $pesanCheckOut . ' Menunggu data Check In untuk tanggal ' . $tanggalLabel . '.',
+                    ]);
+                }
+
+                return response()->json([
+                    'status' => 'check_out_only',
+                    'waktu_fingerprint' => $waktuKeluar->format('H:i'),
+                    'message' => $pesanCheckOut . ' Check In tidak ditemukan pada tanggal ' . $tanggalLabel . '.',
+                ]);
+            }
+
+            if ($tanggal < $hariIni || $waktuSekarang->greaterThanOrEqualTo($mulaiHari->copy()->setTime(20, 0))) {
+                return response()->json([
+                    'status' => 'no_fingerprint',
+                    'message' => 'Tidak ditemukan fingerprint masuk untuk tanggal ' . $tanggalLabel . ' pada rentang pukul 08.00–19.59 WIB.',
+                ]);
+            }
 
             return response()->json([
                 'status' => 'waiting',
-                'message' => 'Menunggu fingerprint tanggal ' . $tanggalLabel . ' pada pukul 14.00-15.59.',
+                'message' => 'Menunggu fingerprint tanggal ' . $tanggalLabel . ' pada pukul 08.00–19.59 WIB.',
             ]);
         }
 
         $waktuTap = $fingerprint->punched_at->copy()->setTimezone($zona);
+<<<<<<< HEAD
         $namaShift = $waktuTap->hour === 14 ? 'Pagi Gizi & Linen' : 'OH Reguler';
+=======
+        // Jam OH dan shift siang tumpang tindih (13.00-16.00); waktu mulai
+        // shift siang dipakai sebagai batas agar tap masuk mulai pukul 13.00
+        // diklasifikasikan sebagai shift siang.
+        $namaShift = $waktuTap->format('H:i:s') < '13:00:00'
+            ? 'OH IT,Gizi'
+            : 'Siang Gizi & Linen';
+>>>>>>> f947faa74445f1b0e16dfc4b5361d5dde6f72cf8
         $shift = Shift::query()
             ->whereIn('nama', WorkSchedule::shiftNames($user->employee_unit))
             ->where('nama', $namaShift)
@@ -188,13 +243,35 @@ class LogbookController extends Controller
                 // Serialkan submit dari akun yang sama sebelum memeriksa batas harian.
                 User::query()->whereKey($userId)->lockForUpdate()->firstOrFail();
 
-                $entriTanggal = Logbook::query()
-                    ->where('user_id', $userId)
-                    ->whereDate('tanggal', $data['tanggal'])
-                    ->lockForUpdate()
-                    ->get(['jenis', 'status']);
+                $harian = $data['jenis'] === 'harian';
+                $isCuti = $harian && $request->boolean('is_cuti');
+                $tanggalMulai = $isCuti ? $data['cuti_mulai'] : $data['tanggal'];
+                $tanggalSelesai = $isCuti ? $data['cuti_selesai'] : $data['tanggal'];
 
-                if ($entriTanggal->contains(fn ($item) => in_array(
+                $entriRentang = Logbook::query()
+                    ->where('user_id', $userId)
+                    ->where(function ($query) use ($tanggalMulai, $tanggalSelesai) {
+                        $query->where(function ($padaTanggal) use ($tanggalMulai, $tanggalSelesai) {
+                            $padaTanggal->whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai])
+                                ->where(function ($regularAtauCutiAktif) {
+                                    $regularAtauCutiAktif->whereNull('is_cuti')
+                                        ->orWhere('is_cuti', false)
+                                        ->orWhere(function ($cutiAktif) {
+                                            $cutiAktif->where('is_cuti', true)
+                                                ->whereIn('status', [Logbook::STATUS_MENUNGGU, Logbook::STATUS_DISETUJUI]);
+                                        });
+                                });
+                        })->orWhere(function ($cuti) use ($tanggalMulai, $tanggalSelesai) {
+                            $cuti->where('is_cuti', true)
+                                ->whereIn('status', [Logbook::STATUS_MENUNGGU, Logbook::STATUS_DISETUJUI])
+                                ->where('tanggal', '<=', $tanggalSelesai)
+                                ->where('cuti_selesai', '>=', $tanggalMulai);
+                        });
+                    })
+                    ->lockForUpdate()
+                    ->get(['id', 'jenis', 'status', 'is_cuti', 'is_izin_sakit', 'bukti_path', 'ringkasan', 'tanggal']);
+
+                if ($entriRentang->contains(fn ($item) => in_array(
                     $item->status,
                     [Logbook::STATUS_DISETUJUI, Logbook::STATUS_DITOLAK],
                     true
@@ -204,7 +281,30 @@ class LogbookController extends Controller
                     ]);
                 }
 
-                if ($data['jenis'] === 'harian' && $entriTanggal->contains('jenis', 'harian')) {
+                if ($isCuti && $entriRentang->isNotEmpty()) {
+                    throw ValidationException::withMessages([
+                        'cuti_mulai' => 'Rentang cuti bertabrakan dengan logbook yang sudah ada.',
+                    ]);
+                }
+
+                if (! $isCuti && $entriRentang->contains(fn ($item) => $item->is_cuti
+                    && in_array($item->status, [Logbook::STATUS_MENUNGGU, Logbook::STATUS_DISETUJUI], true))) {
+                    throw ValidationException::withMessages([
+                        'tanggal' => 'Tanggal ini berada dalam rentang cuti yang sudah diajukan.',
+                    ]);
+                }
+
+                $entriTanggal = $entriRentang->filter(fn ($item) => $item->tanggal->toDateString() === $data['tanggal']);
+
+                $isIzinSakit = $harian && $request->boolean('is_izin_sakit');
+                $entriIzinSakitUntukBukti = $isIzinSakit && $request->hasFile('bukti')
+                    ? $entriTanggal->first(fn ($item) => $item->jenis === 'harian'
+                        && $item->is_izin_sakit
+                        && $item->bukti_path === null
+                        && ! in_array($item->status, [Logbook::STATUS_DISETUJUI, Logbook::STATUS_DITOLAK], true))
+                    : null;
+
+                if ($harian && $entriTanggal->contains('jenis', 'harian') && ! $entriIzinSakitUntukBukti) {
                     throw ValidationException::withMessages([
                         'tanggal' => 'Logbook harian tanggal ini sudah diisi.',
                     ]);
@@ -227,8 +327,9 @@ class LogbookController extends Controller
                     }
                 }
 
-                $harian = $data['jenis'] === 'harian';
-                $shift = $harian ? Shift::find($data['shift_id']) : null;
+                $shift = $harian && ! $isCuti && ! $isIzinSakit
+                    ? Shift::find($data['shift_id'] ?? null)
+                    : null;
                 $tipeShift = WorkSchedule::tipe($shift);
                 $dinasLuarTanpaFingerprint = $harian
                     && WorkSchedule::unitKey($request->user()->employee_unit) === 'Gizi'
@@ -236,22 +337,31 @@ class LogbookController extends Controller
                     && empty($data['shift_id']);
                 $dinasLuar = $request->boolean('is_dinas_luar')
                     && ($tipeShift === 'kerja' || $dinasLuarTanpaFingerprint);
-                $perluBukti = $tipeShift === 'sakit' || $dinasLuar;
+                $bolehUnggahBukti = $dinasLuar || $isCuti || $isIzinSakit || in_array($tipeShift, ['sakit', 'izin'], true);
 
-                if ($perluBukti && $request->hasFile('bukti')) {
+                if ($bolehUnggahBukti && $request->hasFile('bukti')) {
                     $buktiPath = $request->file('bukti')->store("bukti/{$userId}", 'local');
+                }
+
+                if ($entriIzinSakitUntukBukti && $buktiPath) {
+                    $entriIzinSakitUntukBukti->update(['bukti_path' => $buktiPath]);
+
+                    return;
                 }
 
                 Logbook::create([
                     'user_id'       => $userId,
                     'jenis'         => $data['jenis'],
-                    'tanggal'       => $data['tanggal'],
-                    'shift_id'      => $harian ? ($data['shift_id'] ?? null) : null,
+                    'tanggal'       => $tanggalMulai,
+                    'shift_id'      => $harian && ! $isCuti && ! $isIzinSakit ? ($data['shift_id'] ?? null) : null,
                     'jam_mulai'     => $harian ? null : $data['jam_mulai'],
                     'jam_selesai'   => $harian ? null : $data['jam_selesai'],
                     'ringkasan'     => $tipeShift === 'libur' ? 'Libur' : ($data['ringkasan'] ?? ''),
                     'is_wfh'        => false,
                     'is_dinas_luar' => $dinasLuar,
+                    'is_cuti'       => $isCuti,
+                    'is_izin_sakit' => $isIzinSakit,
+                    'cuti_selesai'  => $isCuti ? $tanggalSelesai : null,
                     'bukti_path'    => $buktiPath,
                     'harian_unik'   => $harian ? 1 : null,
                 ]);
@@ -325,20 +435,56 @@ class LogbookController extends Controller
     
     private function dataKalender(Carbon $mulai, Carbon $akhir): array
     {
-        return Logbook::query()
+        $logbooks = Logbook::query()
             ->with('shift')
             ->where('user_id', Auth::id())
-            ->whereBetween('tanggal', [$mulai, $akhir])
+            ->where(function ($query) use ($mulai, $akhir) {
+                $query->whereBetween('tanggal', [$mulai, $akhir])
+                    ->orWhere(function ($cuti) use ($mulai, $akhir) {
+                        $cuti->where('is_cuti', true)
+                            ->where('tanggal', '<=', $akhir)
+                            ->where('cuti_selesai', '>=', $mulai);
+                    });
+            })
             ->orderBy('tanggal')
-            ->get()
-            ->groupBy(fn ($item) => $item->tanggal->format('Y-m-d'))
-            ->map(fn ($items) => $items->map(fn ($item) => $this->formatItem($item))->values()->all())
-            ->all();
+            ->get();
+
+        $kalender = [];
+        foreach ($logbooks as $item) {
+            $data = $this->formatItem($item);
+
+            if ($item->is_cuti && $item->cuti_selesai) {
+                $tanggal = $item->tanggal->copy()->max($mulai)->startOfDay();
+                $batasCuti = $item->cuti_selesai->copy()->min($akhir)->startOfDay();
+                while ($tanggal->lte($batasCuti)) {
+                    $kalender[$tanggal->format('Y-m-d')][] = $data;
+                    $tanggal->addDay();
+                }
+                continue;
+            }
+
+            $kalender[$item->tanggal->format('Y-m-d')][] = $data;
+        }
+
+        ksort($kalender);
+
+        return $kalender;
     }
 
     /** Satu logbook dalam bentuk array untuk kalender, kartu riwayat, dan popup detail. */
     private function formatItem(Logbook $item): array
     {
+        $isCuti = (bool) $item->is_cuti;
+        $isIzinSakit = (bool) $item->is_izin_sakit;
+        $cutiRange = null;
+        if ($isCuti && $item->cuti_selesai) {
+            $mulaiCuti = $item->tanggal->copy()->locale('id');
+            $akhirCuti = $item->cuti_selesai->copy()->locale('id');
+            $formatMulai = $mulaiCuti->isSameMonth($akhirCuti)
+                ? $mulaiCuti->translatedFormat('j')
+                : $mulaiCuti->translatedFormat('j M');
+            $cutiRange = $formatMulai . '–' . $akhirCuti->translatedFormat('j M Y');
+        }
         $shift = $item->shift ? 'Shift: ' . $item->shift->nama : null;
 
         $jam = ($item->jam_mulai && $item->jam_selesai)
@@ -348,11 +494,14 @@ class LogbookController extends Controller
         $data = [
             'id'        => $item->id,
             'jenis'     => $item->jenis,
-            'detail'    => collect([$shift, $jam])->filter()->implode(' | ') ?: null,
-            'jam_kerja' => $item->shift?->nama ?? $jam, // harian: nama shift, lembur/on call: rentang jam
+            'detail'    => $isCuti ? 'Cuti · ' . $cutiRange : ($isIzinSakit ? 'Izin/Sakit' : (collect([$shift, $jam])->filter()->implode(' | ') ?: null)),
+            'jam_kerja' => $isCuti ? 'Cuti' : ($isIzinSakit ? 'Izin/Sakit' : ($item->shift?->nama ?? $jam)), // harian: nama shift, lembur/on call: rentang jam
             'kegiatan'  => $item->ringkasan,
             'is_wfh'    => (bool) $item->is_wfh,
             'is_dinas_luar' => (bool) $item->is_dinas_luar,
+            'is_cuti'   => $isCuti,
+            'is_izin_sakit' => $isIzinSakit,
+            'cuti_range' => $cutiRange,
             'bukti_url' => $item->bukti_path ? route('logbook.bukti', $item, false) : null,
             'keterangan_pegawai' => $item->keterangan_pegawai,
             'status_banding' => $item->status_banding,
