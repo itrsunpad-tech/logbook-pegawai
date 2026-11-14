@@ -8,7 +8,25 @@
 <style>
     .lb-dinas-toggle { display: flex; align-items: center; gap: 9px; color: var(--text); font-size: 13px; font-weight: 600; }
     .lb-dinas-toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
+    .lb-dinas-options { display: flex; flex-wrap: wrap; gap: 12px 22px; }
+    .lb-cuti-range-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .lb-cuti-range-fields label { display: grid; gap: 6px; color: var(--text-muted); font-size: 12px; font-weight: 600; }
+    .lb-dot--cuti { background: #ef4444; }
+    .lb-form-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
+    .lb-cuti-active-state { margin-top: 14px; padding: 16px; display: flex; align-items: flex-start; gap: 12px; border: 1px solid #d8dee8; border-radius: 12px; background: #f5f7fa; }
+    .lb-cuti-active-state[hidden], .lb-form-fields[hidden] { display: none; }
+    .lb-cuti-active-icon { width: 36px; height: 36px; flex: 0 0 36px; display: grid; place-items: center; border-radius: 10px; background: #e8edf3; color: #64748b; font-size: 16px; }
+    .lb-cuti-active-copy { min-width: 0; }
+    .lb-cuti-active-title { margin: 0; color: #334155; font-size: 14px; font-weight: 700; }
+    .lb-cuti-active-message { margin: 4px 0 10px; color: #58677d; font-size: 12px; line-height: 1.5; }
+    .lb-cuti-active-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .lb-cuti-active-range, .lb-cuti-active-status { display: inline-flex; align-items: center; min-height: 24px; padding: 3px 9px; border: 1px solid #d8dee8; border-radius: 999px; background: #fff; color: #475569; font-size: 11px; font-weight: 700; }
+    .lb-cuti-active-status { border-color: #d9e2ef; color: #596b83; }
+    .kal-logbook-detail--cuti .riwayat-item-detail { margin-top: 4px; color: var(--text-dark); font-size: 11px; font-weight: 600; line-height: 1.4; }
     .lb-dinas-fields { margin-top: 10px; padding: 12px; border: 1px solid var(--accent-soft-border); border-radius: 10px; background: #f8fbff; }
+    @media (max-width: 700px) {
+        .lb-cuti-range-fields { grid-template-columns: 1fr; }
+    }
 
     .lb-file-picker {
         position: relative;
@@ -90,6 +108,10 @@
     .lb-date-day.is-today { color: var(--accent); box-shadow: inset 0 0 0 1px #a9c8ff; }
     .lb-date-day.is-selected { border-color: var(--accent); background: var(--accent); color: #fff; box-shadow: 0 3px 8px rgba(11, 87, 208, .22); }
     .lb-date-day:disabled { color: #c1cad6; cursor: not-allowed; }
+    .lb-date-day.is-cuti { position: relative; }
+    .lb-date-day.is-cuti::after { position: absolute; bottom: 3px; width: 4px; height: 4px; border-radius: 50%; background: #ef4444; content: ''; }
+    .lb-date-legend { margin-top: 8px; display: flex; align-items: center; gap: 6px; color: #58677d; font-size: 10px; font-weight: 600; }
+    .lb-date-legend-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: #ef4444; }
     .lb-date-foot { margin-top: 8px; padding-top: 8px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #edf1f6; }
     .lb-date-clear { padding: 6px 9px; border: 0; border-radius: 8px; background: transparent; color: #66758a; font-size: 11px; font-weight: 700; }
     .lb-date-clear:hover { background: #f1f4f8; color: #334155; }
@@ -181,6 +203,7 @@
         font-size: 12px;
         line-height: 1.35;
     }
+    .lb-shift-help.is-warning { color: #a16207; font-weight: 600; }
 
 
     /* Modal detail logbook */
@@ -521,7 +544,7 @@
                 Logbook Harian
             </h2>
 
-            <div class="lb-field">
+            <div class="lb-field" id="harian-tanggal-field">
                     <label class="lb-label">Tanggal <span class="lb-required">*</span></label>
                 <input
                     type="date"
@@ -533,12 +556,33 @@
                 >
             </div>
 
+            @include('logbook._status_cuti')
+
+            <fieldset id="harian-fields" class="lb-form-fields" data-form-fields>
+            <div class="lb-field" id="harian-cuti-range" style="display:none">
+                <label class="lb-label">Rentang Tanggal Cuti <span class="lb-required">*</span></label>
+                <div class="lb-cuti-range-fields">
+                    <label>Mulai
+                        <input type="date" name="cuti_mulai" id="harian-cuti-mulai" class="lb-input" value="{{ $o('harian', 'cuti_mulai') }}">
+                    </label>
+                    <label>Sampai
+                        <input type="date" name="cuti_selesai" id="harian-cuti-selesai" class="lb-input" value="{{ $o('harian', 'cuti_selesai') }}">
+                    </label>
+                </div>
+                <small class="lb-shift-help">Cuti tidak memerlukan fingerprint; tanggal mulai dan selesai dapat dipilih bebas.</small>
+                @error('tanggal') <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div> @enderror
+                @error('cuti_mulai') <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div> @enderror
+                @error('cuti_selesai') <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div> @enderror
+            </div>
+
             <div class="lb-field">
-                <label class="lb-label" for="{{ $unitKey === 'Gizi' && $shifts->isNotEmpty() ? 'harian-shift-display' : 'harian-shift-select' }}">Shift / Jadwal <span class="lb-required">*</span></label>
+                <label class="lb-label" id="harian-shift-label" for="{{ $unitKey === 'Gizi' && $shifts->isNotEmpty() ? 'harian-shift-display' : 'harian-shift-select' }}">Shift / Jadwal <span class="lb-required">*</span></label>
                 @if ($unitKey === 'Gizi' && $shifts->isNotEmpty())
                     <input type="text" id="harian-shift-display" class="lb-select" readonly
                            placeholder="Menunggu fingerprint" aria-describedby="harian-shift-help" aria-required="true">
                 @endif
+                <input type="text" id="harian-izin-sakit-display" class="lb-select" value="Izin/Sakit" readonly aria-labelledby="harian-shift-label" style="display:none">
+                <input type="text" id="harian-cuti-shift-display" class="lb-select" value="Cuti" readonly aria-labelledby="harian-shift-label" style="display:none">
                 <select name="shift_id" @required($unitKey !== 'Gizi') class="lb-select {{ $unitKey === 'Gizi' && $shifts->isNotEmpty() ? 'lb-select--auto-hidden' : '' }}"
                         id="harian-shift-select" data-auto-fingerprint="{{ $unitKey === 'Gizi' ? 'true' : 'false' }}"
                         @if ($unitKey === 'Gizi' && $shifts->isNotEmpty()) aria-hidden="true" tabindex="-1" @endif
@@ -576,35 +620,43 @@
                 @endif
             </div>
 
-            <div class="lb-field" id="harian-dl-box" style="display:none">
+            <div class="lb-field" id="harian-dl-box">
+                <div class="lb-dinas-options">
                 <label class="lb-dinas-toggle">
-                    <input type="checkbox" name="is_dinas_luar" value="1"
+                    <input type="checkbox" id="harian-is-dinas-luar" name="is_dinas_luar" value="1"
                            @checked($o('harian', 'is_dinas_luar'))>
                     <span>Dinas Luar</span>
                 </label>
+                <label class="lb-dinas-toggle">
+                    <input type="checkbox" id="harian-is-izin-sakit" name="is_izin_sakit" value="1" @checked($o('harian', 'is_izin_sakit'))>
+                    <span>Izin/Sakit</span>
+                </label>
+                <label class="lb-dinas-toggle">
+                    <input type="checkbox" id="harian-is-cuti" name="is_cuti" value="1" @checked($o('harian', 'is_cuti'))>
+                    <span>Cuti</span>
+                </label>
+                </div>
                 @error('is_dinas_luar')
                     <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
                 @enderror
+                @error('is_izin_sakit') <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div> @enderror
+                @error('is_cuti') <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div> @enderror
             </div>
 
             <div class="lb-dinas-fields" id="harian-dinas-fields" style="display:none">
                 <div class="lb-field" style="margin-top:0">
-                    <label class="lb-label" for="harian-dinas-ringkasan">Deskripsi Pekerjaan Dinas Luar <span class="lb-required">*</span></label>
+                    <label class="lb-label" id="harian-special-description-label" for="harian-dinas-ringkasan">Deskripsi Pekerjaan Dinas Luar <span class="lb-required">*</span></label>
                     <textarea id="harian-dinas-ringkasan" name="ringkasan" rows="4"
                               class="lb-textarea" placeholder="Jelaskan pekerjaan dinas luar..."
-                              disabled>{{ $o('harian', 'is_dinas_luar') ? $o('harian', 'ringkasan') : '' }}</textarea>
-                    @if ($o('harian', 'is_dinas_luar'))
-                        @error('ringkasan')
-                            <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
-                        @enderror
-                    @endif
+                              disabled>{{ $o('harian', 'is_dinas_luar') || $o('harian', 'is_izin_sakit') || $o('harian', 'is_cuti') ? $o('harian', 'ringkasan') : '' }}</textarea>
+                    @error('ringkasan') <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div> @enderror
                 </div>
                 <div class="lb-field">
-                    <label class="lb-label" for="harian-dinas-bukti">SURAT TUGAS <span class="lb-required">*</span></label>
+                    <label class="lb-label" id="harian-special-proof-label" for="harian-dinas-bukti">DOKUMEN PENDUKUNG <span class="lb-required">*</span></label>
                     <label class="lb-file-picker">
                         <span class="lb-file-picker-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
                         <span class="lb-file-picker-copy">
-                            <strong class="lb-file-picker-prompt" data-empty-label="Pilih surat tugas">Pilih surat tugas</strong>
+                            <strong class="lb-file-picker-prompt" data-empty-label="Pilih dokumen pendukung">Pilih dokumen pendukung</strong>
                             <small class="lb-file-picker-hint">PNG, JPG, atau PDF - maksimal 5 MB · Klik atau tarik file</small>
                             <small class="lb-file-picker-name" hidden></small>
                         </span>
@@ -612,11 +664,7 @@
                                accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf">
                     </label>
                     <small class="lb-file-picker-error" data-file-error-for="harian-dinas-bukti" hidden></small>
-                    @if ($o('harian', 'is_dinas_luar'))
-                        @error('bukti')
-                            <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
-                        @enderror
-                    @endif
+                    @error('bukti') <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div> @enderror
                 </div>
             </div>
 
@@ -628,8 +676,8 @@
                     rows="4"
                     class="lb-textarea"
                     placeholder="Jelaskan kegiatan yang dilakukan..."
-                >{{ $o('harian', 'is_dinas_luar') ? '' : $o('harian', 'ringkasan') }}</textarea>
-                @if (! $o('harian', 'is_dinas_luar'))
+                >{{ $o('harian', 'is_dinas_luar') || $o('harian', 'is_izin_sakit') || $o('harian', 'is_cuti') ? '' : $o('harian', 'ringkasan') }}</textarea>
+                @if (! $o('harian', 'is_dinas_luar') && ! $o('harian', 'is_izin_sakit') && ! $o('harian', 'is_cuti'))
                     @error('ringkasan')
                         <div class="lb-alert lb-alert--error" role="alert">{{ $message }}</div>
                     @enderror
@@ -657,6 +705,7 @@
             </div>
 
             @include('logbook._pernyataan', ['jenisForm' => 'harian'])
+            </fieldset>
         </form>
 
 
@@ -686,6 +735,9 @@
                 >
             </div>
 
+            @include('logbook._status_cuti')
+
+            <fieldset class="lb-form-fields" data-form-fields>
             <div class="lb-two-column">
                 <div class="lb-field">
                     <label class="lb-label">Jam Mulai <span class="lb-required">*</span></label>
@@ -726,6 +778,7 @@
             </div>
 
             @include('logbook._pernyataan', ['jenisForm' => 'lembur'])
+            </fieldset>
         </form>
 
 
@@ -755,6 +808,9 @@
                 >
             </div>
 
+            @include('logbook._status_cuti')
+
+            <fieldset class="lb-form-fields" data-form-fields>
             <div class="lb-two-column">
                 <div class="lb-field">
                     <label class="lb-label">Jam Mulai <span class="lb-required">*</span></label>
@@ -795,6 +851,7 @@
             </div>
 
             @include('logbook._pernyataan', ['jenisForm' => 'oncall'])
+            </fieldset>
         </form>
 
     </section>
@@ -836,6 +893,7 @@
                 <span><i class="lb-dot lb-dot--harian"></i> Harian</span>
                 <span><i class="lb-dot lb-dot--lembur"></i> Lembur</span>
                 <span><i class="lb-dot lb-dot--oncall"></i> On Call</span>
+                <span><i class="lb-dot lb-dot--cuti"></i> Cuti</span>
                 {{-- Libur nasional disembunyikan sementara.
                 <span><i class="lb-dot lb-dot--libur"></i> Libur Nasional</span>
                 --}}
@@ -873,6 +931,11 @@
             <button type="button" data-open-jenis="harian" class="lb-modal-type-button">
                 <i class="fa-solid fa-book"></i>
                 Logbook Harian
+            </button>
+
+            <button type="button" data-open-jenis="harian" data-open-cuti="1" class="lb-modal-type-button">
+                <i class="fa-solid fa-calendar-days"></i>
+                Cuti
             </button>
 
             <button type="button" data-open-jenis="lembur" class="lb-modal-type-button">
@@ -1038,6 +1101,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const HARI_INI = readData('hariIni');
     const DIBUKA = readData('dibuka');
     const HARI_INI_KEY = HARI_INI;
+    const activeCutiForDate = (dateKey) => (DATA[dateKey] || []).find((item) =>
+        item.is_cuti && [@json(\App\Models\Logbook::STATUS_MENUNGGU), @json(\App\Models\Logbook::STATUS_DISETUJUI)].includes(item.status)
+    );
+    const isActiveCutiDate = (dateKey) => Boolean(activeCutiForDate(dateKey));
     const JENIS_LAMA = readData('jenisLama');
     const BANDING_URL = serverData.bandingUrl;
     const OLD_BANDING = readData('oldBanding');
@@ -1195,10 +1262,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     const key = dateToKey(date);
                     const dayButton = el('button', 'lb-date-day', String(day));
                     dayButton.type = 'button';
-                    dayButton.disabled = key < earliestDateKey || key > HARI_INI;
-                    dayButton.setAttribute('aria-label', new Intl.DateTimeFormat('id-ID', {
+                    const tanggalCutiAktif = isActiveCutiDate(key);
+                    dayButton.disabled = key < earliestDateKey || (key > HARI_INI && !tanggalCutiAktif);
+                    const labelTanggal = new Intl.DateTimeFormat('id-ID', {
                         dateStyle: 'full',
-                    }).format(date));
+                    }).format(date);
+                    dayButton.setAttribute('aria-label', tanggalCutiAktif ? `${labelTanggal}, termasuk rentang cuti` : labelTanggal);
+                    if (tanggalCutiAktif) {
+                        dayButton.classList.add('is-cuti');
+                        dayButton.title = 'Pilih untuk melihat informasi cuti';
+                    }
                     if (key === todayKey) dayButton.classList.add('is-today');
                     if (key === selectedKey) {
                         dayButton.classList.add('is-selected');
@@ -1208,6 +1281,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     dayGrid.append(dayButton);
                 }
                 popover.append(dayGrid);
+
+                const cutiLegend = el('div', 'lb-date-legend');
+                cutiLegend.append(el('span', 'lb-date-legend-dot'), el('span', '', 'Titik merah = cuti · pilih tanggal untuk melihat status'));
+                popover.append(cutiLegend);
 
                 const foot = el('div', 'lb-date-foot');
                 const clear = el('button', 'lb-date-clear', 'Hapus tanggal');
@@ -1399,14 +1476,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function openRiwayatModal(tgl, item) {
         const jenis = safeJenis(item.jenis);
 
-        rwSub.textContent = formatDate(tgl);
+        rwSub.textContent = item.is_cuti ? item.cuti_range : formatDate(tgl);
 
         rwJenis.innerHTML = '';
         rwJenis.append(
             el(
                 'span',
                 `riwayat-item-type riwayat-item-type--${jenis}`,
-                JENIS_LABEL[item.jenis] || item.jenis || 'Logbook'
+                item.is_cuti ? 'Cuti' : item.is_izin_sakit ? 'Izin/Sakit' : (JENIS_LABEL[item.jenis] || item.jenis || 'Logbook')
             )
         );
         if (item.is_dinas_luar) {
@@ -1478,18 +1555,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const shiftSelect = qs('#harian-shift-select');
     const shiftDisplay = qs('#harian-shift-display');
     const shiftHelp = qs('#harian-shift-help');
+    const shiftLabel = qs('#harian-shift-label');
     const dateInput = qs('#harian-tanggal');
+    const dateField = qs('#harian-tanggal-field');
+    const cutiRangeBox = qs('#harian-cuti-range');
+    const cutiStartInput = qs('#harian-cuti-mulai');
+    const cutiEndInput = qs('#harian-cuti-selesai');
+    const izinSakitDisplay = qs('#harian-izin-sakit-display');
+    const cutiShiftDisplay = qs('#harian-cuti-shift-display');
     const autoFingerprintSchedule = shiftSelect?.dataset.autoFingerprint === 'true';
     const dinasBox = qs('#harian-dl-box');
-    const dinasCheckbox = qs('#harian-dl-box input');
+    const dinasCheckbox = qs('#harian-is-dinas-luar');
+    const izinSakitCheckbox = qs('#harian-is-izin-sakit');
+    const cutiCheckbox = qs('#harian-is-cuti');
+    const modeCheckboxes = [dinasCheckbox, izinSakitCheckbox, cutiCheckbox].filter(Boolean);
     const ringkasanBox = qs('#harian-ringkasan-box');
     const ringkasanInput = qs('#harian-ringkasan-input');
     const ringkasanLabel = qs('#harian-ringkasan-label');
-    const buktiBox = qs('#harian-bukti-box');
-    const sakitBuktiInput = qs('#harian-sakit-bukti');
     const dinasFields = qs('#harian-dinas-fields');
     const dinasRingkasanInput = qs('#harian-dinas-ringkasan');
     const dinasBuktiInput = qs('#harian-dinas-bukti');
+    const specialDescriptionLabel = qs('#harian-special-description-label');
+    const specialProofLabel = qs('#harian-special-proof-label');
 
     const syncFileName = (input) => {
         const picker = input.closest('.lb-file-picker');
@@ -1547,12 +1634,105 @@ document.addEventListener('DOMContentLoaded', () => {
             if (validateFileSize(input)) syncFileName(input);
         });
     };
-    [sakitBuktiInput, dinasBuktiInput].forEach((input) => input && setupFilePicker(input));
+    [dinasBuktiInput].forEach((input) => input && setupFilePicker(input));
+
+    const selectedMode = () => modeCheckboxes.find((checkbox) => checkbox.checked)?.id || null;
+    const hasSpecialMode = () => Boolean(selectedMode());
+    let priorShiftValue = '';
+    const formatLongDate = (value) => {
+        if (!value) return '';
+        const [year, month, day] = value.split('-').map(Number);
+        return new Date(year, month - 1, day).toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'short', year: 'numeric',
+        });
+    };
+    const syncActiveCutiState = (form) => {
+        const formDate = qs('input[name="tanggal"]', form);
+        const fields = qs('[data-form-fields]', form);
+        const notice = qs('[data-active-cuti-state]', form);
+        if (!formDate || !fields || !notice) return false;
+
+        let dateKey = formDate.value || HARI_INI;
+        const cuti = activeCutiForDate(dateKey);
+        if (!formDate.value && cuti) {
+            formDate.value = dateKey;
+            formDate.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        const sedangCuti = Boolean(cuti);
+
+        notice.hidden = !sedangCuti;
+        fields.hidden = sedangCuti;
+        fields.disabled = sedangCuti;
+        form.noValidate = sedangCuti;
+
+        if (sedangCuti) {
+            const tanggalLabel = dateToDisplay(dateKey);
+            const approved = cuti.status === @json(\App\Models\Logbook::STATUS_DISETUJUI);
+            qs('[data-cuti-title]', notice).textContent = approved ? 'Anda sedang cuti' : 'Pengajuan cuti menunggu persetujuan';
+            qs('[data-cuti-message]', notice).textContent = approved
+                ? `Tanggal ${tanggalLabel} termasuk masa cuti. Anda tidak perlu mengisi logbook pada tanggal ini.`
+                : `Tanggal ${tanggalLabel} termasuk rentang cuti yang Anda ajukan. Logbook tidak dapat dikirim pada tanggal ini selama pengajuan diproses.`;
+            qs('[data-cuti-range]', notice).textContent = `Rentang cuti: ${cuti.cuti_range || 'terdaftar'}`;
+            qs('[data-cuti-status]', notice).textContent = `Status: ${cuti.status}`;
+        }
+
+        return sedangCuti;
+    };
+    qsa('form[data-jenis-panel]').forEach((form) => {
+        const formDate = qs('input[name="tanggal"]', form);
+        formDate?.addEventListener('change', () => syncActiveCutiState(form));
+        form.addEventListener('submit', (event) => {
+            if (syncActiveCutiState(form)) event.preventDefault();
+        });
+        syncActiveCutiState(form);
+    });
+    const syncCutiDates = () => {
+        if (cutiCheckbox?.checked && cutiStartInput?.value) {
+            dateInput.value = cutiStartInput.value;
+            dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        if (cutiShiftDisplay) {
+            const start = formatLongDate(cutiStartInput?.value);
+            const end = formatLongDate(cutiEndInput?.value);
+            cutiShiftDisplay.value = start && end ? `Cuti · ${start} – ${end}` : 'Cuti · pilih rentang tanggal';
+        }
+    };
+    let stopSchedulePolling = () => {};
+    let startSchedulePolling = () => {};
 
     if (autoFingerprintSchedule && shiftSelect && shiftHelp) {
         const scheduleUrl = @json(route('logbook.fingerprint-schedule'));
         let requestSequence = 0;
         let schedulePollingTimer = null;
+        let waitingClockTimer = null;
+        let fingerprintWaitStartedAt = null;
+        let pendingFingerprintMessage = '';
+        const batasTungguFingerprintDetik = 60;
+
+        const renderFingerprintWait = () => {
+            if (!fingerprintWaitStartedAt || !pendingFingerprintMessage) return;
+            const elapsedSeconds = Math.floor((Date.now() - fingerprintWaitStartedAt) / 1000);
+            const minutes = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+            const seconds = String(elapsedSeconds % 60).padStart(2, '0');
+            const durasi = `${minutes}:${seconds}`;
+            if (elapsedSeconds >= batasTungguFingerprintDetik) {
+                shiftHelp.classList.add('is-warning');
+                shiftHelp.textContent = `${pendingFingerprintMessage} Pencarian dihentikan setelah ${durasi}. Klik tanggal yang sama kembali untuk mencoba lagi.`;
+                if (shiftDisplay) {
+                    shiftDisplay.value = '';
+                    shiftDisplay.placeholder = 'Fingerprint belum terdeteksi';
+                }
+                stopSchedulePolling();
+                return;
+            }
+
+            const warning = elapsedSeconds >= 30;
+
+            shiftHelp.classList.toggle('is-warning', warning);
+            shiftHelp.textContent = warning
+                ? `${pendingFingerprintMessage} Belum terdeteksi setelah ${durasi}. Jika sudah tap, tunggu sinkronisasi atau hubungi admin.`
+                : `${pendingFingerprintMessage} Waktu tunggu ${durasi}.`;
+        };
 
         const clearSchedule = () => {
             shiftSelect.value = '';
@@ -1563,7 +1743,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const refreshFingerprintSchedule = async () => {
             const sequence = ++requestSequence;
             clearSchedule();
-            shiftHelp.textContent = 'Memeriksa fingerprint terbaru...';
+            shiftHelp.classList.remove('is-warning');
+            if (shiftDisplay) shiftDisplay.placeholder = 'Memeriksa fingerprint...';
+            shiftHelp.textContent = 'Memeriksa data fingerprint...';
 
             try {
                 const params = new URLSearchParams();
@@ -1577,8 +1759,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (sequence !== requestSequence) return;
 
                 if (result.status === 'matched' && result.shift) {
+                    shiftHelp.classList.remove('is-warning');
                     shiftSelect.value = String(result.shift.id);
-                    if (shiftDisplay) shiftDisplay.value = result.shift.label;
+                    if (shiftDisplay) {
+                        shiftDisplay.value = result.shift.label;
+                        shiftDisplay.placeholder = 'Jadwal terdeteksi';
+                    }
                     if (dateInput && result.tanggal) {
                         dateInput.value = result.tanggal;
                         dateInput.dispatchEvent(new Event('change', { bubbles: true }));
@@ -1586,124 +1772,235 @@ document.addEventListener('DOMContentLoaded', () => {
                     shiftHelp.textContent = `Fingerprint pukul ${result.waktu_fingerprint} WIB terdeteksi. Jadwal terisi otomatis.`;
                     stopSchedulePolling();
                 } else {
-                    shiftHelp.textContent = result.message || 'Jadwal belum dapat dicocokkan dari fingerprint.';
-                    if (result.status !== 'waiting') stopSchedulePolling();
+                    if (result.status === 'waiting') {
+                        pendingFingerprintMessage = result.message || 'Menunggu fingerprint.';
+                        if (shiftDisplay) shiftDisplay.placeholder = result.check_out_found
+                            ? 'Menunggu Check In'
+                            : 'Menunggu fingerprint';
+                        renderFingerprintWait();
+                    } else {
+                        shiftHelp.classList.toggle('is-warning', ['no_fingerprint', 'check_out_only'].includes(result.status));
+                        if (shiftDisplay) {
+                            shiftDisplay.value = '';
+                            shiftDisplay.placeholder = result.status === 'no_fingerprint'
+                                ? 'Fingerprint tidak ditemukan'
+                                : result.status === 'check_out_only'
+                                    ? 'Check In tidak ditemukan'
+                                : result.status === 'future_date'
+                                    ? 'Fingerprint belum tersedia'
+                                    : 'Jadwal belum tersedia';
+                        }
+                        shiftHelp.textContent = result.message || 'Jadwal belum dapat dicocokkan dari fingerprint.';
+                        stopSchedulePolling();
+                    }
                 }
 
                 shiftSelect.dispatchEvent(new Event('change', { bubbles: true }));
             } catch (error) {
                 if (sequence !== requestSequence) return;
-                shiftHelp.textContent = 'Data fingerprint belum dapat diperiksa. Coba lagi sebentar.';
+                pendingFingerprintMessage = 'Data fingerprint belum dapat diperiksa. Sistem akan mencoba kembali.';
+                if (shiftDisplay) shiftDisplay.placeholder = 'Memeriksa fingerprint...';
+                shiftHelp.classList.add('is-warning');
+                renderFingerprintWait();
                 clearSchedule();
             }
         };
 
-        const stopSchedulePolling = () => {
+        stopSchedulePolling = () => {
             requestSequence++;
             if (schedulePollingTimer) {
                 window.clearInterval(schedulePollingTimer);
                 schedulePollingTimer = null;
             }
+            if (waitingClockTimer) {
+                window.clearInterval(waitingClockTimer);
+                waitingClockTimer = null;
+            }
+            fingerprintWaitStartedAt = null;
+            pendingFingerprintMessage = '';
         };
 
-        const startSchedulePolling = () => {
+        startSchedulePolling = () => {
+            if (!fingerprintWaitStartedAt) fingerprintWaitStartedAt = Date.now();
+            if (shiftDisplay && !shiftSelect.value) shiftDisplay.placeholder = 'Menunggu fingerprint';
+            if (!waitingClockTimer) {
+                waitingClockTimer = window.setInterval(renderFingerprintWait, 1000);
+            }
+            if (!pendingFingerprintMessage) pendingFingerprintMessage = 'Menunggu fingerprint untuk tanggal yang dipilih.';
             if (!schedulePollingTimer) {
                 schedulePollingTimer = window.setInterval(refreshFingerprintSchedule, 10000);
             }
+            renderFingerprintWait();
             refreshFingerprintSchedule();
         };
 
         dateInput?.addEventListener('logbook:date-selected', () => {
-            clearSchedule();
-            if (dinasCheckbox?.checked) {
+            if (isActiveCutiDate(dateInput.value || HARI_INI)) {
                 stopSchedulePolling();
-                shiftHelp.textContent = 'Dinas luar tidak memerlukan fingerprint. Isi deskripsi dan unggah surat tugas.';
+                clearSchedule();
+                shiftHelp.textContent = 'Tanggal ini termasuk rentang cuti yang masih berlaku dan tidak dapat diisi logbook.';
+                return;
+            }
+            if (cutiCheckbox?.checked) {
+                cutiStartInput.value = dateInput.value;
+                cutiEndInput.value = dateInput.value;
+                syncCutiDates();
+                applyShiftFields();
+                return;
+            }
+            if (izinSakitCheckbox?.checked) {
+                stopSchedulePolling();
+                shiftSelect.value = '';
+                shiftSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                shiftHelp.textContent = 'Izin/Sakit tidak memerlukan fingerprint.';
+                return;
+            }
+            clearSchedule();
+            if (hasSpecialMode()) {
+                stopSchedulePolling();
+                shiftHelp.textContent = 'Pilihan ini tidak memerlukan fingerprint.';
                 return;
             }
             stopSchedulePolling();
             startSchedulePolling();
         });
 
-        dinasCheckbox?.addEventListener('change', () => {
-            if (dinasCheckbox.checked && !shiftSelect.value) {
-                stopSchedulePolling();
-                shiftHelp.textContent = 'Dinas luar tidak memerlukan fingerprint. Isi deskripsi dan unggah surat tugas.';
-            } else if (!dinasCheckbox.checked && !shiftSelect.value) {
-                startSchedulePolling();
-            }
-        });
-
-        if (dinasCheckbox?.checked && !shiftSelect.value) {
-            shiftHelp.textContent = 'Dinas luar tidak memerlukan fingerprint. Isi deskripsi dan unggah surat tugas.';
-        } else {
+        if (isActiveCutiDate(dateInput.value || HARI_INI)) {
+            shiftHelp.textContent = 'Tanggal ini termasuk rentang cuti yang masih berlaku dan tidak dapat diisi logbook.';
+        } else if (!hasSpecialMode()) {
             startSchedulePolling();
         }
     }
 
     const applyShiftFields = () => {
-        if (!shiftSelect || !dinasCheckbox || !ringkasanInput || !sakitBuktiInput) return;
+        if (!shiftSelect || !dinasCheckbox || !ringkasanInput || !dinasBuktiInput) return;
 
-        const tipe = shiftSelect.selectedOptions[0]?.dataset.tipe || '';
+        const mode = selectedMode();
+        const option = shiftSelect.selectedOptions[0];
+        const tipe = option?.dataset.tipe || '';
+        const isDinas = mode === 'harian-is-dinas-luar';
+        const isIzinSakit = mode === 'harian-is-izin-sakit' || (!mode && (tipe === 'izin' || tipe === 'sakit'));
+        const isCuti = mode === 'harian-is-cuti';
         const isKerja = tipe === 'kerja';
         const bolehDinasLuarTanpaShift = autoFingerprintSchedule && !shiftSelect.value;
-        if (!isKerja && !bolehDinasLuarTanpaShift && dinasCheckbox.checked) {
-            dinasCheckbox.checked = false;
-            dinasRingkasanInput.value = '';
-            dinasBuktiInput.value = '';
-            syncFileName(dinasBuktiInput);
+
+        if (isIzinSakit || isCuti) {
+            shiftSelect.value = '';
         }
 
-        const dinasLuar = dinasCheckbox.checked && (isKerja || bolehDinasLuarTanpaShift);
-        const sakit = tipe === 'sakit';
-        const ringkasanTampil = tipe !== 'libur' && !dinasLuar;
+        const dinasLuar = isDinas && (isKerja || bolehDinasLuarTanpaShift);
+        const modeKhusus = dinasLuar || isIzinSakit || isCuti;
+        const tanggalCutiAktif = isActiveCutiDate(dateInput.value || HARI_INI);
+        const adaEntriIzinSakitTanpaBukti = isIzinSakit
+            && (DATA[dateInput.value] || []).some((item) => item.is_izin_sakit && !item.bukti_url && item.status === 'Menunggu');
+        const hanyaMelengkapiBukti = adaEntriIzinSakitTanpaBukti && Boolean(dinasBuktiInput.files?.length);
+        const ringkasanTampil = tipe !== 'libur' && !modeKhusus;
 
-        dinasBox.style.display = isKerja || autoFingerprintSchedule ? '' : 'none';
-        dinasCheckbox.disabled = !isKerja && !autoFingerprintSchedule;
-        dinasFields.style.display = dinasLuar ? '' : 'none';
-        if (shiftDisplay && !shiftSelect.value) {
-            shiftDisplay.value = dinasCheckbox.checked
-                ? 'Tidak perlu fingerprint untuk Dinas Luar'
-                : '';
+        dinasBox.style.display = '';
+        dinasCheckbox.disabled = !isKerja && !bolehDinasLuarTanpaShift && !dinasLuar;
+        dinasFields.style.display = modeKhusus ? '' : 'none';
+        shiftSelect.style.display = isCuti || isIzinSakit ? 'none' : '';
+        shiftLabel.innerHTML = isCuti ? 'Rentang Cuti' : 'Shift / Jadwal <span class="lb-required">*</span>';
+        if (shiftDisplay) {
+            shiftDisplay.style.display = isCuti || isIzinSakit ? 'none' : '';
+            if (dinasLuar) {
+                shiftDisplay.value = 'Dinas Luar';
+            } else if (!isCuti && !isIzinSakit) {
+                shiftDisplay.value = shiftSelect.value
+                    ? (shiftSelect.selectedOptions[0]?.textContent.trim() || '')
+                    : '';
+            }
         }
+        if (izinSakitDisplay) izinSakitDisplay.style.display = isIzinSakit ? '' : 'none';
+        if (cutiShiftDisplay) {
+            cutiShiftDisplay.style.display = isCuti ? '' : 'none';
+            syncCutiDates();
+        }
+
+        shiftSelect.required = !isCuti && !isIzinSakit && !dinasLuar && !autoFingerprintSchedule;
+        dateField.style.display = isCuti && !tanggalCutiAktif ? 'none' : '';
+        cutiRangeBox.style.display = isCuti ? '' : 'none';
+        dateInput.required = !isCuti;
+        cutiStartInput.required = isCuti;
+        cutiEndInput.required = isCuti;
 
         ringkasanBox.style.display = ringkasanTampil ? '' : 'none';
         ringkasanInput.disabled = !ringkasanTampil;
         ringkasanInput.required = ringkasanTampil;
 
-        dinasRingkasanInput.disabled = !dinasLuar;
-        dinasRingkasanInput.required = dinasLuar;
+        dinasRingkasanInput.disabled = !modeKhusus;
+        dinasRingkasanInput.required = modeKhusus && !hanyaMelengkapiBukti;
         dinasRingkasanInput.minLength = 10;
         dinasRingkasanInput.maxLength = 2000;
-        dinasBuktiInput.disabled = !dinasLuar;
-        dinasBuktiInput.required = dinasLuar;
+        dinasBuktiInput.disabled = !modeKhusus;
+        dinasBuktiInput.required = modeKhusus && !isIzinSakit;
+        specialDescriptionLabel.innerHTML = `${dinasLuar ? 'Deskripsi Pekerjaan Dinas Luar' : isCuti ? 'Keterangan Cuti' : isIzinSakit ? 'Keterangan Izin/Sakit' : 'Keterangan'}${dinasRingkasanInput.required ? ' <span class="lb-required">*</span>' : ''}`;
+        specialProofLabel.innerHTML = isIzinSakit
+            ? 'DOKUMEN PENDUKUNG'
+            : `${dinasLuar ? 'SURAT TUGAS' : 'DOKUMEN PENDUKUNG'} <span class="lb-required">*</span>`;
+        const filePrompt = qs('.lb-file-picker-prompt', dinasBuktiInput.closest('.lb-file-picker'));
+        filePrompt.dataset.emptyLabel = dinasLuar ? 'Pilih surat tugas' : 'Pilih dokumen pendukung';
+        if (!dinasBuktiInput.files?.length) filePrompt.textContent = filePrompt.dataset.emptyLabel;
+        ringkasanLabel.innerHTML = `${tipe === 'sakit' || tipe === 'izin' ? 'Keterangan' : 'Ringkasan Kegiatan'} <span class="lb-required">*</span>`;
+        ringkasanInput.placeholder = tipe === 'sakit' || tipe === 'izin' ? 'Jelaskan keterangan...' : 'Jelaskan kegiatan yang dilakukan...';
 
-        buktiBox.style.display = sakit ? '' : 'none';
-        sakitBuktiInput.disabled = !sakit;
-        sakitBuktiInput.required = sakit;
-        if (!sakit) {
-            sakitBuktiInput.value = '';
-            syncFileName(sakitBuktiInput);
+        if (autoFingerprintSchedule && shiftHelp) {
+            if (isCuti) shiftHelp.textContent = 'Cuti tidak memerlukan fingerprint.';
+            else if (isIzinSakit) shiftHelp.textContent = 'Izin/Sakit tidak memerlukan fingerprint.';
+            else if (dinasLuar) shiftHelp.textContent = 'Dinas luar tidak memerlukan fingerprint. Isi deskripsi dan unggah surat tugas.';
         }
-
-        const labelKeterangan = sakit || tipe === 'izin';
-        ringkasanLabel.innerHTML = dinasLuar
-            ? 'Deskripsi Pekerjaan Dinas Luar <span class="lb-required">*</span>'
-            : `${labelKeterangan ? 'Keterangan' : 'Ringkasan Kegiatan'} <span class="lb-required">*</span>`;
-        ringkasanInput.placeholder = labelKeterangan
-            ? 'Jelaskan keterangan...'
-            : 'Jelaskan kegiatan yang dilakukan...';
+        if ((dinasLuar || isIzinSakit || isCuti) && shiftHelp) {
+            shiftHelp.classList.remove('is-warning');
+        }
+        if (tanggalCutiAktif && shiftHelp) {
+            shiftHelp.textContent = 'Tanggal ini termasuk rentang cuti yang masih berlaku dan tidak dapat diisi logbook.';
+        }
+        if (shiftHelp && adaEntriIzinSakitTanpaBukti) {
+            shiftHelp.textContent = 'Entri Izin/Sakit tanggal ini sudah tersimpan. Unggah dokumen untuk melengkapinya; keterangan lama tetap digunakan.';
+        }
     };
 
     shiftSelect?.addEventListener('change', applyShiftFields);
-    dinasCheckbox?.addEventListener('change', () => {
-        if (!dinasCheckbox.checked) {
+    modeCheckboxes.forEach((checkbox) => checkbox.addEventListener('change', () => {
+        if (checkbox.checked) {
+            const anotherModeWasChecked = modeCheckboxes.some((other) => other !== checkbox && other.checked);
+            if (!anotherModeWasChecked) priorShiftValue = shiftSelect.value;
+            modeCheckboxes.forEach((other) => { if (other !== checkbox) other.checked = false; });
+            if (autoFingerprintSchedule && hasSpecialMode()) stopSchedulePolling();
+            if (checkbox === cutiCheckbox) {
+                const seed = dateInput.value || HARI_INI;
+                if (!cutiStartInput.value) cutiStartInput.value = seed;
+                if (!cutiEndInput.value) cutiEndInput.value = cutiStartInput.value;
+            }
+        } else if (!hasSpecialMode()) {
+            const selectedType = shiftSelect.selectedOptions[0]?.dataset.tipe || '';
+            if (autoFingerprintSchedule) {
+                shiftSelect.value = '';
+                if (shiftDisplay) shiftDisplay.value = '';
+                startSchedulePolling();
+            } else if (checkbox === cutiCheckbox || checkbox === izinSakitCheckbox || selectedType === 'izin' || selectedType === 'sakit') {
+                shiftSelect.value = priorShiftValue;
+            }
+        }
+
+        if (checkbox === dinasCheckbox && !checkbox.checked) {
             dinasRingkasanInput.value = '';
             dinasBuktiInput.value = '';
             syncFileName(dinasBuktiInput);
         }
         applyShiftFields();
-    });
+        shiftSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }));
+    [cutiStartInput, cutiEndInput].forEach((input) => input?.addEventListener('change', () => {
+        if (cutiStartInput.value && cutiEndInput.value && cutiEndInput.value < cutiStartInput.value) {
+            cutiEndInput.value = cutiStartInput.value;
+        }
+        syncCutiDates();
+        if (cutiCheckbox.checked && cutiStartInput.value) dateInput.value = cutiStartInput.value;
+    }));
     applyShiftFields();
+    dinasBuktiInput?.addEventListener('change', applyShiftFields);
+    dateInput?.addEventListener('change', applyShiftFields);
 
     function showJenis(jenis, clearDurationErrors = true) {
         if (clearDurationErrors) {
@@ -1731,14 +2028,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!checkbox || !submit) return;
 
         const needsAutoSchedule = form.id === 'harian-form' && autoFingerprintSchedule;
+        const formDate = qs('input[name="tanggal"]', form);
         const sync = () => {
-            const tanpaJadwalUntukDinasLuar = needsAutoSchedule && dinasCheckbox?.checked;
-            submit.disabled = !checkbox.checked || (needsAutoSchedule && !shiftSelect?.value && !tanpaJadwalUntukDinasLuar);
+            const tanpaFingerprint = needsAutoSchedule && hasSpecialMode();
+            const tanggalTerkunciCuti = isActiveCutiDate(formDate?.value || HARI_INI);
+            submit.disabled = !checkbox.checked || tanggalTerkunciCuti || (needsAutoSchedule && !shiftSelect?.value && !tanpaFingerprint);
         };
 
         checkbox.addEventListener('change', sync);
-        if (needsAutoSchedule) shiftSelect?.addEventListener('change', sync);
-        if (needsAutoSchedule) dinasCheckbox?.addEventListener('change', sync);
+        formDate?.addEventListener('change', sync);
+        if (needsAutoSchedule) {
+            shiftSelect?.addEventListener('change', sync);
+            modeCheckboxes.forEach((mode) => mode.addEventListener('change', sync));
+            [cutiStartInput, cutiEndInput].forEach((input) => input?.addEventListener('change', sync));
+        }
         sync();
 
         form.addEventListener('submit', (event) => {
@@ -1823,6 +2126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 && items.length === 0;
             const adaPenolakan = items.some((item) => item.status === 'Ditolak');
             const adaMenunggu = items.some((item) => item.status === 'Menunggu');
+            const adaCuti = items.some((item) => item.is_cuti);
             const semuaDisetujui = items.length > 0
                 && items.every((item) => item.status === 'Disetujui');
 
@@ -1830,15 +2134,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 'button',
                 'lb-cal-day'
                     + (dateKey === HARI_INI ? ' is-today' : '')
+                    + (adaCuti ? ' has-cuti' : '')
                     + (adaPenolakan ? ' has-rejected' : '')
                     + (!adaPenolakan && adaMenunggu ? ' has-waiting' : '')
                     + (!adaPenolakan && !adaMenunggu && semuaDisetujui ? ' has-approved' : '')
             );
             button.type = 'button';
-            button.disabled = dateKey > HARI_INI;
+            button.disabled = dateKey > HARI_INI && !adaCuti;
             if (adaPenolakan) button.title = 'Ada logbook ditolak';
             else if (adaMenunggu) button.title = 'Menunggu persetujuan';
             else if (semuaDisetujui) button.title = 'Semua logbook disetujui';
+            if (adaCuti) button.title = 'Ada pengajuan cuti';
             else if (isMissing) button.title = 'Belum diisi';
             button.append(el('span', '', day));
 
@@ -1846,12 +2152,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isMissing) {
                 dots.append(el('i', 'lb-dot lb-dot--kosong'));
             } else {
-                const jenisTerisi = [...new Set(items.map((item) => item.jenis))];
+                if (items.some((item) => item.is_cuti)) {
+                    dots.append(el('i', 'lb-dot lb-dot--cuti'));
+                } else {
+                    const jenisTerisi = [...new Set(items.map((item) => item.jenis))];
+                    jenisTerisi.forEach((jenis) => dots.append(el('i', `lb-dot lb-dot--${jenis}`)));
+                }
                 // Indikator libur nasional disembunyikan sementara.
                 // if (LIBUR[dateKey]) jenisTerisi.push('libur');
-                jenisTerisi.forEach((jenis) => {
-                    dots.append(el('i', `lb-dot lb-dot--${jenis}`));
-                });
             }
             button.append(dots);
 
@@ -1924,9 +2232,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const type = el(
                 'span',
                 `riwayat-item-type riwayat-item-type--${jenis}`,
-                JENIS_LABEL[item.jenis] || item.jenis || 'Logbook'
+                item.is_cuti ? 'Cuti' : item.is_izin_sakit ? 'Izin/Sakit' : (JENIS_LABEL[item.jenis] || item.jenis || 'Logbook')
             );
-            const detailRow = el('div', 'kal-logbook-detail');
+            const detailRow = el('div', `kal-logbook-detail${item.is_cuti ? ' kal-logbook-detail--cuti' : ''}`);
             const detail = el('span', 'riwayat-item-detail', item.detail || '');
             const detailButton = el('button', 'rw-detail-btn');
 
@@ -1941,7 +2249,7 @@ document.addEventListener('DOMContentLoaded', () => {
             head.append(badges);
             detailRow.append(detail, detailButton);
             content.append(head, detailRow);
-            row.append(el('i', `lb-dot lb-dot--${jenis}`), content);
+            row.append(el('i', `lb-dot lb-dot--${item.is_cuti ? 'cuti' : jenis}`), content);
             modalList.append(row);
         });
 
@@ -1981,6 +2289,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (input) {
                 input.value = selectedDate;
+                if (button.dataset.openCuti) {
+                    modeCheckboxes.forEach((checkbox) => { checkbox.checked = checkbox === cutiCheckbox; });
+                    cutiStartInput.value = selectedDate;
+                    cutiEndInput.value = selectedDate;
+                    cutiCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
+                    syncCutiDates();
+                }
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 input.dispatchEvent(new Event('change', { bubbles: true }));
                 input.dispatchEvent(new Event('logbook:date-selected', { bubbles: true }));

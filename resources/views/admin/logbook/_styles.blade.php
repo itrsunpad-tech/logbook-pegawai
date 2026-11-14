@@ -86,6 +86,7 @@
     .acc-submitted { display: inline-flex; align-items: center; gap: 6px; color: var(--muted-light); font-size: 11px; font-weight: 600; }
     .acc-submitted i { color: var(--accent); }
     .acc-evidence-row { display: flex; }
+    .acc-no-evidence { color: var(--muted-light); font-size: 11px; font-style: italic; }
     .acc-evidence {
         min-height: 32px;
         padding: 0 10px;

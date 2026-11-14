@@ -113,6 +113,10 @@ class LogbookController extends Controller
 
         $statusSebelumnya = $logbook->status;
         $logbook->status = Logbook::STATUS_DITOLAK;
+        if ($logbook->is_cuti) {
+            // Lepaskan batas unik harian agar pegawai bisa mengisi tanggal cuti yang ditolak.
+            $logbook->harian_unik = null;
+        }
         if ($logbook->status_banding === Logbook::BANDING_MENUNGGU) {
             $logbook->status_banding = Logbook::BANDING_DITOLAK;
         }
@@ -151,7 +155,13 @@ class LogbookController extends Controller
         return $query
             ->when($status !== 'semua', fn ($q) => $q->where('status', $status))
             ->when($filter['jenis'] ?? null, fn ($q, $jenis) => $q->where('jenis', $jenis))
-            ->when($filter['dari'] ?? null, fn ($q, $dari) => $q->whereDate('tanggal', '>=', $dari))
-            ->when($filter['sampai'] ?? null, fn ($q, $sampai) => $q->whereDate('tanggal', '<=', $sampai));
+            ->when($filter['dari'] ?? null, fn ($q, $dari) => $q->where(function ($range) use ($dari) {
+                $range->whereDate('tanggal', '>=', $dari)
+                    ->orWhere(fn ($cuti) => $cuti->where('is_cuti', true)->whereDate('cuti_selesai', '>=', $dari));
+            }))
+            ->when($filter['sampai'] ?? null, fn ($q, $sampai) => $q->where(function ($range) use ($sampai) {
+                $range->whereDate('tanggal', '<=', $sampai)
+                    ->orWhere(fn ($cuti) => $cuti->where('is_cuti', true)->whereDate('tanggal', '<=', $sampai));
+            }));
     }
 }

@@ -48,6 +48,9 @@ class Logbook extends Model
         'ringkasan',
         'is_wfh',
         'is_dinas_luar',
+        'is_cuti',
+        'is_izin_sakit',
+        'cuti_selesai',
         'bukti_path',
         'harian_unik',
     ];
@@ -56,6 +59,9 @@ class Logbook extends Model
         'tanggal' => 'date',
         'is_wfh' => 'boolean',
         'is_dinas_luar' => 'boolean',
+        'is_cuti' => 'boolean',
+        'is_izin_sakit' => 'boolean',
+        'cuti_selesai' => 'date',
     ];
 
     public function user(): BelongsTo

@@ -13,7 +13,7 @@ return [
         ],
         'Gizi' => [
             'oh' => ['OH IT,Gizi'],
-            'shift' => ['Pagi Gizi & Linen', 'Siang Gizi & Linen'],
+            'shift' => ['Siang Gizi & Linen'],
         ],
         'Lab' => [
             'oh' => ['OH Lab'],
