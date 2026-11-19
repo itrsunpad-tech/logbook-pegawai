@@ -267,7 +267,7 @@ class LogbookController extends Controller
                     ->lockForUpdate()
                     ->get(['id', 'jenis', 'status', 'is_cuti', 'is_izin_sakit', 'bukti_path', 'ringkasan', 'tanggal']);
 
-                if ($entriRentang->contains(fn ($item) => in_array(
+                if ($entriRentang->contains(fn ($item) => ! $item->is_cuti && in_array(
                     $item->status,
                     [Logbook::STATUS_DISETUJUI, Logbook::STATUS_DITOLAK],
                     true
@@ -283,7 +283,7 @@ class LogbookController extends Controller
                     ]);
                 }
 
-                if (! $isCuti && $entriRentang->contains(fn ($item) => $item->is_cuti
+                if ($harian && ! $isCuti && $entriRentang->contains(fn ($item) => $item->is_cuti
                     && in_array($item->status, [Logbook::STATUS_MENUNGGU, Logbook::STATUS_DISETUJUI], true))) {
                     throw ValidationException::withMessages([
                         'tanggal' => 'Tanggal ini berada dalam rentang cuti yang sudah diajukan.',

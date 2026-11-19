@@ -1652,6 +1652,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const notice = qs('[data-active-cuti-state]', form);
         if (!formDate || !fields || !notice) return false;
 
+        // Rentang cuti hanya menutup pengiriman Logbook Harian. Lembur dan On Call tetap tersedia.
+        if (form.dataset.jenisPanel !== 'harian') {
+            notice.hidden = true;
+            fields.hidden = false;
+            fields.disabled = false;
+            form.noValidate = false;
+            return false;
+        }
+
         let dateKey = formDate.value || HARI_INI;
         const cuti = activeCutiForDate(dateKey);
         if (!formDate.value && cuti) {
