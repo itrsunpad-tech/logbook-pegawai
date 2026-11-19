@@ -22,7 +22,7 @@ class KepegawaianController extends Controller
     public function index(Request $request): View
     {
         $filter = $request->validate([
-            'status' => ['nullable', Rule::in(['semua', 'terdaftar', 'belum'])],
+            'status' => ['nullable', Rule::in(['semua', 'terdaftar', 'belum', 'unit_ada', 'unit_belum'])],
             'q'      => ['nullable', 'string', 'max:100'],
         ]);
 
@@ -32,9 +32,12 @@ class KepegawaianController extends Controller
         $pegawai = User::query()
             ->when($status === 'terdaftar', fn ($q) => $q->whereNotNull('email'))
             ->when($status === 'belum', fn ($q) => $q->whereNull('email'))
+            ->when($status === 'unit_ada', fn ($q) => $q->whereNotNull('employee_unit')->where('employee_unit', '!=', ''))
+            ->when($status === 'unit_belum', fn ($q) => $q->where(fn ($w) => $w->whereNull('employee_unit')->orWhere('employee_unit', '')))
             ->when($kata, fn ($q) => $q->where(function ($w) use ($kata) {
                 $w->where('name', 'like', "%{$kata}%")
                     ->orWhere('email', 'like', "%{$kata}%")
+                    ->orWhere('employee_unit', 'like', "%{$kata}%")
                     ->orWhere('fingerprint_id', $kata);
             }))
             ->orderBy('name')
@@ -42,9 +45,11 @@ class KepegawaianController extends Controller
             ->withQueryString();
 
         $jumlah = [
-            'semua'     => User::count(),
-            'terdaftar' => User::whereNotNull('email')->count(),
-            'belum'     => User::whereNull('email')->count(),
+            'semua'      => User::count(),
+            'terdaftar'  => User::whereNotNull('email')->count(),
+            'belum'      => User::whereNull('email')->count(),
+            'unit_ada'   => User::whereNotNull('employee_unit')->where('employee_unit', '!=', '')->count(),
+            'unit_belum' => User::where(fn ($q) => $q->whereNull('employee_unit')->orWhere('employee_unit', ''))->count(),
         ];
 
         return view('admin.kepegawaian.index', compact('pegawai', 'status', 'jumlah'));

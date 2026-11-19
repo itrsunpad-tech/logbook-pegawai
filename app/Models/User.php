@@ -66,7 +66,6 @@ class User extends Authenticatable
         'Staff Gizi',
         'Staff HSSE',
         'Staff Human Capital',
-        'Staff IPSRS',
         'Staff IT',
         'Staff Keuangan',
         'Staff Laboratorium',
@@ -79,6 +78,7 @@ class User extends Authenticatable
         'Staff Perawat',
         'Staff Radiologi',
         'Staff Rekam Medis',
+        'Staff Sarana dan Prasarana (Sarpras)',
         'Staff Sekretaris',
     ];
 

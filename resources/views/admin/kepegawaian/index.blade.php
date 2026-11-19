@@ -16,12 +16,14 @@
         <a href="{{ route('admin.dashboard') }}" class="kp-back">&larr; Dashboard</a>
     </div>
 
-    {{-- Filter: punya email atau belum --}}
+    {{-- Filter: status email & unit --}}
     @php
         $tabs = [
-            'semua'     => 'Semua',
-            'terdaftar' => 'Sudah punya email',
-            'belum'     => 'Belum punya email',
+            'semua'      => 'Semua',
+            'terdaftar'  => 'Sudah punya email',
+            'belum'      => 'Belum punya email',
+            'unit_ada'   => 'Sudah punya unit',
+            'unit_belum' => 'Belum punya unit',
         ];
     @endphp
 
@@ -38,7 +40,7 @@
     <form method="GET" action="{{ route('admin.kepegawaian.index') }}" class="kp-search">
         <input type="hidden" name="status" value="{{ $status }}">
         <input type="text" name="q" value="{{ request('q') }}" class="lb-input"
-               placeholder="Cari nama, email, atau ID mesin...">
+               placeholder="Cari nama, email, unit, atau ID mesin...">
         <button type="submit" class="kp-btn">Cari</button>
     </form>
 
