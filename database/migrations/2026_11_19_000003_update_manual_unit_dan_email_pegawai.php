@@ -12,7 +12,6 @@ return new class extends Migration
     private array $emails = [
         1   => ['test@example.com', 'Test User'],
         2   => ['itrsunpad@gmail.com', 'IT RS UNPAD'],
-        3   => ['dghaz.xrpl5@gmail.com', 'Ilmi Fathurrahman Ghazali, S.Kom'],
         4   => ['smix2572@gmail.com', 'Red MiX'],
         15  => ['aliphyasuryadi.putri13@gmail.com', 'Nur Aliphya Suryadi Putr'],
         20  => ['lidyaapuspaa2002@gmail.com', 'Lidya Puspa Sari'],
