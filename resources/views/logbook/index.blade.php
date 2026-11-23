@@ -12,6 +12,34 @@
     .lb-cuti-range-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .lb-cuti-range-fields label { display: grid; gap: 6px; color: var(--text-muted); font-size: 12px; font-weight: 600; }
     .lb-dot--cuti { background: #ef4444; }
+    .lb-main-tabs { display:flex; gap:9px; margin:0 0 16px; padding:3px; }
+    .lb-main-hint { margin:-7px 4px 14px; color:var(--muted); font-size:12px; font-weight:500; text-align:center; }
+    .lb-main-tab { flex:1; min-height:44px; display:flex; align-items:center; justify-content:center; gap:8px; border:1px solid #cbd8eb; border-radius:11px; background:linear-gradient(180deg,#fff,#f5f8fd); color:#34445c; font-size:13px; font-weight:700; cursor:pointer; transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background .16s ease; }
+    .lb-main-tab:hover { transform:translateY(-1px); border-color:#7ca9f3; box-shadow:0 5px 12px rgba(29,78,160,.1); }
+    .lb-main-tab.is-active { border-color:#145bd7; background:linear-gradient(135deg,#1764e8,#084bbd); color:#fff; box-shadow:0 5px 14px rgba(20,91,215,.22); }
+    .lb-monitor-filters { display:flex; flex-wrap:wrap; align-items:end; gap:10px; margin:12px 0 16px; }
+    .lb-monitor-filters label { display:grid; gap:5px; color:var(--muted); font-size:11px; font-weight:700; }
+    .lb-monitor-filters input,.lb-monitor-filters select { min-height:36px; padding:6px 9px; border:1px solid var(--border); border-radius:8px; background:#f8fafc; color:var(--text); font:inherit; }
+    .lb-monitor-summary { margin-left:auto; color:var(--muted); font-size:12px; font-weight:700; }
+    .lb-monitor-wrap { overflow-x:auto; }
+    .lb-monitor-table { width:100%; border-collapse:separate; border-spacing:0; font-size:13px; }
+    .lb-monitor-table thead { background:#f5f8fc; }
+    .lb-monitor-table th { padding:12px; border-top:1px solid #e6edf6; border-bottom:1px solid #dfe7f1; color:#52647e; font-size:11px; font-weight:800; text-align:left; text-transform:uppercase; letter-spacing:.025em; }
+    .lb-monitor-table th:first-child { border-left:1px solid #e6edf6; border-radius:9px 0 0 0; }
+    .lb-monitor-table th:last-child { border-right:1px solid #e6edf6; border-radius:0 9px 0 0; }
+    .lb-monitor-table td { padding:12px; border-bottom:1px solid #e9eef5; color:#34445c; text-align:left; white-space:nowrap; }
+    .lb-monitor-table tbody tr:nth-child(even) { background:#fafbfd; }
+    .lb-monitor-table tbody tr:hover { background:#f5f8fc; }
+    .lb-monitor-status { color:#34445c; font-weight:600; }
+    .lb-monitor-status[data-status="Terlambat"] { color:#8a5a16; }
+    .lb-monitor-status[data-status="Tepat waktu"] { color:#315f91; }
+    .lb-monitor-status[data-status="Tidak tercatat"] { color:#64748b; }
+    .lb-monitor-pagination { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px; }
+    .lb-monitor-pages { display:flex; gap:4px; }
+    .lb-monitor-range { color:var(--muted); font-size:11px; font-weight:600; }
+    .lb-monitor-pagination button { min-width:30px; height:30px; padding:0 7px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #cbd8eb; border-radius:7px; background:#fff; color:#34445c; font-size:12px; line-height:1; font-weight:700; cursor:pointer; }
+    .lb-monitor-pagination button.is-current { border-color:#145bd7; background:#145bd7; color:#fff; }
+    .lb-monitor-pagination button:disabled { opacity:.45; cursor:not-allowed; }
     .lb-form-fields { min-width: 0; margin: 0; padding: 0; border: 0; }
     .lb-cuti-active-state { margin-top: 14px; padding: 16px; display: flex; align-items: flex-start; gap: 12px; border: 1px solid #d8dee8; border-radius: 12px; background: #f5f7fa; }
     .lb-cuti-active-state[hidden], .lb-form-fields[hidden] { display: none; }
@@ -498,6 +526,12 @@
     @endif
 
     <section>
+        <div class="lb-main-tabs" role="tablist" aria-label="Menu logbook">
+            <button type="button" class="lb-main-tab" data-main-tab="input"><i class="fa-solid fa-file-circle-plus" aria-hidden="true"></i> Input Baru</button>
+            <button type="button" class="lb-main-tab" data-main-tab="monitoring"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Monitoring Harian Absensi</button>
+        </div>
+        <p class="lb-main-hint" id="logbook-main-hint">Pilih Input Baru untuk mengisi logbook, atau Monitoring untuk melihat catatan absensi.</p>
+        <div id="logbook-input-view" hidden>
 
         {{-- Pilih jenis logbook --}}
         <div class="lb-card">
@@ -854,6 +888,35 @@
             </fieldset>
         </form>
 
+        </div>
+        <div id="logbook-monitoring-view" class="lb-card" hidden>
+            <h2 class="lb-card-title"><i class="fa-solid fa-fingerprint"></i> Monitoring Harian Absensi</h2>
+            <div class="lb-monitor-filters">
+                <label>Dari tanggal<input type="date" id="monitor-dari" value="{{ $mulaiKalender->format('Y-m-d') }}"></label>
+                <label>Sampai tanggal<input type="date" id="monitor-sampai" value="{{ $akhirKalender->format('Y-m-d') }}"></label>
+                <label>Status<select id="monitor-status"><option value="">Semua status</option><option>Tepat waktu</option><option>Terlambat</option><option>Tidak tercatat</option></select></label>
+                <span class="lb-monitor-summary" id="monitor-summary"></span>
+            </div>
+            <div class="lb-monitor-wrap">
+                <table class="lb-monitor-table">
+                    <thead><tr><th>Tanggal</th><th>Jenis Absensi</th><th>Waktu Check In</th><th>Waktu Check Out</th><th>Status keterlambatan</th></tr></thead>
+                    <tbody>
+                    @forelse ($monitoringAbsensi as $absensi)
+                        <tr data-absensi-row data-tanggal="{{ $absensi['tanggal'] }}" data-status="{{ $absensi['status'] }}">
+                            <td>{{ \Carbon\Carbon::parse($absensi['tanggal'])->locale('id')->translatedFormat('d F Y') }}</td>
+                            <td>{{ $absensi['metode'] }}</td>
+                            <td>{{ $absensi['check_in'] ?? '—' }}</td>
+                            <td>{{ $absensi['check_out'] ?? '—' }}</td>
+                            <td class="lb-monitor-status" data-status="{{ $absensi['status'] }}">{{ $absensi['status'] }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="5">Belum ada data fingerprint pada rentang ini.</td></tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="lb-monitor-pagination"><span id="monitor-range-label" class="lb-monitor-range"></span><div class="lb-monitor-pages"><button type="button" id="monitor-prev" aria-label="Halaman sebelumnya">‹</button><span id="monitor-page-numbers" class="lb-monitor-pages"></span><button type="button" id="monitor-next" aria-label="Halaman berikutnya">›</button></div></div>
+        </div>
     </section>
 
 
@@ -2012,6 +2075,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dateInput?.addEventListener('change', applyShiftFields);
 
     function showJenis(jenis, clearDurationErrors = true) {
+        setMainView('input');
         if (clearDurationErrors) {
             qsa('.js-form-warning').forEach((message) => message.remove());
             qsa('.js-time-order-warning').forEach((message) => message.remove());
@@ -2024,6 +2088,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     typeButtons.forEach((button) => button.addEventListener('click', () => showJenis(button.dataset.jenis)));
+
+    const setMainView = (view) => {
+        const inputView = qs('#logbook-input-view');
+        const monitoringView = qs('#logbook-monitoring-view');
+        const calendarView = qs('#kalender-utama');
+        qsa('[data-main-tab]').forEach((tab) => tab.classList.toggle('is-active', tab.dataset.mainTab === view));
+        if (inputView) inputView.hidden = view !== 'input';
+        if (monitoringView) monitoringView.hidden = view !== 'monitoring';
+        if (calendarView) calendarView.hidden = view === 'monitoring';
+        const hint = qs('#logbook-main-hint');
+        if (hint) hint.hidden = Boolean(view);
+    };
+    qsa('[data-main-tab]').forEach((tab) => tab.addEventListener('click', () => setMainView(tab.dataset.mainTab)));
+    const filterMonitoring = () => {
+        const dari = qs('#monitor-dari')?.value || '';
+        const sampai = qs('#monitor-sampai')?.value || '';
+        const status = qs('#monitor-status')?.value || '';
+        const rows = [...qsa('[data-absensi-row]')];
+        const filtered = rows.filter((row) => (!dari || row.dataset.tanggal >= dari)
+                && (!sampai || row.dataset.tanggal <= sampai)
+                && (!status || row.dataset.status === status));
+        const pages = Math.max(1, Math.ceil(filtered.length / 10));
+        window.monitorPage = Math.min(window.monitorPage || 1, pages);
+        rows.forEach((row) => { row.hidden = true; });
+        filtered.slice((window.monitorPage - 1) * 10, window.monitorPage * 10).forEach((row) => { row.hidden = false; });
+        const summary = qs('#monitor-summary');
+        if (summary) summary.textContent = `${filtered.length} hari ditemukan`;
+        const awalBaris = filtered.length ? (window.monitorPage - 1) * 10 + 1 : 0;
+        const akhirBaris = Math.min(window.monitorPage * 10, filtered.length);
+        if (qs('#monitor-range-label')) qs('#monitor-range-label').textContent = `Menampilkan ${awalBaris}–${akhirBaris} dari ${filtered.length} data`;
+        const pageNumbers = qs('#monitor-page-numbers');
+        if (pageNumbers) {
+            pageNumbers.replaceChildren();
+            for (let page = 1; page <= pages; page++) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = page;
+                button.classList.toggle('is-current', page === window.monitorPage);
+                button.setAttribute('aria-label', `Halaman ${page}`);
+                button.addEventListener('click', () => { window.monitorPage = page; filterMonitoring(); });
+                pageNumbers.append(button);
+            }
+        }
+        if (qs('#monitor-prev')) qs('#monitor-prev').disabled = window.monitorPage <= 1;
+        if (qs('#monitor-next')) qs('#monitor-next').disabled = window.monitorPage >= pages;
+    };
+    ['#monitor-dari', '#monitor-sampai', '#monitor-status'].forEach((selector) => {
+        qs(selector)?.addEventListener('change', () => { window.monitorPage = 1; filterMonitoring(); });
+    });
+    qs('#monitor-prev')?.addEventListener('click', () => { window.monitorPage = Math.max(1, (window.monitorPage || 1) - 1); filterMonitoring(); });
+    qs('#monitor-next')?.addEventListener('click', () => { window.monitorPage = (window.monitorPage || 1) + 1; filterMonitoring(); });
+    filterMonitoring();
 
     // Validasi gagal: buka kembali form yang tadi dikirim
     if (JENIS_LAMA) showJenis(JENIS_LAMA, false);
@@ -2040,7 +2156,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const formDate = qs('input[name="tanggal"]', form);
         const sync = () => {
             const tanpaFingerprint = needsAutoSchedule && hasSpecialMode();
-            const tanggalTerkunciCuti = isActiveCutiDate(formDate?.value || HARI_INI);
+            const tanggalTerkunciCuti = needsAutoSchedule
+                && isActiveCutiDate(formDate?.value || HARI_INI);
             submit.disabled = !checkbox.checked || tanggalTerkunciCuti || (needsAutoSchedule && !shiftSelect?.value && !tanpaFingerprint);
         };
 

@@ -72,6 +72,31 @@ class LogbookController extends Controller
 
         $kalender = $this->dataKalender($mulaiKalender, $akhirKalender);
         $libur = $this->dataLibur($mulaiKalender, $akhirKalender);
+        $monitoringAbsensi = collect();
+        if (Auth::user()->fingerprint_id) {
+            $awalUtc = $mulaiKalender->copy()->startOfDay()->utc();
+            $akhirUtc = $akhirKalender->copy()->endOfDay()->utc();
+            $logs = FingerprintLog::query()
+                ->where('fingerprint_id', Auth::user()->fingerprint_id)
+                ->whereIn('punch_state', [0, 1])
+                ->where('punched_at', '>=', $awalUtc)
+                ->where('punched_at', '<=', $akhirUtc)
+                ->orderBy('punched_at')
+                ->get();
+            $monitoringAbsensi = $logs->groupBy(fn (FingerprintLog $log) => $log->punched_at->copy()->setTimezone(FingerprintLog::TZ_TAMPIL)->toDateString())
+                ->map(function ($dailyLogs, $tanggal) {
+                    $checkIn = $dailyLogs->first(fn (FingerprintLog $log) => (int) $log->punch_state === 0);
+                    $checkOut = $dailyLogs->filter(fn (FingerprintLog $log) => (int) $log->punch_state === 1)->last();
+
+                    return [
+                        'tanggal' => $tanggal,
+                        'check_in' => $checkIn?->punched_at->copy()->setTimezone(FingerprintLog::TZ_TAMPIL)->format('H:i'),
+                        'check_out' => $checkOut?->punched_at->copy()->setTimezone(FingerprintLog::TZ_TAMPIL)->format('H:i'),
+                        'metode' => $checkIn?->labelVerifikasi() ?? '—',
+                        'status' => $checkIn ? ($checkIn->punched_at->copy()->setTimezone(FingerprintLog::TZ_TAMPIL)->format('H:i:s') > '08:00:00' ? 'Terlambat' : 'Tepat waktu') : 'Tidak tercatat',
+                    ];
+                })->sortKeysDesc();
+        }
         $notifikasiStatus = Auth::user()->unreadNotifications()
             ->where('type', LogbookStatusChanged::class)
             ->latest()
@@ -92,6 +117,9 @@ class LogbookController extends Controller
             'minJamOncall',
             'hariIni',
             'kalender',
+            'monitoringAbsensi',
+            'mulaiKalender',
+            'akhirKalender',
             'libur',
             'notifikasiStatus'
         ));
