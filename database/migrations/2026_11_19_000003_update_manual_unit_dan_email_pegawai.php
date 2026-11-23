@@ -55,25 +55,9 @@ return new class extends Migration
 
     public function up(): void
     {
-        // 1. Update data email
-        foreach ($this->emails as $id => [$email, $name]) {
-            DB::table('users')
-                ->where('id', $id)
-                ->update([
-                    'email'      => strtolower(trim($email)),
-                    'updated_at' => now(),
-                ]);
-        }
-
-        // 2. Update data unit kerja
-        foreach ($this->units as $id => [$unit, $name]) {
-            DB::table('users')
-                ->where('id', $id)
-                ->update([
-                    'employee_unit' => trim($unit),
-                    'updated_at'    => now(),
-                ]);
-        }
+        // Catatan: Migrasi manual berbasis ID ini telah digantikan secara menyeluruh oleh migrasi:
+        // 2026_11_23_000001_sync_all_users_unit_and_email.php
+        // yang mencocokkan data langsung via Nama Pegawai (bukan auto-increment ID).
     }
 
     public function down(): void

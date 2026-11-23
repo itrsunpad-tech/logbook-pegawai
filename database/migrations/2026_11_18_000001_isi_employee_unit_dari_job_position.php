@@ -60,18 +60,9 @@ return new class extends Migration
 
     public function up(): void
     {
-        foreach ($this->mapping as $unit => $ids) {
-            DB::table('users')
-                ->whereIn('id', $ids)
-                // hanya yang masih kosong, data yang sudah terisi tidak ditimpa
-                ->where(function ($q) {
-                    $q->whereNull('employee_unit')->orWhere('employee_unit', '');
-                })
-                ->update([
-                    'employee_unit' => $unit,
-                    'updated_at'    => now(),
-                ]);
-        }
+        // Catatan: Migrasi berbasis ID ini telah digantikan secara menyeluruh oleh migrasi:
+        // 2026_11_23_000001_sync_all_users_unit_and_email.php
+        // yang mencocokkan data langsung via Nama Pegawai (bukan auto-increment ID).
     }
 
     public function down(): void

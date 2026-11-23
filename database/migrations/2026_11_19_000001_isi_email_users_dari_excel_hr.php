@@ -251,27 +251,9 @@ return new class extends Migration
 
     public function up(): void
     {
-        foreach ($this->mapping as $id => $email) {
-            // Lewati kalau email ini sudah dipakai user lain (kolom email unique)
-            $sudahDipakai = DB::table('users')
-                ->where('email', $email)
-                ->exists();
-
-            if ($sudahDipakai) {
-                continue;
-            }
-
-            DB::table('users')
-                ->where('id', $id)
-                // hanya yang masih kosong, email yang sudah terisi tidak ditimpa
-                ->where(function ($q) {
-                    $q->whereNull('email')->orWhere('email', '');
-                })
-                ->update([
-                    'email'      => $email,
-                    'updated_at' => now(),
-                ]);
-        }
+        // Catatan: Migrasi berbasis ID ini telah digantikan secara menyeluruh oleh migrasi:
+        // 2026_11_23_000001_sync_all_users_unit_and_email.php
+        // yang mencocokkan data langsung via Nama Pegawai (bukan auto-increment ID).
     }
 
     public function down(): void
