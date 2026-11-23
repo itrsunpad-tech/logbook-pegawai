@@ -23,7 +23,7 @@ class ShiftSeeder extends Seeder
             // Shift
             [
                 'nama' => 'Pagi Reguler',
-                'jenis' => 'Shift',
+                'jenis' => 'Shift 1',
                 'jam_mulai' => '07:00',
                 'jam_selesai' => '14:00',
                 'is_kerja' => true,
@@ -31,7 +31,7 @@ class ShiftSeeder extends Seeder
             ],
             [
                 'nama' => 'Siang Reguler',
-                'jenis' => 'Shift',
+                'jenis' => 'Shift 1',
                 'jam_mulai' => '14:00',
                 'jam_selesai' => '21:00',
                 'is_kerja' => true,
@@ -39,7 +39,7 @@ class ShiftSeeder extends Seeder
             ],
             [
                 'nama' => 'Malam Reguler',
-                'jenis' => 'Shift',
+                'jenis' => 'Shift 1',
                 'jam_mulai' => '21:00',
                 'jam_selesai' => '07:00',
                 'is_kerja' => true,
@@ -47,7 +47,7 @@ class ShiftSeeder extends Seeder
             ],
             [
                 'nama' => 'Pagi Gizi & Linen',
-                'jenis' => 'Shift',
+                'jenis' => 'Shift 2',
                 'jam_mulai' => '06:00',
                 'jam_selesai' => '13:00',
                 'is_kerja' => true,
@@ -55,7 +55,7 @@ class ShiftSeeder extends Seeder
             ],
             [
                 'nama' => 'Siang Gizi & Linen',
-                'jenis' => 'Shift',
+                'jenis' => 'Shift 2',
                 'jam_mulai' => '13:00',
                 'jam_selesai' => '20:00',
                 'is_kerja' => true,
@@ -63,7 +63,7 @@ class ShiftSeeder extends Seeder
             ],
             [
                 'nama' => 'Pagi Hemodialisa',
-                'jenis' => 'Shift',
+                'jenis' => 'Shift 3',
                 'jam_mulai' => '05:00',
                 'jam_selesai' => '12:00',
                 'is_kerja' => true,
@@ -71,7 +71,7 @@ class ShiftSeeder extends Seeder
             ],
             [
                 'nama' => 'Siang Hemodialisa',
-                'jenis' => 'Shift',
+                'jenis' => 'Shift 3',
                 'jam_mulai' => '12:00',
                 'jam_selesai' => '19:00',
                 'is_kerja' => true,
@@ -80,7 +80,7 @@ class ShiftSeeder extends Seeder
             [
                 // Aturan Middle: Jam berapapun yang penting 7 jam, jam_mulai dan jam_selesai dikosongkan
                 'nama' => 'Middle',
-                'jenis' => 'Shift',
+                'jenis' => 'Shift 4',
                 'jam_mulai' => null,
                 'jam_selesai' => null,
                 'is_kerja' => true,
