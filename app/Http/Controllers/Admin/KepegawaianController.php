@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\EmployeeProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -38,6 +39,8 @@ class KepegawaianController extends Controller
                 $w->where('name', 'like', "%{$kata}%")
                     ->orWhere('email', 'like', "%{$kata}%")
                     ->orWhere('employee_unit', 'like', "%{$kata}%")
+                    ->orWhere('employee_instalasi', 'like', "%{$kata}%")
+                    ->orWhere('employee_jabatan', 'like', "%{$kata}%")
                     ->orWhere('fingerprint_id', $kata);
             }))
             ->orderBy('name')
@@ -66,37 +69,72 @@ class KepegawaianController extends Controller
 
         $user->load('profile');
 
-        // Daftar dropdown mencakup unit baku dan unit lama yang sudah tercatat.
-        $daftarUnit = User::whereNotNull('employee_unit')
-            ->distinct()
-            ->orderBy('employee_unit')
-            ->pluck('employee_unit')
-            ->merge(User::UNIT_KERJA)
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values();
+        // Dropdown unit kerja = unit baku (User::UNIT_KERJA).
+        $daftarUnit = $this->daftarUnit($user);
 
-        return view('admin.kepegawaian.show', compact('user', 'tab', 'daftarUnit'));
+        // Dropdown instalasi & jabatan = daftar dari Excel + nilai yang sudah tercatat di database.
+        $daftarInstalasi = $this->daftarPilihan(User::INSTALASI, 'employee_instalasi', $user->employee_instalasi);
+        $daftarJabatan   = $this->daftarPilihan(User::JABATAN, 'employee_jabatan', $user->employee_jabatan);
+
+        return view('admin.kepegawaian.show', compact(
+            'user', 'tab', 'daftarUnit', 'daftarInstalasi', 'daftarJabatan'
+        ));
     }
 
     /**
-     * Simpan tab Overview: nama, kategori, unit.
+     * Unit kerja yang boleh dipilih: unit baku. Kalau pegawai ini masih punya unit lama
+     * di luar daftar baku, unit itu ikut ditampilkan (hanya untuk dia) supaya tidak
+     * hilang diam-diam saat form disimpan.
+     */
+    private function daftarUnit(User $user): Collection
+    {
+        return collect(User::UNIT_KERJA)
+            ->when($user->employee_unit, fn (Collection $c, string $unitLama) => $c->push($unitLama))
+            ->unique()
+            ->sortBy(fn (string $unit) => mb_strtolower($unit))
+            ->values();
+    }
+
+    /**
+     * Pilihan dropdown untuk kolom users tertentu: daftar baku (dari Excel) + semua nilai
+     * yang sudah tercatat di database + nilai milik pegawai ini sendiri.
+     */
+    private function daftarPilihan(array $baku, string $kolom, ?string $nilaiSaatIni): Collection
+    {
+        return User::query()
+            ->whereNotNull($kolom)
+            ->where($kolom, '!=', '')
+            ->distinct()
+            ->pluck($kolom)
+            ->merge($baku)
+            ->when($nilaiSaatIni, fn (Collection $c, string $nilai) => $c->push($nilai))
+            ->filter()
+            ->unique()
+            ->sortBy(fn (string $nilai) => mb_strtolower($nilai))
+            ->values();
+    }
+
+    /**
+     * Simpan tab Overview: nama, unit kerja, instalasi, jabatan, jenis jam kerja.
      */
     public function updateOverview(Request $request, User $user): RedirectResponse
     {
         $data = $request->validate([
-            'name'              => ['required', 'string', 'max:255'],
-            'employee_category' => ['nullable', Rule::in(User::KATEGORI)],
-            'employee_unit'     => ['nullable', 'string', 'max:100', Rule::in(
-                User::query()->whereNotNull('employee_unit')->distinct()->pluck('employee_unit')
-                    ->merge(User::UNIT_KERJA)->filter()->unique()->values()->all()
+            'name'               => ['required', 'string', 'max:255'],
+            'employee_unit'      => ['nullable', 'string', 'max:100', Rule::in($this->daftarUnit($user)->all())],
+            'employee_instalasi' => ['nullable', 'string', 'max:100', Rule::in(
+                $this->daftarPilihan(User::INSTALASI, 'employee_instalasi', $user->employee_instalasi)->all()
             )],
-            'work_hour_type'    => ['nullable', Rule::in(User::JENIS_JAM_KERJA)],
+            'employee_jabatan'   => ['nullable', 'string', 'max:150', Rule::in(
+                $this->daftarPilihan(User::JABATAN, 'employee_jabatan', $user->employee_jabatan)->all()
+            )],
+            'work_hour_type'     => ['nullable', Rule::in(User::JENIS_JAM_KERJA)],
         ], [
-            'name.required'        => 'Nama lengkap wajib diisi.',
-            'employee_category.in' => 'Kategori tidak valid.',
-            'work_hour_type.in'    => 'Jenis jam kerja tidak valid.',
+            'name.required'          => 'Nama lengkap wajib diisi.',
+            'employee_unit.in'       => 'Unit kerja tidak valid.',
+            'employee_instalasi.in'  => 'Instalasi tidak valid.',
+            'employee_jabatan.in'    => 'Jabatan tidak valid.',
+            'work_hour_type.in'      => 'Jenis jam kerja tidak valid.',
         ]);
 
         // forceFill: lewat $fillable, aman karena hanya data tervalidasi dari rute admin
@@ -192,7 +230,6 @@ class KepegawaianController extends Controller
     {
         $data = $request->validate([
             'tanggal_mulai_kerja' => ['nullable', 'date'],
-            'jabatan'             => ['nullable', 'string', 'max:100'],
             'status_kepegawaian'  => ['nullable', Rule::in(EmployeeProfile::STATUS_KEPEGAWAIAN)],
         ], [
             'tanggal_mulai_kerja.date' => 'Tanggal mulai kerja tidak valid.',

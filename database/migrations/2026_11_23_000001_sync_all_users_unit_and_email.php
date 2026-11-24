@@ -151,7 +151,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Andreas Recki Prasetyo',
-            'email' => null,
+            'email' => 'andreas@unpad.ac.id',
             'employee_unit' => 'Manajer Human Capital',
             'employee_category' => null,
             'work_hour_type' => null,
@@ -191,7 +191,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Budi Utami',
-            'email' => null,
+            'email' => 'casemixrsunpad@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -207,7 +207,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Violletha Shefierra Sept',
-            'email' => null,
+            'email' => 'violletha1109@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -319,7 +319,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Asri Amalul Ihsan',
-            'email' => null,
+            'email' => 'asriamalul10@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -447,7 +447,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Risa Rahmawati',
-            'email' => null,
+            'email' => 'risarahma205@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -567,7 +567,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Eva Hardiana',
-            'email' => null,
+            'email' => 'dianaevahardiana@gmail.com',
             'employee_unit' => 'Staff Keuangan',
             'employee_category' => null,
             'work_hour_type' => null,
@@ -983,7 +983,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Reina Rofilla',
-            'email' => null,
+            'email' => 'reihanarofilla525@gmail.com',
             'employee_unit' => 'Staff Perawat',
             'employee_category' => null,
             'work_hour_type' => null,
@@ -1103,7 +1103,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Selviana Budiani',
-            'email' => null,
+            'email' => 'selvinaby4business@gmail.com',
             'employee_unit' => 'Staff Bidan',
             'employee_category' => null,
             'work_hour_type' => null,
@@ -1191,7 +1191,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Syifa Nurul Fauzania',
-            'email' => null,
+            'email' => 'syifanurulfauzania@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2007,7 +2007,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Tira Kurniasih',
-            'email' => null,
+            'email' => 'tirakurniasih127@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2055,7 +2055,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Arfiah Azzahra Nissa Sur',
-            'email' => null,
+            'email' => 'azzahraarfiah@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2063,7 +2063,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Sri Dian Harianti',
-            'email' => null,
+            'email' => 'sridianh504@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2095,7 +2095,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Febriana Wahyuni Nazwa',
-            'email' => null,
+            'email' => 'febriananazwa40@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2167,7 +2167,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Aurel Avrilia',
-            'email' => null,
+            'email' => 'aurellavriliaa05@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2175,7 +2175,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Ridwan Zulpan',
-            'email' => null,
+            'email' => 'zulpanridwan3@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2183,7 +2183,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Siti Juariah',
-            'email' => null,
+            'email' => 'shienju5@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2191,7 +2191,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Aditya Nugraha',
-            'email' => null,
+            'email' => '8055dit@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2199,7 +2199,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Nadia Sinta Wulandari',
-            'email' => null,
+            'email' => 'nadiasinw@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2207,7 +2207,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Ai Siti Maesaroh',
-            'email' => null,
+            'email' => 'aiisitimaesaroh519@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2223,7 +2223,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Dinal',
-            'email' => null,
+            'email' => 'dinalminul123@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2231,7 +2231,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Yulia Alya Rohyana',
-            'email' => null,
+            'email' => 'yuliarohyana9@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2239,7 +2239,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Angga Rahayu',
-            'email' => null,
+            'email' => 'anggaabyan28@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2255,7 +2255,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Nadia Sari',
-            'email' => null,
+            'email' => 'nanatnadia@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2263,7 +2263,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Jajang Nurjaman',
-            'email' => null,
+            'email' => 'nabasyam04@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2279,7 +2279,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Indrawan Mustofa',
-            'email' => null,
+            'email' => 'indrawandm3006@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2287,7 +2287,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Yohana Novrida',
-            'email' => null,
+            'email' => 'yohananovrida9@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2295,7 +2295,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Silvi putri Mutiara Meil',
-            'email' => null,
+            'email' => 'silvimeiliza15smp.belajar.id@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2303,7 +2303,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Sari Syifa Andini',
-            'email' => null,
+            'email' => 'ssyifaaan@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2311,7 +2311,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Iklima Mardiah',
-            'email' => null,
+            'email' => 'iklimamardiahh@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2319,7 +2319,7 @@ return new class extends Migration
         ],
         [
             'name' => 'M nur Indrawan',
-            'email' => null,
+            'email' => 'indrawanur@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2327,7 +2327,7 @@ return new class extends Migration
         ],
         [
             'name' => 'devi Rosmiati',
-            'email' => null,
+            'email' => 'dedevirosmiati@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2335,7 +2335,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Sholeh Ramdan',
-            'email' => null,
+            'email' => 'sholehramdan64@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2343,7 +2343,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Acep Setia Firmansyah',
-            'email' => null,
+            'email' => 'acepsetiaf@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2351,7 +2351,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Hari Muhamad Raya',
-            'email' => null,
+            'email' => 'harimuhamadraya@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2359,7 +2359,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Neni Ermawati',
-            'email' => null,
+            'email' => 'ermawatineni6@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2367,7 +2367,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Ramdani',
-            'email' => null,
+            'email' => 'rmdn0450@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2375,7 +2375,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Alya Anissa Fitrie',
-            'email' => null,
+            'email' => 'safieyaaly@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2383,7 +2383,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Fitri Apiyah Afini',
-            'email' => null,
+            'email' => 'fitriapiyah95@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2391,7 +2391,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Lita Rizki Aurelia',
-            'email' => null,
+            'email' => 'litaaarzky@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2399,7 +2399,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Angela Vanessa Amabel Od',
-            'email' => null,
+            'email' => 'angela18004@mail.unpad.ac.id',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2407,7 +2407,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Yolanfa Chelsea Salsa',
-            'email' => null,
+            'email' => 'yolanfachelsea@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2415,7 +2415,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Ghina Nur Alya',
-            'email' => null,
+            'email' => 'ghinanuralya13@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2423,7 +2423,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Nia Kurniati',
-            'email' => null,
+            'email' => 'niakurniati625@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2431,7 +2431,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Indra Rohmatullah',
-            'email' => null,
+            'email' => 'indrarohmatullah@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2447,7 +2447,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Rima Siti Hamidah',
-            'email' => null,
+            'email' => 'rimasiti363@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2455,7 +2455,7 @@ return new class extends Migration
         ],
         [
             'name' => 'bani Farriz',
-            'email' => null,
+            'email' => 'banifarriz01@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2463,7 +2463,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Ika Siska',
-            'email' => null,
+            'email' => 'siskaika505@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2471,7 +2471,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Aa Wasailut Thoibin',
-            'email' => null,
+            'email' => 'aawasailutthoibin7@gmail.com',
             'employee_unit' => null,
             'employee_category' => 'Non-Medis',
             'work_hour_type' => null,
@@ -2479,7 +2479,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Santi Aulia Rahmah',
-            'email' => null,
+            'email' => 'santiaulia2000@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2487,7 +2487,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Hari Azhar',
-            'email' => null,
+            'email' => 'hariazhar3@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2495,7 +2495,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Lisa Setyowati',
-            'email' => null,
+            'email' => 'tyowatilisa@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2511,7 +2511,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Sri Dewi Rahmasari',
-            'email' => null,
+            'email' => 'sridewirahmasari@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2519,7 +2519,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Anisah Istiqomah',
-            'email' => null,
+            'email' => '12dbkc.anisahistiqomah@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2527,7 +2527,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Muhammad Akbar Syuhada',
-            'email' => null,
+            'email' => 'muhammadakbarsyuhada@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2535,7 +2535,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Annisa Salma nur Fauziya',
-            'email' => null,
+            'email' => 'aesfile8@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2543,7 +2543,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Diki Gunawan',
-            'email' => null,
+            'email' => 'dikigunawan214@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2551,7 +2551,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Agniya nur Rohmah',
-            'email' => null,
+            'email' => 'agniyanurrohmah@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2559,7 +2559,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Anjani Sekar Syafana',
-            'email' => null,
+            'email' => 'gyunyuu06@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2567,7 +2567,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Dinda putri arianto',
-            'email' => null,
+            'email' => 'dindaaputrii1818@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2575,7 +2575,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Diah NUR anggraini',
-            'email' => null,
+            'email' => 'diahnuranggraini23@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2583,7 +2583,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Puput Widiawati',
-            'email' => null,
+            'email' => 'nyomanacu93@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2591,7 +2591,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Sara Safira',
-            'email' => null,
+            'email' => 'sarasafirajan26@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2599,7 +2599,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Ristia Gustiani',
-            'email' => null,
+            'email' => 'ristiag3@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2607,7 +2607,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Dianti Apriliani',
-            'email' => null,
+            'email' => 'diantiapriliani12@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2623,7 +2623,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Gwendy Dale Henry',
-            'email' => null,
+            'email' => 'gwendydale@gmail.com',
             'employee_unit' => 'Satuan Pengawas Internal (SPI)',
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2631,7 +2631,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Rima Mutiarawati',
-            'email' => null,
+            'email' => 'rimamutiarawati30@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2639,7 +2639,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Muhammad Sri Kurniawan D',
-            'email' => null,
+            'email' => 'irwan.mskurniawan@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2647,7 +2647,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Dini Apriyani',
-            'email' => null,
+            'email' => 'dini.lulu92@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,
@@ -2655,7 +2655,7 @@ return new class extends Migration
         ],
         [
             'name' => 'Rizka Hadi Lestari',
-            'email' => null,
+            'email' => 'rizkaahadi@gmail.com',
             'employee_unit' => null,
             'employee_category' => null,
             'work_hour_type' => null,

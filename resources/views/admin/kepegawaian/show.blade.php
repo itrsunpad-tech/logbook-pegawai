@@ -18,7 +18,7 @@
         <div class="kp-row-main">
             <div class="kp-title">{{ $user->name }}</div>
             <div class="kp-meta">
-                {{ collect([$user->employee_unit, $user->employee_category, $user->work_hour_type])->filter()->implode(' · ') ?: 'Unit dan kategori belum diisi' }}
+                {{ $user->employee_instalasi ?: 'Instalasi belum diisi' }}
             </div>
 
             <div class="kp-chips">
@@ -87,78 +87,47 @@
                 </div>
 
                 <div>
-                    <label class="lb-label" for="employee_category">Kategori</label>
-                    <select id="employee_category" name="employee_category" class="lb-select">
-                        <option value="">&mdash; Pilih &mdash;</option>
-                        @foreach (\App\Models\User::KATEGORI as $kategori)
-                            <option value="{{ $kategori }}"
-                                @selected(old('employee_category', $user->employee_category) === $kategori)>
-                                {{ $kategori }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('employee_category')
+                    <label class="lb-label" for="employee_unit">Unit kerja / divisi</label>
+                    @include('admin.kepegawaian._searchable-select', [
+                        'field'             => 'employee_unit',
+                        'options'           => $daftarUnit,
+                        'current'           => $user->employee_unit,
+                        'placeholder'       => 'Pilih unit kerja',
+                        'searchPlaceholder' => 'Cari unit kerja...',
+                        'emptyText'         => 'Tidak ada unit kerja yang cocok',
+                    ])
+                    <div class="kp-help">Pilihan jadwal logbook pegawai mengikuti unit ini.</div>
+                    @error('employee_unit')
                         <div class="kp-error">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="lb-label" for="employee_unit">Unit kerja / divisi</label>
-                    <div class="searchable-select" id="unit-searchable">
-                        {{-- Native select tersembunyi untuk submit form & validasi --}}
-                        <select id="employee_unit" name="employee_unit" class="searchable-select-hidden" tabindex="-1" aria-hidden="true">
-                            <option value="">&mdash; Pilih unit &mdash;</option>
-                            @foreach ($daftarUnit as $unit)
-                                <option value="{{ $unit }}"
-                                    @selected(old('employee_unit', $user->employee_unit) === $unit)>
-                                    {{ $unit }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <label class="lb-label" for="employee_instalasi">Instalasi</label>
+                    @include('admin.kepegawaian._searchable-select', [
+                        'field'             => 'employee_instalasi',
+                        'options'           => $daftarInstalasi,
+                        'current'           => $user->employee_instalasi,
+                        'placeholder'       => 'Pilih instalasi',
+                        'searchPlaceholder' => 'Cari instalasi...',
+                        'emptyText'         => 'Tidak ada instalasi yang cocok',
+                    ])
+                    @error('employee_instalasi')
+                        <div class="kp-error">{{ $message }}</div>
+                    @enderror
+                </div>
 
-                        {{-- Tombol trigger dropdown --}}
-                        <button type="button" class="searchable-select-trigger" aria-haspopup="listbox" aria-expanded="false">
-                            <span class="searchable-select-label {{ !old('employee_unit', $user->employee_unit) ? 'is-placeholder' : '' }}">
-                                {{ old('employee_unit', $user->employee_unit) ?: '— Pilih unit / posisi —' }}
-                            </span>
-                            <i class="fa-solid fa-chevron-down searchable-select-arrow"></i>
-                        </button>
-
-                        {{-- Panel dropdown mengambang dengan pencarian --}}
-                        <div class="searchable-select-dropdown" role="listbox">
-                            <div class="searchable-select-search">
-                                <i class="fa-solid fa-magnifying-glass searchable-select-search-icon"></i>
-                                <input type="text" class="searchable-select-input" placeholder="Cari posisi / unit..." autocomplete="off">
-                                <button type="button" class="searchable-select-clear" title="Hapus pencarian" style="display: none;">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                            </div>
-
-                            <ul class="searchable-select-list">
-                                <li class="searchable-select-item {{ !old('employee_unit', $user->employee_unit) ? 'is-selected' : '' }}" data-value="">
-                                    <span>&mdash; Pilih unit / posisi &mdash;</span>
-                                    @if (!old('employee_unit', $user->employee_unit))
-                                        <i class="fa-solid fa-check searchable-select-check"></i>
-                                    @endif
-                                </li>
-                                @foreach ($daftarUnit as $unit)
-                                    @php $isSelected = old('employee_unit', $user->employee_unit) === $unit; @endphp
-                                    <li class="searchable-select-item {{ $isSelected ? 'is-selected' : '' }}" data-value="{{ $unit }}">
-                                        <span>{{ $unit }}</span>
-                                        @if ($isSelected)
-                                            <i class="fa-solid fa-check searchable-select-check"></i>
-                                        @endif
-                                    </li>
-                                @endforeach
-                            </ul>
-
-                            <div class="searchable-select-empty" style="display: none;">
-                                <i class="fa-regular fa-folder-open"></i> Tidak ada unit atau posisi yang cocok
-                            </div>
-                        </div>
-                    </div>
-                    <div class="kp-help">Pilihan jadwal logbook pegawai mengikuti unit ini.</div>
-                    @error('employee_unit')
+                <div>
+                    <label class="lb-label" for="employee_jabatan">Jabatan</label>
+                    @include('admin.kepegawaian._searchable-select', [
+                        'field'             => 'employee_jabatan',
+                        'options'           => $daftarJabatan,
+                        'current'           => $user->employee_jabatan,
+                        'placeholder'       => 'Pilih jabatan',
+                        'searchPlaceholder' => 'Cari jabatan...',
+                        'emptyText'         => 'Tidak ada jabatan yang cocok',
+                    ])
+                    @error('employee_jabatan')
                         <div class="kp-error">{{ $message }}</div>
                     @enderror
                 </div>
@@ -258,9 +227,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const root = document.getElementById('unit-searchable');
-    if (!root) return;
-
+  document.querySelectorAll('.searchable-select').forEach(function (root) {
     const hiddenSelect = root.querySelector('.searchable-select-hidden');
     const trigger = root.querySelector('.searchable-select-trigger');
     const triggerLabel = root.querySelector('.searchable-select-label');
@@ -294,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function selectOption(val, label) {
         hiddenSelect.value = val;
-        triggerLabel.textContent = label || '— Pilih unit / posisi —';
+        triggerLabel.textContent = label || root.dataset.placeholder;
         if (val) {
             triggerLabel.classList.remove('is-placeholder');
         } else {
@@ -421,6 +388,7 @@ document.addEventListener('DOMContentLoaded', function () {
             closeDropdown();
         }
     });
+  });
 });
 </script>
 @endpush

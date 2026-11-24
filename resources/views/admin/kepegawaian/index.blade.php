@@ -40,7 +40,7 @@
     <form method="GET" action="{{ route('admin.kepegawaian.index') }}" class="kp-search">
         <input type="hidden" name="status" value="{{ $status }}">
         <input type="text" name="q" value="{{ request('q') }}" class="lb-input"
-               placeholder="Cari nama, email, unit, atau ID mesin...">
+               placeholder="Cari nama, email, unit, instalasi, jabatan, atau ID mesin...">
         <button type="submit" class="kp-btn">Cari</button>
     </form>
 
@@ -52,10 +52,7 @@
             <div class="kp-row-main">
                 <div class="kp-name">{{ $p->name }}</div>
                 <div class="kp-meta">
-                    {{ $p->employee_unit ?: 'Unit belum diisi' }}
-                    @if ($p->fingerprint_id)
-                        &middot; ID mesin {{ $p->fingerprint_id }}
-                    @endif
+                    {{ $p->employee_instalasi ?: 'Instalasi belum diisi' }}
                 </div>
             </div>
 

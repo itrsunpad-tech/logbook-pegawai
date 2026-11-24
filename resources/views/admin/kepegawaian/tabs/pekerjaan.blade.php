@@ -6,15 +6,6 @@
 
     <div class="kp-form-grid">
         <div>
-            <label class="lb-label" for="jabatan">Jabatan / pekerjaan</label>
-            <input type="text" id="jabatan" name="jabatan" class="lb-input" maxlength="100"
-                   value="{{ old('jabatan', $profil?->jabatan) }}">
-            @error('jabatan')
-                <div class="kp-error">{{ $message }}</div>
-            @enderror
-        </div>
-
-        <div>
             <label class="lb-label" for="status_kepegawaian">Status kepegawaian</label>
             <select id="status_kepegawaian" name="status_kepegawaian" class="lb-select">
                 <option value="">&mdash; Pilih &mdash;</option>
@@ -44,13 +35,18 @@
         </div>
 
         <div>
-            <div class="kp-info-label">Kategori</div>
-            <div class="kp-info-value">{{ $user->employee_category ?: '-' }}</div>
+            <div class="kp-info-label">Instalasi</div>
+            <div class="kp-info-value">{{ $user->employee_instalasi ?: '-' }}</div>
+        </div>
+
+        <div>
+            <div class="kp-info-label">Jabatan</div>
+            <div class="kp-info-value">{{ $user->employee_jabatan ?: '-' }}</div>
         </div>
     </div>
 
     <div class="kp-help" style="margin-top: 10px;">
-        Unit kerja dan kategori diubah di tab Overview.
+        Unit kerja, instalasi, dan jabatan diubah di tab Overview.
     </div>
 
     <div class="kp-actions">
