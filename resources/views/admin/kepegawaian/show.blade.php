@@ -143,6 +143,7 @@
                             </option>
                         @endforeach
                     </select>
+                    <div class="kp-help">Menentukan pilihan jadwal logbook. Ubah di sini saat pegawai bertukar jadwal.</div>
                     @error('work_hour_type')
                         <div class="kp-error">{{ $message }}</div>
                     @enderror

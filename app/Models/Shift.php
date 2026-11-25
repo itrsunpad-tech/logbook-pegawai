@@ -16,12 +16,18 @@ class Shift extends Model
 
     public const JENIS_SHIFT_4 = 'Shift 4';
 
+    public const JENIS_SHIFT_5 = 'Shift 5';
+
+    public const JENIS_SHIFT_6 = 'Shift 6';
+
     public const JENIS = [
         self::JENIS_OFFICE_HOUR,
         self::JENIS_SHIFT_1,
         self::JENIS_SHIFT_2,
         self::JENIS_SHIFT_3,
         self::JENIS_SHIFT_4,
+        self::JENIS_SHIFT_5,
+        self::JENIS_SHIFT_6,
     ];
 
     protected $fillable = [

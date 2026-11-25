@@ -115,11 +115,11 @@ class StoreLogbookRequest extends FormRequest
         return WorkSchedule::tipe(is_numeric($id) ? Shift::find($id) : null);
     }
 
-    /** Dinas luar unit Gizi pada masa uji tidak bergantung pada catatan fingerprint/jadwal. */
+    /** Dinas luar pada mode jadwal otomatis tidak bergantung pada catatan fingerprint/jadwal. */
     private function dinasLuarTanpaFingerprint(): bool
     {
         return $this->input('jenis') === 'harian'
-            && WorkSchedule::unitKey($this->user()?->employee_unit) === 'Gizi'
+            && WorkSchedule::autoFingerprint($this->user())
             && $this->boolean('is_dinas_luar')
             && ! $this->filled('shift_id');
     }
@@ -202,13 +202,13 @@ class StoreLogbookRequest extends FormRequest
                 }
             }
 
-            if ($jenis === 'harian') {
-                $unit = $this->user()->employee_unit;
+                        if ($jenis === 'harian') {
+                $pegawai = $this->user();
                 $shift = \App\Models\Shift::find($this->input('shift_id'));
-                $namaShiftDiizinkan = WorkSchedule::shiftNames($unit);
+                $namaShiftDiizinkan = WorkSchedule::shiftNames($pegawai);
 
-                if (trim((string) $unit) === '') {
-                    $validator->errors()->add('shift_id', 'Unit kerja Anda belum diatur. Hubungi admin.');
+                if (WorkSchedule::jenis($pegawai) === null) {
+                    $validator->errors()->add('shift_id', 'Jenis Jam Kerja Anda belum diatur. Hubungi HC.');
                     return;
                 }
 
@@ -217,7 +217,7 @@ class StoreLogbookRequest extends FormRequest
                 $izinSakit = $this->boolean('is_izin_sakit');
 
                 if (! $dinasLuarTanpaFingerprint && ! $cuti && ! $izinSakit && (! $shift || ! in_array($shift->nama, $namaShiftDiizinkan, true))) {
-                    $validator->errors()->add('shift_id', 'Jadwal tersebut tidak tersedia untuk unit Anda.');
+                    $validator->errors()->add('shift_id', 'Jadwal tersebut tidak tersedia untuk Jenis Jam Kerja Anda.');
                     return;
                 }
 

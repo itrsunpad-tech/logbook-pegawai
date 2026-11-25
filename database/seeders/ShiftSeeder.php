@@ -86,6 +86,39 @@ class ShiftSeeder extends Seeder
                 'is_kerja' => true,
                 'urutan' => 9,
             ],
+
+            [
+                'nama' => 'Pagi Rajal',
+                'jenis' => 'Shift 5',
+                'jam_mulai' => '07:00:00',
+                'jam_selesai' => '14:00:00',
+                'is_kerja' => true,
+                'urutan' => 12,
+            ],
+            [
+                'nama' => 'Siang Rajal',
+                'jenis' => 'Shift 5',
+                'jam_mulai' => '13:00:00',
+                'jam_selesai' => '20:00:00',
+                'is_kerja' => true,
+                'urutan' => 13,
+            ],
+            [
+                'nama' => 'Pagi NA dan Ambulans',
+                'jenis' => 'Shift 6',
+                'jam_mulai' => '07:00:00',
+                'jam_selesai' => '19:00:00',
+                'is_kerja' => true,
+                'urutan' => 14,
+            ],
+            [
+                'nama' => 'Malam NA dan Ambulans',
+                'jenis' => 'Shift 6',
+                'jam_mulai' => '19:00:00',
+                'jam_selesai' => '07:00:00',
+                'is_kerja' => true,
+                'urutan' => 15,
+            ],
             // Status Umum
             [
                 'nama' => 'Sakit',

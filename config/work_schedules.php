@@ -1,35 +1,21 @@
 <?php
 
 return [
-    // Unit => nama shift yang boleh dipilih pada form logbook harian.
-    'units' => [
-        'Reguler' => [
-            'oh' => ['OH Reguler'],
-            'shift' => ['Pagi Reguler', 'Siang Reguler', 'Malam Reguler', 'Middle'],
-        ],
-        'IT' => [
-            'oh' => ['OH Reguler'],
-            'shift' => [],
-        ],
-        'Gizi' => [
-            'oh' => ['OH Reguler'],
-            'shift' => ['Pagi Gizi & Linen', 'Siang Gizi & Linen', 'Middle'],
-        ],
-        'Lab' => [
-            'oh' => ['OH Reguler'],
-            'shift' => [],
-        ],
-        'Linen' => [
-            'oh' => [],
-            'shift' => ['Pagi Gizi & Linen', 'Siang Gizi & Linen', 'Middle'],
-        ],
-        'Hemodialisa' => [
-            'oh' => [],
-            'shift' => ['Pagi Hemodialisa', 'Siang Hemodialisa', 'Middle'],
-        ],
+    // Jenis Jam Kerja (kolom users.work_hour_type) => jadwal yang boleh dipakai pegawai.
+    // Nama jadwal harus persis sama dengan kolom `nama` di tabel shifts.
+    'jenis_jam_kerja' => [
+        'Office Hour' => ['OH Reguler'],
+        'Shift Reguler' => ['Pagi Reguler', 'Siang Reguler', 'Malam Reguler'],
+        'Shift Rajal' => ['Pagi Rajal', 'Siang Rajal'],
+        'Shift Gizi & Linen' => ['Pagi Gizi & Linen', 'Siang Gizi & Linen'],
+        'Shift Hemodialisa' => ['Pagi Hemodialisa', 'Siang Hemodialisa'],
+        'NA dan Ambulans' => ['Pagi NA dan Ambulans', 'Malam NA dan Ambulans'],
+        'Middle' => ['Middle'],
     ],
 
-    // Unit lama/tidak dikenal hanya mendapat pilihan status umum.
-    'default' => ['Sakit', 'Izin'],
+    // Tap masuk sampai sekian menit SEBELUM jam mulai shift tetap dihitung shift tersebut.
+    'toleransi_menit' => 60,
+
+    // Status umum yang selalu tersedia.
     'common' => ['Sakit', 'Izin'],
 ];

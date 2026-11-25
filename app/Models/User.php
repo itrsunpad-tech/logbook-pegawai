@@ -203,8 +203,16 @@ class User extends Authenticatable
         'Terapis',
     ];
 
-    /** Pilihan jenis jam kerja pegawai (kolom work_hour_type). */
-    public const JENIS_JAM_KERJA = ['Office Hour', 'Shift'];
+        /** Pilihan jenis jam kerja pegawai (kolom work_hour_type). Kuncinya sama dengan config/work_schedules.php. */
+    public const JENIS_JAM_KERJA = [
+        'Office Hour',
+        'Shift Reguler',
+        'Shift Rajal',
+        'Shift Gizi & Linen',
+        'Shift Hemodialisa',
+        'NA dan Ambulans',
+        'Middle',
+    ];
 
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;

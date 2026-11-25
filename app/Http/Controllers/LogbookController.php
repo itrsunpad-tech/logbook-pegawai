@@ -48,21 +48,22 @@ class LogbookController extends Controller
             ->latest('id')
             ->get();
 
-        $unit = Auth::user()->employee_unit;
-        $unitKey = WorkSchedule::unitKey($unit);
-        $namaShiftDiizinkan = WorkSchedule::shiftNames($unit);
+        $pegawai = Auth::user();
+        $autoFingerprint = WorkSchedule::autoFingerprint($pegawai);
+        $namaShiftDiizinkan = WorkSchedule::shiftNames($pegawai);
         $shifts = Shift::query()
             ->whereIn('nama', $namaShiftDiizinkan)
             ->get()
             ->sortBy(fn (Shift $shift) => array_search($shift->nama, $namaShiftDiizinkan, true))
             ->values();
-        $grupShift = WorkSchedule::groups($unit);
+        $grupShift = WorkSchedule::groups($pegawai);
         $opsiShift = [
             'Office hour' => $shifts->whereIn('nama', $grupShift['oh']),
             'Shift' => $shifts->whereIn('nama', $grupShift['shift']),
+            'Middle' => $shifts->whereIn('nama', $grupShift['middle']),
             'Status' => $shifts->whereIn('nama', config('work_schedules.common', [])),
         ];
-        $namaDefaultShift = WorkSchedule::defaultShiftName($unit);
+        $namaDefaultShift = WorkSchedule::defaultShiftName($pegawai);
         $shiftDefaultId = $namaDefaultShift
             ? $shifts->firstWhere('nama', $namaDefaultShift)?->id
             : null;
@@ -108,7 +109,7 @@ class LogbookController extends Controller
             'logbooks',
             'shifts',
             'opsiShift',
-            'unitKey',
+            'autoFingerprint',
             'shiftDefaultId',
             'batas',
             'dibuka',
@@ -126,7 +127,7 @@ class LogbookController extends Controller
     }
 
     /**
-     * Cocokkan jadwal unit Gizi dari tap masuk pertama pada rentang kerja hari itu.
+     * Cocokkan jadwal pegawai dari tap masuk pertama pada tanggal yang dipilih.
      * Hanya membaca log milik akun yang sedang login.
      */
     public function jadwalFingerprint(Request $request): JsonResponse
@@ -136,12 +137,6 @@ class LogbookController extends Controller
         ]);
 
         $user = $request->user();
-        if (WorkSchedule::unitKey($user->employee_unit) !== 'Gizi') {
-            return response()->json([
-                'status' => 'unit_not_supported',
-                'message' => 'Saran otomatis sidik jari saat ini disiapkan untuk unit Gizi.',
-            ]);
-        }
 
         if (! $user->fingerprint_id) {
             return response()->json([
@@ -150,10 +145,17 @@ class LogbookController extends Controller
             ]);
         }
 
+        if (! WorkSchedule::autoFingerprint($user)) {
+            return response()->json([
+                'status' => 'unit_not_supported',
+                'message' => 'Jadwal otomatis dari fingerprint belum tersedia untuk jadwal Anda. Pilih jadwal secara manual.',
+            ]);
+        }
+
         $zona = FingerprintLog::TZ_TAMPIL;
         $tanggal = $data['tanggal'] ?? Carbon::now($zona)->toDateString();
-        $waktuSekarang = Carbon::now($zona);
-        $hariIni = $waktuSekarang->toDateString();
+        $hariIni = Carbon::now($zona)->toDateString();
+
         if ($tanggal > $hariIni) {
             return response()->json([
                 'status' => 'future_date',
@@ -161,28 +163,27 @@ class LogbookController extends Controller
             ]);
         }
 
+        // Satu hari penuh, supaya shift pagi (mis. 05.00) dan malam (21.00) ikut terbaca.
         $mulaiHari = Carbon::createFromFormat('Y-m-d', $tanggal, $zona)->startOfDay();
-        $awalRentangKerja = $mulaiHari->copy()->setTime(8, 0)->utc();
-        $akhirRentangKerja = $mulaiHari->copy()->setTime(20, 0)->utc();
+        $awalRentang = $mulaiHari->copy()->utc();
+        $akhirRentang = $mulaiHari->copy()->addDay()->utc();
 
         $fingerprint = FingerprintLog::query()
             ->where('fingerprint_id', $user->fingerprint_id)
             ->where('punch_state', 0)
-            ->where('punched_at', '>=', $awalRentangKerja)
-            ->where('punched_at', '<', $akhirRentangKerja)
+            ->where('punched_at', '>=', $awalRentang)
+            ->where('punched_at', '<', $akhirRentang)
             ->orderBy('punched_at')
             ->orderBy('id')
             ->first();
 
         if (! $fingerprint) {
-            $tanggalLabel = Carbon::createFromFormat('Y-m-d', $tanggal, $zona)
-                ->locale('id')
-                ->translatedFormat('d F Y');
+            $tanggalLabel = $mulaiHari->copy()->locale('id')->translatedFormat('d F Y');
             $fingerprintKeluar = FingerprintLog::query()
                 ->where('fingerprint_id', $user->fingerprint_id)
                 ->where('punch_state', 1)
-                ->where('punched_at', '>=', $awalRentangKerja)
-                ->where('punched_at', '<', $akhirRentangKerja)
+                ->where('punched_at', '>=', $awalRentang)
+                ->where('punched_at', '<', $akhirRentang)
                 ->orderByDesc('punched_at')
                 ->orderByDesc('id')
                 ->first();
@@ -192,7 +193,7 @@ class LogbookController extends Controller
                 $pesanCheckOut = 'Tap Check Out pukul ' . $waktuKeluar->format('H:i')
                     . ' WIB tercatat, tetapi jadwal hanya dicocokkan dari Check In.';
 
-                if ($tanggal === $hariIni && $waktuSekarang->lt($mulaiHari->copy()->setTime(20, 0))) {
+                if ($tanggal === $hariIni) {
                     return response()->json([
                         'status' => 'waiting',
                         'check_out_found' => true,
@@ -208,35 +209,26 @@ class LogbookController extends Controller
                 ]);
             }
 
-            if ($tanggal < $hariIni || $waktuSekarang->greaterThanOrEqualTo($mulaiHari->copy()->setTime(20, 0))) {
+            if ($tanggal < $hariIni) {
                 return response()->json([
                     'status' => 'no_fingerprint',
-                    'message' => 'Tidak ditemukan fingerprint masuk untuk tanggal ' . $tanggalLabel . ' pada rentang pukul 08.00–19.59 WIB.',
+                    'message' => 'Tidak ditemukan fingerprint masuk untuk tanggal ' . $tanggalLabel . '.',
                 ]);
             }
 
             return response()->json([
                 'status' => 'waiting',
-                'message' => 'Menunggu fingerprint tanggal ' . $tanggalLabel . ' pada pukul 08.00–19.59 WIB.',
+                'message' => 'Menunggu fingerprint tanggal ' . $tanggalLabel . '.',
             ]);
         }
 
         $waktuTap = $fingerprint->punched_at->copy()->setTimezone($zona);
-        // Jam OH dan shift siang tumpang tindih (13.00-16.00); waktu mulai
-        // shift siang dipakai sebagai batas agar tap masuk mulai pukul 13.00
-        // diklasifikasikan sebagai shift siang.
-        $namaShift = $waktuTap->format('H:i:s') < '13:00:00'
-            ? 'OH Reguler'
-            : 'Siang Gizi & Linen';
-        $shift = Shift::query()
-            ->whereIn('nama', WorkSchedule::shiftNames($user->employee_unit))
-            ->where('nama', $namaShift)
-            ->first();
+        $shift = WorkSchedule::cocokkanDariTap($user, $waktuTap);
 
         if (! $shift) {
             return response()->json([
                 'status' => 'schedule_unavailable',
-                'message' => 'Jadwal Gizi belum tersedia di database. Admin perlu memuat jadwal terlebih dahulu.',
+                'message' => 'Jadwal untuk instalasi Anda belum tersedia di database. Hubungi admin.',
                 'waktu_fingerprint' => $waktuTap->format('H:i'),
             ]);
         }
@@ -356,7 +348,7 @@ class LogbookController extends Controller
                     : null;
                 $tipeShift = WorkSchedule::tipe($shift);
                 $dinasLuarTanpaFingerprint = $harian
-                    && WorkSchedule::unitKey($request->user()->employee_unit) === 'Gizi'
+                    && WorkSchedule::autoFingerprint($request->user())
                     && $request->boolean('is_dinas_luar')
                     && empty($data['shift_id']);
                 $dinasLuar = $request->boolean('is_dinas_luar')

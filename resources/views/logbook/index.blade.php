@@ -610,16 +610,16 @@
             </div>
 
             <div class="lb-field">
-                <label class="lb-label" id="harian-shift-label" for="{{ $unitKey === 'Gizi' && $shifts->isNotEmpty() ? 'harian-shift-display' : 'harian-shift-select' }}">Shift / Jadwal <span class="lb-required">*</span></label>
-                @if ($unitKey === 'Gizi' && $shifts->isNotEmpty())
+                <label class="lb-label" id="harian-shift-label" for="{{ $autoFingerprint && $shifts->isNotEmpty() ? 'harian-shift-display' : 'harian-shift-select' }}">Shift / Jadwal <span class="lb-required">*</span></label>
+                @if ($autoFingerprint && $shifts->isNotEmpty())
                     <input type="text" id="harian-shift-display" class="lb-select" readonly
                            placeholder="Menunggu fingerprint" aria-describedby="harian-shift-help" aria-required="true">
                 @endif
                 <input type="text" id="harian-izin-sakit-display" class="lb-select" value="Izin/Sakit" readonly aria-labelledby="harian-shift-label" style="display:none">
                 <input type="text" id="harian-cuti-shift-display" class="lb-select" value="Cuti" readonly aria-labelledby="harian-shift-label" style="display:none">
-                <select name="shift_id" @required($unitKey !== 'Gizi') class="lb-select {{ $unitKey === 'Gizi' && $shifts->isNotEmpty() ? 'lb-select--auto-hidden' : '' }}"
-                        id="harian-shift-select" data-auto-fingerprint="{{ $unitKey === 'Gizi' ? 'true' : 'false' }}"
-                        @if ($unitKey === 'Gizi' && $shifts->isNotEmpty()) aria-hidden="true" tabindex="-1" @endif
+                <select name="shift_id" @required(! $autoFingerprint) class="lb-select {{ $autoFingerprint && $shifts->isNotEmpty() ? 'lb-select--auto-hidden' : '' }}"
+                        id="harian-shift-select" data-auto-fingerprint="{{ $autoFingerprint ? 'true' : 'false' }}"
+                        @if ($autoFingerprint && $shifts->isNotEmpty()) aria-hidden="true" tabindex="-1" @endif
                         @disabled($shifts->isEmpty())>
                     @if (! $shiftDefaultId)
                         <option value="">-- Pilih Shift --</option>
@@ -645,12 +645,12 @@
                 @enderror
                 @if ($shifts->isEmpty())
                     <div class="lb-alert" role="status">
-                        {{ $unitKey === 'Gizi' ? 'Jadwal untuk unit Gizi belum tersedia di database. Hubungi admin.' : 'Unit kerja belum diatur atau belum memiliki jadwal. Hubungi admin.' }}
+                        Instalasi belum diatur atau belum memiliki jadwal. Hubungi admin.
                     </div>
-                @elseif ($unitKey === 'Gizi')
+                @elseif ($autoFingerprint)
                     <div class="lb-shift-help" id="harian-shift-help" role="status">Tanggal bisa dipilih manual atau terisi otomatis saat fingerprint terdeteksi.</div>
                 @else
-                    <div class="lb-shift-help" id="harian-shift-help">Pilihan jadwal disesuaikan dengan unit kerja.</div>
+                    <div class="lb-shift-help" id="harian-shift-help">Pilihan jadwal disesuaikan dengan jenis jam kerja Anda.</div>
                 @endif
             </div>
 
