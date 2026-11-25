@@ -47,23 +47,8 @@
             <i class="fa-solid fa-phone"></i> Kontak
         </a>
 
-        <a href="{{ route('admin.kepegawaian.show', ['user' => $user, 'tab' => 'data-pribadi']) }}"
-           class="kp-dtab {{ $tab === 'data-pribadi' ? 'is-active' : '' }}">
-            <i class="fa-solid fa-id-card"></i> Data Pribadi
-        </a>
-
-        <a href="{{ route('admin.kepegawaian.show', ['user' => $user, 'tab' => 'pekerjaan']) }}"
-           class="kp-dtab {{ $tab === 'pekerjaan' ? 'is-active' : '' }}">
-            <i class="fa-solid fa-briefcase"></i> Pekerjaan
-        </a>
-
-        <a href="{{ route('admin.kepegawaian.show', ['user' => $user, 'tab' => 'perbankan']) }}"
-           class="kp-dtab {{ $tab === 'perbankan' ? 'is-active' : '' }}">
-            <i class="fa-solid fa-building-columns"></i> Perbankan
-        </a>
-
         {{-- Tab yang akan dibuat di tahap berikutnya --}}
-        @foreach (['Berkas', 'Payroll (Gaji)', 'Sistem'] as $nama)
+        @foreach (['Payroll (Gaji)', 'Sistem'] as $nama)
             <span class="kp-dtab is-off" title="Segera hadir">{{ $nama }}</span>
         @endforeach
     </div>
@@ -210,15 +195,6 @@
                 <button type="submit" class="kp-btn">Simpan</button>
             </div>
         </form>
-
-        @elseif ($tab === 'data-pribadi')
-        @include('admin.kepegawaian.tabs.data-pribadi')
-
-    @elseif ($tab === 'pekerjaan')
-        @include('admin.kepegawaian.tabs.pekerjaan')
-
-    @elseif ($tab === 'perbankan')
-        @include('admin.kepegawaian.tabs.perbankan')
 
     @endif
 

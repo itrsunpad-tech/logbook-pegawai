@@ -28,12 +28,34 @@
     .lb-monitor-table th:first-child { border-left:1px solid #e6edf6; border-radius:9px 0 0 0; }
     .lb-monitor-table th:last-child { border-right:1px solid #e6edf6; border-radius:0 9px 0 0; }
     .lb-monitor-table td { padding:12px; border-bottom:1px solid #e9eef5; color:#34445c; text-align:left; white-space:nowrap; }
-    .lb-monitor-table tbody tr:nth-child(even) { background:#fafbfd; }
-    .lb-monitor-table tbody tr:hover { background:#f5f8fc; }
+    .lb-monitor-table tbody tr { background:#fff; transition:background .15s ease; }
+    .lb-monitor-table tbody tr:hover { background:#f8faff; }
     .lb-monitor-status { color:#34445c; font-weight:600; }
-    .lb-monitor-status[data-status="Terlambat"] { color:#8a5a16; }
-    .lb-monitor-status[data-status="Tepat waktu"] { color:#315f91; }
-    .lb-monitor-status[data-status="Tidak tercatat"] { color:#64748b; }
+    .lb-monitor-status span { display:inline-flex; align-items:center; min-height:24px; padding:3px 11px; border-radius:999px; background:#eef2f7; color:#52647e; font-size:12px; font-weight:600; line-height:1.2; }
+    .lb-monitor-status[data-status="Terlambat"] span { background:#fee2e2; color:#b91c1c; }
+    .lb-monitor-status[data-status="Tepat waktu"] span { background:#e2f3e9; color:#137344; }
+    .lb-monitor-status[data-status="Tidak tercatat"] span { background:#e9edf3; color:#52647e; }
+    .lb-monitor-kpis { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:0 0 14px; }
+    .lb-monitor-kpi { min-width:0; padding:16px; border:1px solid #edf1f7; border-radius:18px; background:#fff; box-shadow:0 5px 16px rgba(27,55,92,.06); }
+    .lb-monitor-kpi-head { display:flex; align-items:center; gap:10px; margin-bottom:14px; color:#273449; font-size:14px; font-weight:800; }
+    .lb-monitor-kpi-head > i { width:25px; text-align:center; font-size:19px; color:#3478f6; }
+    .lb-monitor-kpi--overtime .lb-monitor-kpi-head > i { color:#f59e0b; }
+    .lb-monitor-kpi--oncall .lb-monitor-kpi-head > i { color:#8b4dff; }
+    .lb-monitor-kpi--late .lb-monitor-kpi-head > i { color:#ef4444; }
+    .lb-monitor-kpi-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+    .lb-monitor-kpi-stat { min-width:0; padding:10px 12px; border:1px solid #e1e9f4; border-radius:14px; }
+    .lb-monitor-kpi-stat-label { display:flex; align-items:center; gap:6px; color:#64748b; font-size:11px; font-weight:700; }
+    .lb-monitor-kpi-stat-label i { color:#16a765; }
+    .lb-monitor-kpi-stat-label.is-approved { color:#16834d; }
+    .lb-monitor-kpi-stat-label.is-approved i { color:#16a765; }
+    .lb-monitor-kpi-stat-value { display:block; margin-top:5px; color:#202c40; font-size:24px; line-height:1; font-weight:800; }
+    .lb-monitor-kpi-stat-value small { color:#94a3b8; font-size:11px; font-weight:600; }
+    .lb-monitor-kpi-stat-hours { display:flex; align-items:center; gap:6px; margin-top:8px; padding-top:7px; border-top:1px solid #e6edf5; color:#45556d; font-size:11px; font-weight:700; white-space:nowrap; }
+    .lb-monitor-kpi-stat-hours i { color:#94a3b8; }
+    .lb-monitor-kpi--late .lb-monitor-kpi-stat { min-height:96px; display:flex; flex-direction:column; justify-content:center; }
+    .lb-monitor-kpi--late .lb-monitor-kpi-stat-value { font-size:32px; }
+    .lb-monitor-input-data { display:none; }
+    @media(max-width:700px) { .lb-monitor-kpis { grid-template-columns:1fr; gap:9px; } }
     .lb-monitor-pagination { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px; }
     .lb-monitor-pages { display:flex; gap:4px; }
     .lb-monitor-range { color:var(--muted); font-size:11px; font-weight:600; }
@@ -889,8 +911,40 @@
         </form>
 
         </div>
-        <div id="logbook-monitoring-view" class="lb-card" hidden>
-            <h2 class="lb-card-title"><i class="fa-solid fa-fingerprint"></i> Monitoring Harian Absensi</h2>
+        <div id="logbook-monitoring-view" hidden>
+            <div class="lb-monitor-kpis">
+                <div class="lb-monitor-kpi lb-monitor-kpi--work">
+                    <div class="lb-monitor-kpi-head"><i class="fa-regular fa-clock"></i> Total Hari / Jam Kerja</div>
+                    <div class="lb-monitor-kpi-pair">
+                        <div class="lb-monitor-kpi-stat"><span class="lb-monitor-kpi-stat-label">Diisi</span><strong class="lb-monitor-kpi-stat-value"><span id="monitor-harian-diisi">0</span> <small>hari</small></strong><span class="lb-monitor-kpi-stat-hours"><i class="fa-regular fa-clock"></i><span id="monitor-kerja-diisi">0 Jam</span></span></div>
+                        <div class="lb-monitor-kpi-stat"><span class="lb-monitor-kpi-stat-label is-approved"><i class="fa-regular fa-circle-check"></i> Approved</span><strong class="lb-monitor-kpi-stat-value"><span id="monitor-harian-approved">0</span> <small>hari</small></strong><span class="lb-monitor-kpi-stat-hours"><i class="fa-regular fa-clock"></i><span id="monitor-kerja-approved">0 Jam</span></span></div>
+                    </div>
+                </div>
+                <div class="lb-monitor-kpi lb-monitor-kpi--overtime">
+                    <div class="lb-monitor-kpi-head"><i class="fa-solid fa-business-time"></i> Lembur</div>
+                    <div class="lb-monitor-kpi-pair">
+                        <div class="lb-monitor-kpi-stat"><span class="lb-monitor-kpi-stat-label">Diisi</span><strong class="lb-monitor-kpi-stat-value"><span id="monitor-lembur-diisi">0</span> <small>hari</small></strong><span class="lb-monitor-kpi-stat-hours"><i class="fa-regular fa-clock"></i><span id="monitor-lembur-jam-diisi">0:00 jam</span></span></div>
+                        <div class="lb-monitor-kpi-stat"><span class="lb-monitor-kpi-stat-label is-approved"><i class="fa-regular fa-circle-check"></i> Approved</span><strong class="lb-monitor-kpi-stat-value"><span id="monitor-lembur-approved">0</span> <small>hari</small></strong><span class="lb-monitor-kpi-stat-hours"><i class="fa-regular fa-clock"></i><span id="monitor-lembur-jam-approved">0:00 jam</span></span></div>
+                    </div>
+                </div>
+                <div class="lb-monitor-kpi lb-monitor-kpi--oncall">
+                    <div class="lb-monitor-kpi-head"><i class="fa-solid fa-mobile-screen-button"></i> On Call</div>
+                    <div class="lb-monitor-kpi-pair">
+                        <div class="lb-monitor-kpi-stat"><span class="lb-monitor-kpi-stat-label">Diisi</span><strong class="lb-monitor-kpi-stat-value"><span id="monitor-oncall-diisi">0</span> <small>kali</small></strong><span class="lb-monitor-kpi-stat-hours"><i class="fa-regular fa-clock"></i><span id="monitor-oncall-jam-diisi">0:00 jam</span></span></div>
+                        <div class="lb-monitor-kpi-stat"><span class="lb-monitor-kpi-stat-label is-approved"><i class="fa-regular fa-circle-check"></i> Approved</span><strong class="lb-monitor-kpi-stat-value"><span id="monitor-oncall-approved">0</span> <small>kali</small></strong><span class="lb-monitor-kpi-stat-hours"><i class="fa-regular fa-clock"></i><span id="monitor-oncall-jam-approved">0:00 jam</span></span></div>
+                    </div>
+                </div>
+                <div class="lb-monitor-kpi lb-monitor-kpi--late">
+                    <div class="lb-monitor-kpi-head"><i class="fa-solid fa-triangle-exclamation"></i> Total Keterlambatan</div>
+                    <div class="lb-monitor-kpi-pair"><div class="lb-monitor-kpi-stat"><span class="lb-monitor-kpi-stat-label">Hari terlambat</span><strong class="lb-monitor-kpi-stat-value"><span id="monitor-total-terlambat">0</span> <small>hari</small></strong></div></div>
+                </div>
+            </div>
+            <div class="lb-monitor-input-data" aria-hidden="true">
+                @foreach ($monitoringInput as $input)
+                    <span data-monitor-logbook data-tanggal="{{ $input['tanggal'] }}" data-jenis="{{ $input['jenis'] }}" data-status="{{ $input['status'] }}" data-menit="{{ $input['menit'] }}"></span>
+                @endforeach
+            </div>
+            <div class="lb-card">
             <div class="lb-monitor-filters">
                 <label>Dari tanggal<input type="date" id="monitor-dari" value="{{ $mulaiKalender->format('Y-m-d') }}"></label>
                 <label>Sampai tanggal<input type="date" id="monitor-sampai" value="{{ $akhirKalender->format('Y-m-d') }}"></label>
@@ -899,23 +953,25 @@
             </div>
             <div class="lb-monitor-wrap">
                 <table class="lb-monitor-table">
-                    <thead><tr><th>Tanggal</th><th>Jenis Absensi</th><th>Waktu Check In</th><th>Waktu Check Out</th><th>Status keterlambatan</th></tr></thead>
+                    <thead><tr><th>No.</th><th>Tanggal</th><th>Jenis Absensi</th><th>Waktu Check In</th><th>Waktu Check Out</th><th>Status keterlambatan</th></tr></thead>
                     <tbody>
                     @forelse ($monitoringAbsensi as $absensi)
-                        <tr data-absensi-row data-tanggal="{{ $absensi['tanggal'] }}" data-status="{{ $absensi['status'] }}">
+                        <tr data-absensi-row data-tanggal="{{ $absensi['tanggal'] }}" data-status="{{ $absensi['status'] }}" data-kerja-menit="{{ $absensi['kerja_menit'] }}" data-lembur-menit="{{ $absensi['lembur_menit'] }}">
+                            <td data-row-number></td>
                             <td>{{ \Carbon\Carbon::parse($absensi['tanggal'])->locale('id')->translatedFormat('d F Y') }}</td>
                             <td>{{ $absensi['metode'] }}</td>
                             <td>{{ $absensi['check_in'] ?? '—' }}</td>
                             <td>{{ $absensi['check_out'] ?? '—' }}</td>
-                            <td class="lb-monitor-status" data-status="{{ $absensi['status'] }}">{{ $absensi['status'] }}</td>
+                            <td class="lb-monitor-status" data-status="{{ $absensi['status'] }}"><span>{{ $absensi['status'] }}</span></td>
                         </tr>
                     @empty
-                        <tr><td colspan="5">Belum ada data fingerprint pada rentang ini.</td></tr>
+                        <tr><td colspan="6">Belum ada data fingerprint pada rentang ini.</td></tr>
                     @endforelse
                     </tbody>
                 </table>
             </div>
             <div class="lb-monitor-pagination"><span id="monitor-range-label" class="lb-monitor-range"></span><div class="lb-monitor-pages"><button type="button" id="monitor-prev" aria-label="Halaman sebelumnya">‹</button><span id="monitor-page-numbers" class="lb-monitor-pages"></span><button type="button" id="monitor-next" aria-label="Halaman berikutnya">›</button></div></div>
+            </div>
         </div>
     </section>
 
@@ -2109,10 +2165,42 @@ document.addEventListener('DOMContentLoaded', () => {
         const filtered = rows.filter((row) => (!dari || row.dataset.tanggal >= dari)
                 && (!sampai || row.dataset.tanggal <= sampai)
                 && (!status || row.dataset.status === status));
+        const totalTerlambat = filtered.filter((row) => row.dataset.status === 'Terlambat').length;
+        const totalKerjaMenit = filtered.reduce((total, row) => total + (Number(row.dataset.kerjaMenit) || 0), 0);
+        const logbookInputs = [...document.querySelectorAll('[data-monitor-logbook]')]
+            .filter((item) => (!dari || item.dataset.tanggal >= dari) && (!sampai || item.dataset.tanggal <= sampai));
+        const byType = (jenis) => logbookInputs.filter((item) => item.dataset.jenis === jenis);
+        const minutesFor = (items) => items.reduce((total, item) => total + (Number(item.dataset.menit) || 0), 0);
+        const countUniqueDates = (items) => new Set(items.map((item) => item.dataset.tanggal)).size;
+        const formatDuration = (minutes) => `${Math.floor(minutes / 60)} jam ${String(minutes % 60).padStart(2, '0')} menit`;
+        const harian = byType('harian');
+        const harianApprovedDates = new Set(harian.filter((item) => item.dataset.status === 'Disetujui').map((item) => item.dataset.tanggal));
+        const approvedKerjaMenit = filtered.reduce((total, row) => total + (harianApprovedDates.has(row.dataset.tanggal) ? (Number(row.dataset.kerjaMenit) || 0) : 0), 0);
+        const lembur = byType('lembur');
+        const lemburApproved = lembur.filter((item) => item.dataset.status === 'Disetujui');
+        const oncall = byType('oncall');
+        const oncallApproved = oncall.filter((item) => item.dataset.status === 'Disetujui');
+        qs('#monitor-harian-diisi').textContent = countUniqueDates(harian);
+        qs('#monitor-harian-approved').textContent = countUniqueDates(harian.filter((item) => item.dataset.status === 'Disetujui'));
+        qs('#monitor-kerja-diisi').textContent = formatDuration(totalKerjaMenit);
+        qs('#monitor-kerja-approved').textContent = formatDuration(approvedKerjaMenit);
+        qs('#monitor-lembur-diisi').textContent = countUniqueDates(lembur);
+        qs('#monitor-lembur-approved').textContent = countUniqueDates(lemburApproved);
+        qs('#monitor-lembur-jam-diisi').textContent = formatDuration(minutesFor(lembur));
+        qs('#monitor-lembur-jam-approved').textContent = formatDuration(minutesFor(lemburApproved));
+        qs('#monitor-oncall-diisi').textContent = oncall.length;
+        qs('#monitor-oncall-approved').textContent = oncallApproved.length;
+        qs('#monitor-oncall-jam-diisi').textContent = formatDuration(minutesFor(oncall));
+        qs('#monitor-oncall-jam-approved').textContent = formatDuration(minutesFor(oncallApproved));
+        qs('#monitor-total-terlambat').textContent = totalTerlambat;
         const pages = Math.max(1, Math.ceil(filtered.length / 10));
         window.monitorPage = Math.min(window.monitorPage || 1, pages);
         rows.forEach((row) => { row.hidden = true; });
-        filtered.slice((window.monitorPage - 1) * 10, window.monitorPage * 10).forEach((row) => { row.hidden = false; });
+        filtered.slice((window.monitorPage - 1) * 10, window.monitorPage * 10).forEach((row, index) => {
+            row.hidden = false;
+            const numberCell = qs('[data-row-number]', row);
+            if (numberCell) numberCell.textContent = String((window.monitorPage - 1) * 10 + index + 1);
+        });
         const summary = qs('#monitor-summary');
         if (summary) summary.textContent = `${filtered.length} hari ditemukan`;
         const awalBaris = filtered.length ? (window.monitorPage - 1) * 10 + 1 : 0;

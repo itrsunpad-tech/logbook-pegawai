@@ -23,32 +23,43 @@ class LogbookController extends Controller
         $filter = $this->validasiFilter($request);
         $status = $filter['status'] ?? Logbook::STATUS_MENUNGGU;
         $kata   = $filter['q'] ?? null;
+        $instalasi = $filter['instalasi'] ?? null;
 
-        // Syarat logbook yang dihitung (status, jenis, tanggal)
-        $batasi = fn ($query) => $this->terapkanFilter($query, $filter, $status);
+        // Jenis dan tanggal dipilih saat review dimulai; daftar hanya disaring menurut status, nama, instalasi.
+        $filterDaftar = ['jenis' => null, 'dari' => null, 'sampai' => null];
+        $batasi = fn ($query) => $this->terapkanFilter($query, $filterDaftar, $status);
 
         $pegawai = User::query()
             ->whereHas('logbooks', $batasi)
             ->withCount(['logbooks as total_entri' => $batasi])
             ->when($kata, fn ($q) => $q->where('name', 'like', "%{$kata}%"))
+            ->when($instalasi, fn ($q) => $q->where('employee_instalasi', $instalasi))
             ->orderBy('name')
-            ->simplePaginate(20)
+            ->paginate(10)
             ->withQueryString();
 
         // Total entri untuk teks ringkasan di atas daftar
-        $totalEntri = $this->terapkanFilter(Logbook::query(), $filter, $status)
+        $totalEntri = $this->terapkanFilter(Logbook::query(), $filterDaftar, $status)
             ->when($kata, fn ($q) => $q->whereHas(
                 'user',
                 fn ($u) => $u->where('name', 'like', "%{$kata}%")
             ))
+            ->whereHas('user', fn ($u) => $u->when($instalasi, fn ($uq) => $uq->where('employee_instalasi', $instalasi)))
             ->count();
+
+        $instalasiList = collect(User::INSTALASI)
+            ->merge(User::query()->whereNotNull('employee_instalasi')->distinct()->pluck('employee_instalasi'))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
 
         // Jumlah per status untuk angka di tab: ['Menunggu' => 5, 'Disetujui' => 20, ...]
         $jumlah = Logbook::selectRaw('status, COUNT(*) AS total')
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        return view('admin.logbook.index', compact('pegawai', 'status', 'jumlah', 'totalEntri'));
+        return view('admin.logbook.index', compact('pegawai', 'status', 'jumlah', 'totalEntri', 'instalasiList', 'instalasi'));
     }
 
     /**
@@ -66,7 +77,7 @@ class LogbookController extends Controller
         )
             ->orderBy('tanggal')   // dari yang paling lama, biar review urut
             ->orderBy('id')
-            ->simplePaginate(30)
+            ->paginate(10)
             ->withQueryString();
 
         $riwayatStatus = Logbook::query()
@@ -100,12 +111,56 @@ class LogbookController extends Controller
         );
     }
 
+    public function setujuiTerpilih(Request $request, User $user): RedirectResponse
+    {
+        $data = $request->validate(['logbook_ids' => ['required', 'array', 'min:1'], 'logbook_ids.*' => ['integer', 'distinct', 'exists:logbooks,id']]);
+        $items = Logbook::query()->where('user_id', $user->id)->whereIn('id', $data['logbook_ids'])
+            ->where('status', Logbook::STATUS_MENUNGGU)->get();
+
+        foreach ($items as $item) {
+            if (in_array($item->status_banding, [Logbook::BANDING_DISETUJUI, Logbook::BANDING_DITOLAK], true)) continue;
+            $item->status = Logbook::STATUS_DISETUJUI;
+            if ($item->status_banding === Logbook::BANDING_MENUNGGU) $item->status_banding = Logbook::BANDING_DISETUJUI;
+            $item->keterangan_hc = null;
+            $item->save();
+            $user->notify(new LogbookStatusChanged($item, Logbook::STATUS_DISETUJUI));
+        }
+
+        return back()->with('success', $items->count() . ' logbook terpilih disetujui.');
+    }
+
+    public function tolakTerpilih(Request $request, User $user): RedirectResponse
+    {
+        $request->validate([
+            'logbook_ids' => ['required', 'array', 'min:1'],
+            'logbook_ids.*' => ['integer', 'distinct', 'exists:logbooks,id'],
+        ]);
+        $items = Logbook::query()->where('user_id', $user->id)->whereIn('id', $request->input('logbook_ids'))
+            ->where('status', Logbook::STATUS_MENUNGGU)->get();
+        $adaNonCuti = $items->contains(fn (Logbook $item) => !$item->is_cuti);
+        $data = $request->validate([
+            'keterangan_hc' => [$adaNonCuti ? 'required' : 'nullable', 'string', 'max:500'],
+        ], [
+            'keterangan_hc.required' => 'Alasan penolakan wajib diisi untuk logbook selain cuti.',
+        ]);
+        foreach ($items as $item) {
+            if (in_array($item->status_banding, [Logbook::BANDING_DISETUJUI, Logbook::BANDING_DITOLAK], true)) continue;
+            $item->status = Logbook::STATUS_DITOLAK;
+            $item->keterangan_hc = $data['keterangan_hc'] ?? null;
+            if ($item->is_cuti) $item->harian_unik = null;
+            if ($item->status_banding === Logbook::BANDING_MENUNGGU) $item->status_banding = Logbook::BANDING_DITOLAK;
+            $item->save();
+            $user->notify(new LogbookStatusChanged($item, Logbook::STATUS_DITOLAK));
+        }
+        return back()->with('success', $items->count() . ' logbook terpilih ditolak.');
+    }
+
     public function tolak(Request $request, Logbook $logbook): RedirectResponse
     {
         abort_if(in_array($logbook->status_banding, [Logbook::BANDING_DISETUJUI, Logbook::BANDING_DITOLAK], true), 403);
 
         $data = $request->validate([
-            'keterangan_hc' => ['required', 'string', 'max:500'],
+            'keterangan_hc' => [$logbook->is_cuti ? 'nullable' : 'required', 'string', 'max:500'],
         ], [
             'keterangan_hc.required' => 'Alasan penolakan wajib diisi.',
             'keterangan_hc.max'      => 'Alasan penolakan maksimal 500 karakter.',
@@ -120,7 +175,7 @@ class LogbookController extends Controller
         if ($logbook->status_banding === Logbook::BANDING_MENUNGGU) {
             $logbook->status_banding = Logbook::BANDING_DITOLAK;
         }
-        $logbook->keterangan_hc = $data['keterangan_hc'];
+        $logbook->keterangan_hc = $data['keterangan_hc'] ?? null;
         $logbook->save();
 
         if ($statusSebelumnya !== Logbook::STATUS_DITOLAK) {
@@ -144,6 +199,7 @@ class LogbookController extends Controller
             'dari'   => ['nullable', 'date'],
             'sampai' => ['nullable', 'date', 'after_or_equal:dari'],
             'q'      => ['nullable', 'string', 'max:100'],
+            'instalasi' => ['nullable', 'string', 'max:150'],
         ]);
     }
 

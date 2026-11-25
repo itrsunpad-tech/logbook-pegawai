@@ -37,11 +37,14 @@
         /* Kartu */
         .card {
             width: 100%;
-            max-width: 320px;
+            max-width: 780px;
+            min-height: min(460px, calc(100vh - 48px));
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             overflow: hidden;
             background: #fff;
             border: 1px solid #d7e1ef;
-            border-radius: 16px;
+            border-radius: 24px;
             box-shadow: 0 12px 32px rgba(24, 49, 83, 0.12), 0 2px 5px rgba(24, 49, 83, 0.05);
             animation: rise 0.6s ease-out both;
         }
@@ -51,24 +54,61 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 32px 24px 0;
-            text-align: center;
+            align-items: flex-start;
+            min-height: 100%;
+            padding: 24px 30px 28px;
+            text-align: left;
             color: #fff;
+            /* [BARU] potong pendar yang bergerak & jadikan konteks tumpukan sendiri */
+            overflow: hidden;
+            isolation: isolate;
             background:
                 radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.28), transparent 50%),
                 radial-gradient(circle at 0% 100%, rgba(56, 189, 248, 0.45), transparent 60%),
                 linear-gradient(160deg, #1e3a8a 0%, #1d4ed8 35%, #2563eb 65%, #38bdf8 100%);
         }
 
+        /* [BARU] Pendar gradasi yang bergerak pelan di belakang konten */
+        .card-top::before {
+            content: "";
+            position: absolute;
+            inset: -30%;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 30% 30%, rgba(129, 140, 248, 0.45), transparent 40%),
+                radial-gradient(circle at 70% 75%, rgba(34, 211, 238, 0.40), transparent 42%);
+            animation: drift 22s ease-in-out infinite alternate;
+        }
+
+        /* [BARU] Tanda plus yang melayang pelan ke atas (dekoratif) */
+        .plus {
+            position: absolute;
+            top: 100%;
+            z-index: -1;
+            color: rgba(255, 255, 255, 0.18);
+            font-weight: 800;
+            line-height: 1;
+            pointer-events: none;
+            animation: plusRise 16s linear infinite;
+        }
+
+        .plus.p1 { left: 14%; font-size: 18px; animation-delay: 0s; }
+        .plus.p2 { left: 52%; font-size: 12px; animation-delay: -6s; animation-duration: 19s; }
+        .plus.p3 { left: 80%; font-size: 22px; animation-delay: -11s; animation-duration: 17s; }
+
         /* Wadah logo + riak lembut di sekitarnya */
         .icon-wrap {
             position: relative;
-            width: 52px;
-            height: 52px;
+            width: 40px;
+            height: 40px;
             display: grid;
             place-items: center;
+            flex: 0 0 auto;
         }
+
+        .brand { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:800; }
+        .brand .icon-wrap { border-radius:50%; background:rgba(255,255,255,.22); }
 
         .ripple {
             position: absolute;
@@ -83,8 +123,8 @@
 
         /* Logo UNPAD sebagai siluet putih */
         .card-top .icon {
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             object-fit: contain;
             position: relative;
             filter: brightness(0) invert(1);
@@ -92,25 +132,40 @@
         }
 
         .card-top h1 {
-            margin-top: 14px;
-            font-size: 18px;
-            font-weight: 700;
-            line-height: 1.3;
+            margin-top: 42px;
+            padding-top: 0;
+            font-size: clamp(25px, 2.4vw, 30px);
+            font-weight: 800;
+            line-height: 1.15;
         }
 
         .card-top p {
-            margin-top: 6px;
+            margin-top: 10px;
             color: rgba(255, 255, 255, 0.88);
             font-size: 12.5px;
             line-height: 1.6;
         }
 
+        /* [BARU] Teks panel kiri muncul berurutan */
+        .card-top .brand,
+        .card-top h1,
+        .card-top p {
+            animation: welcomeReveal 0.55s cubic-bezier(.2, .7, .25, 1) both;
+        }
+
+        .card-top .brand { animation-delay: 0.05s; }
+        .card-top h1     { animation-delay: 0.15s; }
+        .card-top p      { animation-delay: 0.27s; }
+
         /* Siluet gedung RS: utuh, berdiri di tepi bawah area biru */
         .sil {
             display: block;
-            width: 76%;
             height: auto;
-            margin-top: 20px;
+            flex: 1 1 auto;
+            align-self: center;
+            width: 94%;
+            max-height: 250px;
+            margin: 18px auto 0;
         }
 
         .sil * {
@@ -144,14 +199,21 @@
         .sil .late { opacity: 0; animation: lateIn 0.8s 1.4s ease forwards; }
 
         /* Bagian bawah putih */
-        .card-body { padding: 22px 26px 24px; }
+        .card-body { position:relative; display:flex; flex-direction:column; justify-content:center; padding:36px 30px 48px; }
+        .card-body > * { animation: welcomeReveal .55s cubic-bezier(.2,.7,.25,1) both; }
+        .card-body > *:nth-child(1) { animation-delay:.12s; }
+        .card-body > *:nth-child(2) { animation-delay:.22s; }
+        .card-body > *:nth-child(3) { animation-delay:.32s; }
+        .card-body > *:nth-child(4) { animation-delay:.42s; }
 
         .card-body h2 {
             color: var(--ink);
-            font-size: 15px;
-            font-weight: 600;
+            font-size: clamp(20px, 2.2vw, 26px);
+            font-weight: 800;
             text-align: center;
         }
+
+        .welcome-subtitle { margin-top:8px; color:#8293aa; font-size:12px; line-height:1.5; text-align:center; }
 
         .alert {
             margin-top: 14px;
@@ -161,25 +223,40 @@
             color: #b91c1c;
             font-size: 13px;
             line-height: 1.55;
+            /* [BARU] bergetar sebentar agar pesan error terlihat */
+            animation: shake 0.4s ease-out both;
         }
 
         .google-button {
             width: 100%;
-            height: 44px;
-            margin-top: 16px;
+            height: 50px;
+            margin-top: 22px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
             border: 1px solid #cbd5e1;
-            border-radius: 8px;
+            border-radius: 14px;
             background: #fff;
             color: var(--ink);
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 800;
             text-decoration: none;
+            /* [BARU] memotong kilau yang menyapu tombol */
+            overflow: hidden;
             transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.2s ease, transform 0.15s ease;
+        }
+
+        /* [BARU] Kilau satu kali setelah reveal selesai */
+        .google-button::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(110deg, transparent 35%, rgba(37, 99, 235, 0.12) 50%, transparent 65%);
+            transform: translateX(-120%);
+            animation: shine 1.2s 1.1s ease-out 1 forwards;
         }
 
         .google-button:hover {
@@ -240,8 +317,13 @@
 
         .google-button.is-loading .spinner { display: inline-block; }
 
+        /* [BARU] Panel kiri ikut merespons saat tombol sedang loading */
+        .card.is-loading .ripple { animation-duration: 1.4s; }
+        .card.is-loading .ripple.r2 { animation-delay: 0.7s; }
+        .card.is-loading .sil .win { animation-duration: 1.6s; }
+
         .note {
-            margin-top: 14px;
+            margin-top: 16px;
             display: flex;
             justify-content: center;
             align-items: flex-start;
@@ -257,6 +339,11 @@
         @keyframes rise {
             from { opacity: 0; transform: translateY(12px); }
             to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes welcomeReveal {
+            from { opacity:0; transform:translateY(8px); }
+            to { opacity:1; transform:translateY(0); }
         }
 
         @keyframes float {
@@ -297,14 +384,50 @@
             to { transform: rotate(360deg); }
         }
 
-        @media (max-width: 420px) {
-            .card-top { padding: 28px 22px 0; }
-            .card-body { padding: 20px 22px 22px; }
+        /* [BARU] Pendar gradasi bergerak pelan */
+        @keyframes drift {
+            from { transform: translate3d(-4%, -3%, 0) rotate(0deg) scale(1); }
+            to   { transform: translate3d(5%, 4%, 0) rotate(12deg) scale(1.08); }
+        }
+
+        /* [BARU] Tanda plus naik perlahan lalu memudar */
+        @keyframes plusRise {
+            0%       { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10%, 85% { opacity: 1; }
+            100%     { transform: translateY(-540px) rotate(90deg); opacity: 0; }
+        }
+
+        /* [BARU] Kilau menyapu tombol */
+        @keyframes shine {
+            to { transform: translateX(120%); }
+        }
+
+        /* [BARU] Pesan error bergetar */
+        @keyframes shake {
+            0%   { transform: translateX(0); }
+            25%  { transform: translateX(-5px); }
+            50%  { transform: translateX(4px); }
+            75%  { transform: translateX(-2px); }
+            100% { transform: translateX(0); }
+        }
+
+        @media (max-width: 680px) {
+            body { padding:12px; }
+            .card { max-width:440px; min-height:calc(100vh - 24px); grid-template-columns:1fr; grid-template-rows:minmax(260px, 42vh) 1fr; border-radius:22px; }
+            .card-top { padding:22px 26px 18px; }
+            .card-top h1 { margin-top:24px; padding-top:0; font-size:27px; }
+            .card-top p { font-size:13px; }
+            .sil { flex:1 1 auto; width:76%; max-height:38%; margin:12px auto 0; }
+            .card-body { padding:28px 25px 58px; }
+            .card-body h2 { font-size:22px; }
+            .google-button { margin-top:22px; }
+            /* [BARU] tanda plus disembunyikan di layar kecil */
+            .plus { display: none; }
         }
 
         /* Hormati pengguna yang mematikan animasi */
         @media (prefers-reduced-motion: reduce) {
-            .card, .card-top .icon { animation: none; }
+            .card, .card-top .icon, .card-body > * { animation: none; }
             .ripple { animation: none; display: none; }
             .sil .late { animation: none; opacity: 1; }
             .sil .s, .sil .ln { animation: none; stroke-dashoffset: 0; }
@@ -313,6 +436,11 @@
             .google-button:hover .arrow { animation: none; }
             .google-button, .google-button .arrow, .google-icon { transition: none; }
             .spinner { animation-duration: 1.6s; }
+
+            /* [BARU] animasi tambahan ikut dimatikan */
+            .card-top .brand, .card-top h1, .card-top p,
+            .card-top::before, .alert { animation: none; }
+            .plus, .google-button::after { display: none; }
         }
     </style>
 </head>
@@ -322,13 +450,21 @@
     <main class="card">
 
         <header class="card-top">
-            <div class="icon-wrap" aria-hidden="true">
-                <span class="ripple"></span>
-                <span class="ripple r2"></span>
-                <img src="{{ asset('images/logo-unpad.png') }}" alt="" class="icon">
+            <!-- [BARU] Tanda plus melayang (dekoratif) -->
+            <span class="plus p1" aria-hidden="true">+</span>
+            <span class="plus p2" aria-hidden="true">+</span>
+            <span class="plus p3" aria-hidden="true">+</span>
+
+            <div class="brand">
+                <div class="icon-wrap" aria-hidden="true">
+                    <span class="ripple"></span>
+                    <span class="ripple r2"></span>
+                    <img src="{{ asset('images/logo-unpad.png') }}" alt="" class="icon">
+                </div>
+                <span>RS UNPAD</span>
             </div>
             <h1>Logbook Pegawai</h1>
-            <p>Catat kegiatan harian dan absensi Anda.</p>
+            <p>Catat kegiatan harian dan absensi Anda</p>
 
             <!-- Siluet gedung rumah sakit -->
             <svg class="sil" viewBox="260 262 900 445" aria-hidden="true">
@@ -352,7 +488,7 @@
                 <path class="s" pathLength="1" d="M905 485 H1012 L1148 568 V586 H905 Z"/>
                 <path class="ln" pathLength="1" d="M953 586 V645 M1033 586 V645 M1113 586 V645"/>
                 <path class="s" pathLength="1" d="M300 597 H700 L735 625 H260 Z"/>
-                
+
                 <!-- jendela menyala bergantian -->
                 <g class="late">
                     <path class="win" d="M456 346 H558" style="animation-delay:0s"/>
@@ -378,6 +514,8 @@
 
         <section class="card-body">
             <h2>Selamat Datang Kembali</h2>
+            <!-- [BARU] Teks cadangan diganti tanggal hari ini lewat JavaScript di bawah -->
+            <p class="welcome-subtitle" id="welcome-date">Catat kegiatan harian dan absensi Anda.</p>
 
             @if ($errors->any() || session('error'))
                 <div class="alert" role="alert">
@@ -407,14 +545,27 @@
 
     <script>
         (function () {
+            // [BARU] Tampilkan tanggal hari ini (mengikuti jam perangkat pengguna)
+            var dateEl = document.getElementById('welcome-date');
+            if (dateEl) {
+                try {
+                    dateEl.textContent = new Intl.DateTimeFormat('id-ID', {
+                        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                    }).format(new Date());
+                } catch (err) { /* biarkan teks cadangan */ }
+            }
+
             var btn = document.getElementById('google-login');
             if (!btn) return;
 
+            var card = document.querySelector('.card');
             var label = btn.querySelector('.label');
             var originalText = label.textContent;
 
             function setLoading(on) {
                 btn.classList.toggle('is-loading', on);
+                // [BARU] panel kiri ikut bereaksi saat loading
+                if (card) card.classList.toggle('is-loading', on);
                 btn.setAttribute('aria-busy', on ? 'true' : 'false');
                 btn.setAttribute('aria-disabled', on ? 'true' : 'false');
                 label.textContent = on ? 'Menghubungkan...' : originalText;

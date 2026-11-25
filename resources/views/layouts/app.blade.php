@@ -410,13 +410,13 @@
             gap: 8px;
             border: 1px solid var(--border);
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.96);
+            background: transparent;
             color: var(--text-dark);
             font-size: 12px;
             font-weight: 700;
             white-space: nowrap;
             box-shadow: 0 8px 22px rgba(15, 23, 42, 0.14);
-            backdrop-filter: blur(8px);
+            backdrop-filter: none;
             transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
 

@@ -36,7 +36,7 @@
     </div>
 
     {{-- Filter --}}
-    <form method="GET" action="{{ route('admin.logbook.index') }}" class="lb-card">
+    <form method="GET" action="{{ route('admin.logbook.index') }}" class="lb-card" id="acc-list-filter">
         <input type="hidden" name="status" value="{{ $status }}">
 
         <div class="acc-filter">
@@ -46,34 +46,23 @@
             </div>
 
             <div>
-                <label class="lb-label" for="jenis">Jenis</label>
-                <select id="jenis" name="jenis" class="lb-select">
-                    <option value="">Semua</option>
-                    @foreach (['harian' => 'Harian', 'lembur' => 'Lembur', 'oncall' => 'On Call'] as $nilai => $label)
-                        <option value="{{ $nilai }}" @selected(request('jenis') === $nilai)>{{ $label }}</option>
+                <label class="lb-label" for="instalasi">Instalasi</label>
+                <select id="instalasi" name="instalasi" class="lb-select">
+                    <option value="">Semua instalasi</option>
+                    @foreach ($instalasiList as $namaInstalasi)
+                        <option value="{{ $namaInstalasi }}" @selected($instalasi === $namaInstalasi)>{{ $namaInstalasi }}</option>
                     @endforeach
                 </select>
             </div>
 
-            <div>
-                <label class="lb-label" for="dari">Dari</label>
-                <input type="date" id="dari" name="dari" value="{{ request('dari') }}" class="lb-input">
-            </div>
-
-            <div>
-                <label class="lb-label" for="sampai">Sampai</label>
-                <input type="date" id="sampai" name="sampai" value="{{ request('sampai') }}" class="lb-input">
-            </div>
-
-            <button type="submit" class="acc-btn">Terapkan</button>
-            <a href="{{ route('admin.logbook.index', ['status' => $status]) }}" class="acc-btn acc-btn--ghost">Reset</a>
+            <a href="{{ route('admin.logbook.index', ['status' => $status]) }}" class="acc-btn acc-btn--ghost acc-reset">Reset</a>
         </div>
     </form>
 
     {{-- Ringkasan --}}
     <div class="acc-total">
         {{ $totalEntri }} entri {{ $status === 'semua' ? 'dari semua status' : strtolower($status) }}
-        &middot; {{ $pegawai->count() }} pegawai di halaman ini
+        &middot; Menampilkan {{ $pegawai->firstItem() ?? 0 }}–{{ $pegawai->lastItem() ?? 0 }} dari {{ $pegawai->total() }} pegawai
     </div>
 
     {{-- Daftar pegawai --}}
@@ -90,7 +79,7 @@
                 <span class="acc-count">{{ $p->total_entri }} entri</span>
 
                 {{-- Bawa status/jenis/tanggal ke halaman detail, tapi tanpa 'q' dan 'page' --}}
-                <a href="{{ route('admin.logbook.pegawai', array_merge(request()->except(['page', 'q']), ['user' => $p->id])) }}"
+                <a href="{{ route('admin.logbook.pegawai', ['user' => $p->id, 'status' => $status]) }}"
                    class="acc-btn">
                     <i class="fa-solid fa-play"></i> Mulai Review
                 </a>
@@ -120,4 +109,19 @@
     @endif
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('acc-list-filter');
+    if (!form) return;
+    const unit = form.querySelector('[name="instalasi"]');
+    unit?.addEventListener('change', () => form.requestSubmit());
+    const name = form.querySelector('[name="q"]');
+    let timer;
+    name?.addEventListener('input', () => {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => form.requestSubmit(), 350);
+    });
+});
+</script>
 @endsection

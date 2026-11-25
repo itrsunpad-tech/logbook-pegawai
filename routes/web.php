@@ -111,6 +111,11 @@ Route::middleware(['auth', 'admin'])
         Route::patch('/logbook/{logbook}/setujui', [AdminLogbookController::class, 'setujui'])
             ->name('logbook.setujui');
 
+        Route::post('/logbook/pegawai/{user}/setujui-terpilih', [AdminLogbookController::class, 'setujuiTerpilih'])
+            ->name('logbook.setujui-terpilih');
+        Route::post('/logbook/pegawai/{user}/tolak-terpilih', [AdminLogbookController::class, 'tolakTerpilih'])
+            ->name('logbook.tolak-terpilih');
+
         Route::patch('/logbook/{logbook}/tolak', [AdminLogbookController::class, 'tolak'])
             ->name('logbook.tolak');
 

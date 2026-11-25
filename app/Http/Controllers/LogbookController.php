@@ -79,7 +79,7 @@ class LogbookController extends Controller
             $akhirUtc = $akhirKalender->copy()->endOfDay()->utc();
             $logs = FingerprintLog::query()
                 ->where('fingerprint_id', Auth::user()->fingerprint_id)
-                ->whereIn('punch_state', [0, 1])
+                ->whereIn('punch_state', [0, 1, 4, 5])
                 ->where('punched_at', '>=', $awalUtc)
                 ->where('punched_at', '<=', $akhirUtc)
                 ->orderBy('punched_at')
@@ -88,16 +88,44 @@ class LogbookController extends Controller
                 ->map(function ($dailyLogs, $tanggal) {
                     $checkIn = $dailyLogs->first(fn (FingerprintLog $log) => (int) $log->punch_state === 0);
                     $checkOut = $dailyLogs->filter(fn (FingerprintLog $log) => (int) $log->punch_state === 1)->last();
+                    $overtimeIn = $dailyLogs->first(fn (FingerprintLog $log) => (int) $log->punch_state === 4);
+                    $overtimeOut = $dailyLogs->filter(fn (FingerprintLog $log) => (int) $log->punch_state === 5)->last();
+                    $toJakarta = fn (?FingerprintLog $log) => $log?->punched_at->copy()->setTimezone(FingerprintLog::TZ_TAMPIL);
+                    $kerjaMenit = $checkIn && $checkOut && $checkOut->punched_at->gt($checkIn->punched_at)
+                        ? (int) $checkIn->punched_at->diffInMinutes($checkOut->punched_at)
+                        : 0;
+                    $lemburMenit = $overtimeIn && $overtimeOut && $overtimeOut->punched_at->gt($overtimeIn->punched_at)
+                        ? (int) $overtimeIn->punched_at->diffInMinutes($overtimeOut->punched_at)
+                        : 0;
 
                     return [
                         'tanggal' => $tanggal,
                         'check_in' => $checkIn?->punched_at->copy()->setTimezone(FingerprintLog::TZ_TAMPIL)->format('H:i'),
                         'check_out' => $checkOut?->punched_at->copy()->setTimezone(FingerprintLog::TZ_TAMPIL)->format('H:i'),
                         'metode' => $checkIn?->labelVerifikasi() ?? '—',
+                        'kerja_menit' => $kerjaMenit,
+                        'lembur_menit' => $lemburMenit,
                         'status' => $checkIn ? ($checkIn->punched_at->copy()->setTimezone(FingerprintLog::TZ_TAMPIL)->format('H:i:s') > '08:00:00' ? 'Terlambat' : 'Tepat waktu') : 'Tidak tercatat',
                     ];
                 })->sortKeysDesc();
         }
+        $monitoringInput = Logbook::query()
+            ->where('user_id', Auth::id())
+            ->whereIn('jenis', [Logbook::HARIAN, Logbook::LEMBUR, Logbook::ONCALL])
+            ->whereDate('tanggal', '>=', $mulaiKalender->toDateString())
+            ->whereDate('tanggal', '<=', $akhirKalender->toDateString())
+            ->get(['tanggal', 'jenis', 'status', 'jam_mulai', 'jam_selesai'])
+            ->map(function (Logbook $item) {
+                $mulai = $item->jam_mulai ? Carbon::parse($item->jam_mulai) : null;
+                $selesai = $item->jam_selesai ? Carbon::parse($item->jam_selesai) : null;
+
+                return [
+                    'tanggal' => $item->tanggal->toDateString(),
+                    'jenis' => $item->jenis,
+                    'status' => $item->status,
+                    'menit' => $mulai && $selesai && $selesai->gt($mulai) ? (int) $mulai->diffInMinutes($selesai) : 0,
+                ];
+            });
         $notifikasiStatus = Auth::user()->unreadNotifications()
             ->where('type', LogbookStatusChanged::class)
             ->latest()
@@ -119,6 +147,7 @@ class LogbookController extends Controller
             'hariIni',
             'kalender',
             'monitoringAbsensi',
+            'monitoringInput',
             'mulaiKalender',
             'akhirKalender',
             'libur',
@@ -467,6 +496,11 @@ class LogbookController extends Controller
 
         $kalender = [];
         foreach ($logbooks as $item) {
+            // Cuti yang ditolak tidak lagi menandai tanggal pada kalender.
+            if ($item->is_cuti && $item->status === Logbook::STATUS_DITOLAK) {
+                continue;
+            }
+
             $data = $this->formatItem($item);
 
             if ($item->is_cuti && $item->cuti_selesai) {
