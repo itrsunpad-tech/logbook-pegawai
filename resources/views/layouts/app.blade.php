@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-unpad.png') }}?v=2">
 
     <title>@yield('title', 'Logbook System')</title>
 
@@ -140,9 +141,12 @@
         }
 
         .brand-logo {
-            width: 80px;
-            height: 44px;
-            flex: 0 0 80px;
+            width: 118px;
+            height: 42px;
+            flex: 0 0 118px;
+            padding: 3px 5px;
+            border-radius: 7px;
+            background: #fff;
             object-fit: contain;
             object-position: center;
         }
@@ -1410,9 +1414,9 @@
             }
 
             .brand-logo {
-                width: 38px;
-                height: 38px;
-                flex-basis: 38px;
+                width: 86px;
+                height: 36px;
+                flex-basis: 86px;
             }
 
             .brand-name {
@@ -1508,9 +1512,9 @@
             }
 
             .brand-logo {
-                width: 32px;
-                height: 34px;
-                flex-basis: 32px;
+                width: 72px;
+                height: 32px;
+                flex-basis: 72px;
             }
 
             .brand-name {
@@ -1814,7 +1818,7 @@ document.addEventListener('DOMContentLoaded', () => {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
-        hour12: true,
+        hourCycle: 'h23',
     });
 
     function updateClock() {
@@ -1826,12 +1830,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const parts = timeFormat.formatToParts(now);
             const get = (type) => parts.find((part) => part.type === type)?.value ?? '';
 
-            const period = document.createElement('small');
-            period.className = 'header-ampm';
-            period.textContent = get('dayPeriod');
+            const zone = document.createElement('small');
+            zone.className = 'header-ampm';
+            zone.textContent = 'WIB';
 
-            timeElement.textContent = `${get('hour')}.${get('minute')}.${get('second')}`;
-            timeElement.append(period);
+            timeElement.textContent = `${get('hour')}:${get('minute')}:${get('second')}`;
+            timeElement.append(zone);
         }
     }
 

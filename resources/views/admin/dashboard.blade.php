@@ -144,12 +144,11 @@
                 @endif
             </a>
 
-            <div class="adm-menu-item is-disabled">
+            <a href="{{ route('admin.rekap.index') }}" class="adm-menu-item">
                 <i class="fa-solid fa-table-list"></i>
                 <span class="adm-menu-name">Rekap Logbook Pegawai</span>
-                <span class="adm-menu-desc">Rekap logbook per pegawai dan per periode.</span>
-                <span class="adm-badge">Segera hadir</span>
-            </div>
+                <span class="adm-menu-desc">Ringkasan logbook berdasarkan instalasi dan pegawai.</span>
+            </a>
 
             <a href="{{ route('admin.sidik-jari.index') }}" class="adm-menu-item">
                 <i class="fa-solid fa-fingerprint"></i>

@@ -914,7 +914,7 @@
         <div id="logbook-monitoring-view" hidden>
             <div class="lb-monitor-kpis">
                 <div class="lb-monitor-kpi lb-monitor-kpi--work">
-                    <div class="lb-monitor-kpi-head"><i class="fa-regular fa-clock"></i> Total Hari / Jam Kerja</div>
+                    <div class="lb-monitor-kpi-head"><i class="fa-regular fa-clock"></i> Logbook Harian</div>
                     <div class="lb-monitor-kpi-pair">
                         <div class="lb-monitor-kpi-stat"><span class="lb-monitor-kpi-stat-label">Diisi</span><strong class="lb-monitor-kpi-stat-value"><span id="monitor-harian-diisi">0</span> <small>hari</small></strong><span class="lb-monitor-kpi-stat-hours"><i class="fa-regular fa-clock"></i><span id="monitor-kerja-diisi">0 Jam</span></span></div>
                         <div class="lb-monitor-kpi-stat"><span class="lb-monitor-kpi-stat-label is-approved"><i class="fa-regular fa-circle-check"></i> Approved</span><strong class="lb-monitor-kpi-stat-value"><span id="monitor-harian-approved">0</span> <small>hari</small></strong><span class="lb-monitor-kpi-stat-hours"><i class="fa-regular fa-clock"></i><span id="monitor-kerja-approved">0 Jam</span></span></div>

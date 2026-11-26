@@ -44,6 +44,7 @@ class LogbookController extends Controller
 
         $logbooks = Logbook::query()
             ->where('user_id', Auth::id())
+            ->with('shift')
             ->latest('tanggal')
             ->latest('id')
             ->get();
@@ -73,6 +74,10 @@ class LogbookController extends Controller
 
         $kalender = $this->dataKalender($mulaiKalender, $akhirKalender);
         $libur = $this->dataLibur($mulaiKalender, $akhirKalender);
+        $shiftHarianPerTanggal = $logbooks
+            ->filter(fn (Logbook $item) => $item->jenis === Logbook::HARIAN && ! $item->is_cuti && ! $item->is_izin_sakit)
+            ->keyBy(fn (Logbook $item) => $item->tanggal->toDateString());
+        $jadwalKerjaPegawai = WorkSchedule::jadwalKerja($pegawai);
         $monitoringAbsensi = collect();
         if (Auth::user()->fingerprint_id) {
             $awalUtc = $mulaiKalender->copy()->startOfDay()->utc();
@@ -85,15 +90,18 @@ class LogbookController extends Controller
                 ->orderBy('punched_at')
                 ->get();
             $monitoringAbsensi = $logs->groupBy(fn (FingerprintLog $log) => $log->punched_at->copy()->setTimezone(FingerprintLog::TZ_TAMPIL)->toDateString())
-                ->map(function ($dailyLogs, $tanggal) {
+                ->map(function ($dailyLogs, $tanggal) use ($pegawai, $shiftHarianPerTanggal, $jadwalKerjaPegawai) {
                     $checkIn = $dailyLogs->first(fn (FingerprintLog $log) => (int) $log->punch_state === 0);
                     $checkOut = $dailyLogs->filter(fn (FingerprintLog $log) => (int) $log->punch_state === 1)->last();
                     $overtimeIn = $dailyLogs->first(fn (FingerprintLog $log) => (int) $log->punch_state === 4);
                     $overtimeOut = $dailyLogs->filter(fn (FingerprintLog $log) => (int) $log->punch_state === 5)->last();
                     $toJakarta = fn (?FingerprintLog $log) => $log?->punched_at->copy()->setTimezone(FingerprintLog::TZ_TAMPIL);
-                    $kerjaMenit = $checkIn && $checkOut && $checkOut->punched_at->gt($checkIn->punched_at)
-                        ? (int) $checkIn->punched_at->diffInMinutes($checkOut->punched_at)
-                        : 0;
+                    $kerjaMenit = WorkSchedule::durasiDariTap(
+                        $pegawai,
+                        $dailyLogs,
+                        $shiftHarianPerTanggal->get($tanggal)?->shift,
+                        $jadwalKerjaPegawai
+                    );
                     $lemburMenit = $overtimeIn && $overtimeOut && $overtimeOut->punched_at->gt($overtimeIn->punched_at)
                         ? (int) $overtimeIn->punched_at->diffInMinutes($overtimeOut->punched_at)
                         : 0;

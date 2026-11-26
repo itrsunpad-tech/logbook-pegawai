@@ -153,6 +153,66 @@ class WorkSchedule
         return $terdekatDalamRentang ?? $terdekat;
     }
 
+    /**
+     * Durasi kerja terjadwal untuk hari yang memiliki minimal satu tap masuk/pulang.
+     * Jika logbook harian menyimpan shift, shift itu menjadi sumber utama. Jika tidak,
+     * jadwal dipilih dari jenis jam kerja pegawai dan waktu tap yang tersedia.
+     */
+    public static function durasiDariTap(?User $user, Collection $logs, ?Shift $shiftTersimpan = null, ?Collection $jadwalPegawai = null): int
+    {
+        $taps = $logs->filter(fn ($log) => in_array((int) $log->punch_state, [0, 1], true));
+
+        if ($taps->isEmpty()) {
+            return 0;
+        }
+
+        $jadwal = ($jadwalPegawai ?? self::jadwalKerja($user))
+            ->filter(fn (Shift $shift) => $shift->jam_mulai && $shift->jam_selesai);
+
+        $jadwalShift = $shiftTersimpan && $shiftTersimpan->is_kerja && $shiftTersimpan->jam_mulai && $shiftTersimpan->jam_selesai
+            ? $jadwal->firstWhere('id', $shiftTersimpan->id)
+            : null;
+
+        // If no work schedule is configured, a saved manual shift is the only reliable source.
+        if (! $jadwalShift && $jadwal->isEmpty() && $shiftTersimpan && $shiftTersimpan->is_kerja && $shiftTersimpan->jam_mulai && $shiftTersimpan->jam_selesai) {
+            $jadwalShift = $shiftTersimpan;
+        }
+
+        if (! $jadwalShift) {
+            if ($jadwal->isEmpty()) {
+                return 0;
+            }
+
+            $masuk = $taps->first(fn ($log) => (int) $log->punch_state === 0);
+            $pulang = $taps->filter(fn ($log) => (int) $log->punch_state === 1)->last();
+            $jadwalShift = $jadwal
+                ->sortBy(function (Shift $shift) use ($masuk, $pulang) {
+                    $mulai = self::menit($shift->jam_mulai);
+                    $selesai = self::menit($shift->jam_selesai);
+
+                    return ($masuk ? self::jarakJam(self::menit($masuk->punched_at->copy()->setTimezone(\App\Models\FingerprintLog::TZ_TAMPIL)->format('H:i')), $mulai) : 0)
+                        + ($pulang ? self::jarakJam(self::menit($pulang->punched_at->copy()->setTimezone(\App\Models\FingerprintLog::TZ_TAMPIL)->format('H:i')), $selesai) : 0);
+                })
+                ->first();
+        }
+
+        $mulai = self::menit($jadwalShift->jam_mulai);
+        $selesai = self::menit($jadwalShift->jam_selesai);
+
+        if ($selesai <= $mulai) {
+            $selesai += 1440;
+        }
+
+        return $selesai - $mulai;
+    }
+
+    private static function jarakJam(int $a, int $b): int
+    {
+        $jarak = abs($a - $b);
+
+        return min($jarak, 1440 - $jarak);
+    }
+
     /** Ubah 'HH:MM[:SS]' menjadi menit sejak 00:00. */
     private static function menit(string $jam): int
     {

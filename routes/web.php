@@ -4,6 +4,7 @@ use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\LogbookController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LogbookController as AdminLogbookController;
+use App\Http\Controllers\Admin\RekapLogbookController;
 use App\Http\Controllers\Admin\KepegawaianController;
 use App\Http\Controllers\Admin\SidikJariController;
 use Illuminate\Http\Request;
@@ -80,6 +81,11 @@ Route::middleware(['auth', 'admin'])
     ->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])
             ->name('dashboard');
+
+        // Rekap logbook per instalasi dan pegawai
+        Route::get('/rekap', [RekapLogbookController::class, 'index'])->name('rekap.index');
+        Route::get('/rekap/pegawai/{user}/excel', [RekapLogbookController::class, 'excel'])->name('rekap.pegawai.excel');
+        Route::get('/rekap/pegawai/{user}', [RekapLogbookController::class, 'pegawai'])->name('rekap.pegawai');
 
         // Kepegawaian
         Route::get('/kepegawaian', [KepegawaianController::class, 'index'])
